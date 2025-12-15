@@ -15,10 +15,6 @@ export async function renderStandingsPage() {
   app.innerHTML = `
     <div class="page">
       <div class="container">
-        <div class="page-header">
-          <h1 class="page-title">NHL Standings</h1>
-          <p class="page-subtitle">2024-2025 Season</p>
-        </div>
         
         <div class="loading-container">
           <div class="loading"></div>
@@ -51,10 +47,6 @@ function renderEmptyStandings() {
   app.innerHTML = `
     <div class="page">
       <div class="container">
-        <div class="page-header">
-          <h1 class="page-title">NHL Standings</h1>
-          <p class="page-subtitle">2024-2025 Season</p>
-        </div>
         <div class="empty-state">
           <div class="empty-state-icon">📊</div>
           <h2 class="empty-state-title">Standings Unavailable</h2>
@@ -70,10 +62,6 @@ function renderErrorStandings() {
   app.innerHTML = `
     <div class="page">
       <div class="container">
-        <div class="page-header">
-          <h1 class="page-title">NHL Standings</h1>
-          <p class="page-subtitle">2024-2025 Season</p>
-        </div>
         <div class="error-message">
           <p>⚠️ Failed to load standings. Please try again later.</p>
         </div>
@@ -88,10 +76,6 @@ function renderStandingsUI(data) {
   let html = `
     <div class="page">
       <div class="container">
-        <div class="page-header">
-          <h1 class="page-title">NHL Standings</h1>
-          <p class="page-subtitle">2024-2025 Season</p>
-        </div>
         
         <div class="view-toggle card mb-lg">
           <button class="view-button ${currentView === 'wildcard' ? 'active' : ''}" data-view="wildcard">Wild Card</button>

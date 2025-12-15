@@ -15,10 +15,6 @@ export async function renderSchedulePage() {
   app.innerHTML = `
     <div class="page">
       <div class="container">
-        <div class="page-header">
-          <h1 class="page-title">Game Schedule</h1>
-          <p class="page-subtitle">Live and upcoming hockey matches</p>
-        </div>
         
         <div class="schedule-controls mb-lg">
           <select id="filter-select" class="sort-select">
@@ -52,14 +48,23 @@ async function loadSchedule() {
   try {
     // Get all hockey games for today
     const games = await getHockeyMatches('today');
-    currentGames = games;
     
-    if (games.length === 0) {
+    // Filter out TBA games
+    const filteredGames = games.filter(game => {
+      const homeTeam = game.teams?.home?.name || 'TBA';
+      const awayTeam = game.teams?.away?.name || 'TBA';
+      // Exclude games where both teams are TBA
+      return !(homeTeam === 'TBA' && awayTeam === 'TBA');
+    });
+    
+    currentGames = filteredGames;
+    
+    if (filteredGames.length === 0) {
       renderEmptySchedule();
       return;
     }
     
-    renderScheduleUI(games);
+    renderScheduleUI(filteredGames);
     
   } catch (error) {
     console.error('Error loading schedule:', error);
@@ -67,11 +72,6 @@ async function loadSchedule() {
     app.innerHTML = `
       <div class="page">
         <div class="container">
-          <div class="page-header">
-            <h1 class="page-title">Game Schedule</h1>
-            <p class="page-subtitle">Live and upcoming hockey matches</p>
-          </div>
-          
           <div class="schedule-controls mb-lg">
             <select id="filter-select" class="sort-select">
               <option value="all">All Games</option>
@@ -102,10 +102,6 @@ function renderEmptySchedule() {
   app.innerHTML = `
     <div class="page">
       <div class="container">
-        <div class="page-header">
-          <h1 class="page-title">Game Schedule</h1>
-          <p class="page-subtitle">Live and upcoming hockey matches</p>
-        </div>
         
         <div class="schedule-controls mb-lg">
           <select id="filter-select" class="sort-select">
@@ -142,11 +138,6 @@ function renderScheduleUI(games) {
   app.innerHTML = `
     <div class="page">
       <div class="container">
-        <div class="page-header">
-          <h1 class="page-title">Game Schedule</h1>
-          <p class="page-subtitle">${games.length} game${games.length !== 1 ? 's' : ''} today</p>
-        </div>
-        
         <div class="schedule-controls mb-lg">
           <select id="filter-select" class="sort-select">
             <option value="all">All Games (${games.length})</option>

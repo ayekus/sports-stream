@@ -38,14 +38,14 @@ export function createHeader() {
   `;
   
   // Add active class to current page
-  updateActiveNav(header);
+  updateActiveNav();
   
   return header;
 }
 
-function updateActiveNav(header) {
+export function updateActiveNav() {
+  const links = document.querySelectorAll('.nav-link');
   const currentPath = window.location.pathname;
-  const links = header.querySelectorAll('.nav-link');
   
   links.forEach(link => {
     link.classList.remove('active');

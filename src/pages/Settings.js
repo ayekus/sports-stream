@@ -9,10 +9,6 @@ export async function renderSettingsPage() {
   app.innerHTML = `
     <div class="page">
       <div class="container">
-        <div class="page-header">
-          <h1 class="page-title">Settings</h1>
-          <p class="page-subtitle">Configure your streaming preferences</p>
-        </div>
         
         <div class="settings-content">
           <section class="card mb-lg">

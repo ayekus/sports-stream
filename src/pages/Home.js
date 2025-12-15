@@ -12,11 +12,6 @@ export async function renderHomePage() {
   app.innerHTML = `
     <div class="page">
       <div class="container">
-        <div class="page-header">
-          <h1 class="page-title">Hockey Streams</h1>
-          <p class="page-subtitle">Watch live hockey games without ads or popups</p>
-        </div>
-        
         <div class="loading-container">
           <div class="loading"></div>
           <p class="loading-text">Loading matches...</p>
@@ -33,11 +28,6 @@ export async function renderHomePage() {
       app.innerHTML = `
         <div class="page">
           <div class="container">
-            <div class="page-header">
-              <h1 class="page-title">Hockey Streams</h1>
-              <p class="page-subtitle">Watch live hockey games without ads or popups</p>
-            </div>
-            
             <div class="empty-state">
               <div class="empty-state-icon">🏒</div>
               <h2 class="empty-state-title">No Matches Available</h2>
@@ -58,10 +48,6 @@ export async function renderHomePage() {
     let html = `
       <div class="page">
         <div class="container">
-          <div class="page-header">
-            <h1 class="page-title">Hockey Streams</h1>
-            <p class="page-subtitle">Watch live hockey games without ads or popups</p>
-          </div>
     `;
     
     if (liveMatches.length > 0) {
@@ -125,11 +111,6 @@ export async function renderHomePage() {
     app.innerHTML = `
       <div class="page">
         <div class="container">
-          <div class="page-header">
-            <h1 class="page-title">Hockey Streams</h1>
-            <p class="page-subtitle">Watch live hockey games without ads or popups</p>
-          </div>
-          
           <div class="error-message">
             <p>⚠️ Failed to load matches. Please try refreshing the page.</p>
           </div>

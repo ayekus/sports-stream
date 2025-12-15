@@ -14,10 +14,6 @@ export async function renderTeamsPage() {
   app.innerHTML = `
     <div class="page">
       <div class="container">
-        <div class="page-header">
-          <h1 class="page-title">NHL Teams</h1>
-          <p class="page-subtitle">Browse all National Hockey League teams</p>
-        </div>
         
         <div class="teams-controls mb-lg">
           <input 
@@ -48,10 +44,6 @@ export async function renderTeamsPage() {
       app.innerHTML = `
         <div class="page">
           <div class="container">
-            <div class="page-header">
-              <h1 class="page-title">NHL Teams</h1>
-              <p class="page-subtitle">Browse all National Hockey League teams</p>
-            </div>
             
             <div class="empty-state">
               <div class="empty-state-icon">🏒</div>
@@ -72,10 +64,6 @@ export async function renderTeamsPage() {
     app.innerHTML = `
       <div class="page">
         <div class="container">
-          <div class="page-header">
-            <h1 class="page-title">NHL Teams</h1>
-            <p class="page-subtitle">Browse all National Hockey League teams</p>
-          </div>
           
           <div class="error-message">
             <p>⚠️ Failed to load teams. Please try again later.</p>
@@ -92,10 +80,6 @@ function renderTeamsUI(teams) {
   app.innerHTML = `
     <div class="page">
       <div class="container">
-        <div class="page-header">
-          <h1 class="page-title">NHL Teams</h1>
-          <p class="page-subtitle">${teams.length} teams in the National Hockey League</p>
-        </div>
         
         <div class="teams-controls mb-lg">
           <input 

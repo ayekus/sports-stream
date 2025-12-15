@@ -3,6 +3,8 @@
  * Handles client-side routing for the application
  */
 
+import { updateActiveNav } from './components/Header.js';
+
 class Router {
   constructor() {
     this.routes = {};
@@ -48,6 +50,8 @@ class Router {
     if (handler) {
       this.currentRoute = path;
       await handler(params);
+      // Update nav active state after route changes
+      updateActiveNav();
     } else {
       // 404 - redirect to home
       this.navigateTo('/');
