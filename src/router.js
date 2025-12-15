@@ -119,6 +119,9 @@ class Router {
 // Export singleton instance
 export const router = new Router();
 
+// Expose on window for global access (used by team modals)
+window.router = router;
+
 /**
  * Create a navigation link element
  * @param {string} href - Link destination

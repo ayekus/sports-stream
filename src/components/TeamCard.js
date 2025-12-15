@@ -90,13 +90,23 @@ export function createTeamModal(team) {
             </div>
           </div>
           
-          ${team.strWebsite ? `
-            <div class="mt-lg">
-              <a href="https://${team.strWebsite}" target="_blank" rel="noopener noreferrer" class="team-website">
+          <div class="modal-actions mt-lg">
+            <button class="view-games-button" data-team-name="${team.strTeam}">
+              📅 View Games
+            </button>
+            ${team.strWebsite ? `
+              <a href="https://${team.strTeam === 'Ottawa Senators' ? 'www.nhl.com/senators' : team.strWebsite}" target="_blank" rel="noopener noreferrer" class="team-website">
                 🌐 Visit Official Website
               </a>
+            ` : ''}
+          </div>
+          
+          <div class="team-stats mt-lg" id="team-stats-${team.idTeam}">
+            <h4>Current Season</h4>
+            <div class="stats-row" style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <div class="loading" style="margin: 0 auto;"></div>
             </div>
-          ` : ''}
+          </div>
           
           <div class="team-description mt-lg">
             <h4>About</h4>
@@ -107,7 +117,111 @@ export function createTeamModal(team) {
     </div>
   `;
   
+  // Add click handler for View Games button
+  setTimeout(() => {
+    const viewGamesBtn = modal.querySelector('.view-games-button');
+    if (viewGamesBtn) {
+      viewGamesBtn.addEventListener('click', () => {
+        const teamName = viewGamesBtn.dataset.teamName;
+        closeTeamModal();
+        // Navigate to schedule with team search
+        window.router.navigateTo(`/schedule?team=${encodeURIComponent(teamName)}`);
+      });
+    }
+    
+    // Load team stats 
+    loadTeamStats(team);
+  }, 10);
+  
   return modal;
+}
+
+/**
+ * Load team stats from NHL API (same method as standings page)
+ */
+async function loadTeamStats(team) {
+  const statsContainer = document.getElementById(`team-stats-${team.idTeam}`);
+  if (!statsContainer) return;
+  
+  try {
+    // Import NHL API service - use absolute path
+    const nhlApi = await import('/src/services/nhlApi.js');
+    const standingsData = await nhlApi.getNHLStandings();
+    
+    // getNHLStandings returns { standings: [...] }
+    const standings = standingsData.standings || standingsData;
+    
+    console.log('Looking for team:', team.strTeam, 'Short:', team.strTeamShort);
+    console.log('Available teams:', standings.map(t => ({ name: t.teamName?.default, abbrev: t.teamAbbrev?.default })));
+    
+    // Find team by abbreviation or name matching
+    const teamStats = standings.find(t => {
+      const abbrev = t.teamAbbrev?.default;
+      const name = t.teamName?.default || t.teamCommonName?.default || '';
+      
+      // Get team abbreviation - try different fields
+      const teamShort = team.strTeamShort || team.strTeamBadge?.match(/([A-Z]{2,3})/)?.[1];
+      
+      // Try matching by abbreviation first (most reliable)
+      if (teamShort && abbrev && abbrev.toLowerCase() === teamShort.toLowerCase()) {
+        console.log('Matched by abbrev:', abbrev);
+        return true;
+      }
+      
+      // Try matching by team name
+      if (name.toLowerCase().includes(team.strTeam.toLowerCase()) ||
+          team.strTeam.toLowerCase().includes(name.toLowerCase())) {
+        console.log('Matched by name:', name);
+        return true;
+      }
+      
+      // Try matching by last word of team name (e.g., "Senators", "Maple Leafs")
+      const teamWords = team.strTeam.toLowerCase().split(' ');
+      const lastWord = teamWords[teamWords.length - 1];
+      if (name.toLowerCase().includes(lastWord)) {
+        console.log('Matched by last word:', lastWord, 'in', name);
+        return true;
+      }
+      
+      return false;
+    });
+    
+    if (!teamStats) {
+      console.error('Team not found in standings:', team.strTeam);
+      statsContainer.innerHTML = '<h4>Current Season</h4><p class="text-secondary" style="font-size: 0.9rem;">Stats unavailable</p>';
+      return;
+    }
+    
+    console.log('Found stats for:', teamStats.teamName?.default);
+    
+    // Display main stats only
+    statsContainer.innerHTML = `
+      <h4>Current Season</h4>
+      <div class="stats-row" style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.9rem;">
+        <span style="padding: 6px 12px; background: var(--color-bg-tertiary); border-radius: 6px;">
+          <strong>${teamStats.gamesPlayed}</strong> GP
+        </span>
+        <span style="padding: 6px 12px; background: var(--color-bg-tertiary); border-radius: 6px;">
+          <strong>${teamStats.wins}</strong>-<strong>${teamStats.losses}</strong>-<strong>${teamStats.otLosses}</strong>
+        </span>
+        <span style="padding: 6px 12px; background: var(--color-accent-gradient); border-radius: 6px; font-weight: bold;">
+          ${teamStats.points} PTS
+        </span>
+        <span style="padding: 6px 12px; background: var(--color-bg-tertiary); border-radius: 6px;">
+          ${teamStats.goalFor} GF
+        </span>
+        <span style="padding: 6px 12px; background: var(--color-bg-tertiary); border-radius: 6px;">
+          ${teamStats.goalAgainst} GA
+        </span>
+        <span style="padding: 6px 12px; background: var(--color-bg-tertiary); border-radius: 6px;">
+          ${teamStats.goalDifferential > 0 ? '+' : ''}${teamStats.goalDifferential} DIFF
+        </span>
+      </div>
+    `;
+  } catch (error) {
+    console.error('Error loading team stats:', error);
+    statsContainer.innerHTML = '<h4>Current Season</h4><p class="text-secondary" style="font-size: 0.9rem;">Unable to load stats</p>';
+  }
 }
 
 /**

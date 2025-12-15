@@ -40,6 +40,18 @@ export async function renderSchedulePage() {
   
   await loadSchedule();
   setupScheduleHandlers();
+  
+  // Check for team query parameter and pre-fill search
+  const urlParams = new URLSearchParams(window.location.search);
+  const teamParam = urlParams.get('team');
+  if (teamParam) {
+    const searchInput = document.getElementById('schedule-search');
+    if (searchInput) {
+      searchInput.value = teamParam;
+      // Trigger filter to show games for this team
+      applyFilters();
+    }
+  }
 }
 
 async function loadSchedule() {
