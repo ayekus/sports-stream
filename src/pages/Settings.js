@@ -1,0 +1,120 @@
+/**
+ * Settings Page
+ * User preferences and configuration
+ */
+
+export async function renderSettingsPage() {
+  const app = document.getElementById('app-content');
+  
+  app.innerHTML = `
+    <div class="page">
+      <div class="container">
+        <div class="page-header">
+          <h1 class="page-title">Settings</h1>
+          <p class="page-subtitle">Configure your streaming preferences</p>
+        </div>
+        
+        <div class="settings-content">
+          <section class="card mb-lg">
+            <h3>API Configuration</h3>
+            <p class="text-secondary mb-md">Configure your API keys for enhanced features</p>
+            
+            <div class="form-group">
+              <label>API-Sports Key (Optional)</label>
+              <input 
+                type="text"
+                id="api-sports-key"
+                placeholder="Enter your API-Sports key..."
+                value="${import.meta.env.VITE_API_SPORTS_KEY || ''}"
+              />
+              <small class="text-muted">Get your free key at api-sports.io (100 requests/day)</small>
+            </div>
+            
+            <button id="save-api-key" class="mt-md">Save API Key</button>
+          </section>
+          
+          <section class="card mb-lg">
+            <h3>Cache Management</h3>
+            <p class="text-secondary mb-md">Manage cached data to improve performance</p>
+            
+            <div class="cache-stats mb-md">
+              <p><strong>Cache Size:</strong> <span id="cache-size">Calculating...</span></p>
+              <p><strong>Cached Items:</strong> <span id="cache-count">0</span></p>
+            </div>
+            
+            <button id="clear-cache">Clear All Cache</button>
+          </section>
+          
+          <section class="card">
+            <h3>About</h3>
+            <p class="text-secondary">StreamPuck - Ad-free hockey streaming platform</p>
+            <p class="text-muted mt-md">Version 1.0.0</p>
+            <p class="text-muted">Built with ❤️ for hockey fans</p>
+            
+            <div class="mt-lg">
+              <h4>Data Sources</h4>
+              <ul class="data-sources">
+                <li>🎥 Streamed.pk - Stream links</li>
+                <li>🏒 API-Sports - NHL schedules & data</li>
+                <li>🎨 TheSportsDB - Team logos & images</li>
+              </ul>
+            </div>
+            
+            <div class="mt-lg">
+              <p class="text-muted">
+                <strong>Legal Notice:</strong> This application aggregates publicly available stream links. 
+                Users are responsible for ensuring compliance with local laws and regulations.
+              </p>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Add event listeners
+  setupSettingsHandlers();
+  updateCacheStats();
+}
+
+function setupSettingsHandlers() {
+  const saveButton = document.getElementById('save-api-key');
+  const clearButton = document.getElementById('clear-cache');
+  
+  if (saveButton) {
+    saveButton.addEventListener('click', () => {
+      const keyInput = document.getElementById('api-sports-key');
+      alert('💡 To configure API keys, create a .env file in the project root with:\nVITE_API_SPORTS_KEY=your_key_here');
+    });
+  }
+  
+  if (clearButton) {
+    clearButton.addEventListener('click', () => {
+      if (confirm('Are you sure you want to clear all cached data?')) {
+        import('../utils/cache.js').then(({ cache }) => {
+          cache.clear();
+          updateCacheStats();
+          alert('✅ Cache cleared successfully!');
+        });
+      }
+    });
+  }
+}
+
+function updateCacheStats() {
+  import('../utils/cache.js').then(({ cache }) => {
+    const sizeElement = document.getElementById('cache-size');
+    const countElement = document.getElementById('cache-count');
+    
+    if (sizeElement) {
+      const size = cache.getCacheSize();
+      const sizeKB = (size / 1024).toFixed(2);
+      sizeElement.textContent = `${sizeKB} KB`;
+    }
+    
+    if (countElement) {
+      const count = cache.keys().length;
+      countElement.textContent = count;
+    }
+  });
+}
