@@ -111,10 +111,16 @@ function renderTeamCards(teams) {
   teams.forEach(team => {
     const card = createTeamCard(team);
     
-    // Add click handler for detail button
+    // Make entire card clickable
+    card.addEventListener('click', () => showTeamDetails(team));
+    
+    // Button still works independently (stops propagation)
     const button = card.querySelector('.team-button');
     if (button) {
-      button.addEventListener('click', () => showTeamDetails(team));
+      button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showTeamDetails(team);
+      });
     }
     
     grid.appendChild(card);

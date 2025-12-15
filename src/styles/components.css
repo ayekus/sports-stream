@@ -593,10 +593,12 @@
   text-align: center;
   padding: var(--spacing-xl);
   transition: all var(--transition-base);
+  cursor: pointer;
 }
 
 .team-card:hover {
   transform: translateY(-8px);
+  box-shadow: var(--shadow-glow);
 }
 
 .team-logo {
@@ -825,6 +827,43 @@
 .schedule-list {
   display: flex;
   flex-direction: column;
+  gap: 0;
+}
+
+/* Date Header Styling */
+.schedule-date-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-accent-gradient);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+}
+
+/* Add spacing between date sections */
+.schedule-date-header:not(:first-child) {
+  margin-top: var(--spacing-2xl);
+  margin-bottom: var(--spacing-lg);
+}
+
+.schedule-date-header .date-title {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.schedule-date-header .game-count {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.games-by-date {
+  display: flex;
+  flex-direction: column;
   gap: var(--spacing-md);
 }
 
@@ -834,6 +873,13 @@
   gap: var(--spacing-lg);
   align-items: center;
   padding: var(--spacing-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.game-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
 }
 
 .game-time {

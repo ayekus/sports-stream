@@ -27,7 +27,6 @@ export function createHeader() {
           </a>
         </div>
         <nav class="nav">
-          <a href="/" data-link class="nav-link">Home</a>
           <a href="/schedule" data-link class="nav-link">Schedule</a>
           <a href="/teams" data-link class="nav-link">Teams</a>
           <a href="/standings" data-link class="nav-link">Standings</a>

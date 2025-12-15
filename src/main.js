@@ -7,7 +7,6 @@ import './styles/index.css';
 import './styles/components.css';
 import { router } from './router.js';
 import { createHeader } from './components/Header.js';
-import { renderHomePage } from './pages/Home.js';
 import { renderMatchPage } from './pages/Match.js';
 import { renderSettingsPage } from './pages/Settings.js';
 import { renderTeamsPage } from './pages/Teams.js';
@@ -29,7 +28,7 @@ function initApp() {
   headerContainer.appendChild(createHeader());
   
   // Setup routes
-  router.route('/', renderHomePage);
+  router.route('/', renderSchedulePage); // Redirect home to schedule
   router.route('/match/:id', renderMatchPage);
   router.route('/schedule', renderSchedulePage);
   router.route('/teams', renderTeamsPage);

@@ -171,9 +171,43 @@ function renderGameCards(games) {
     return;
   }
   
+  // Group games by date
+  const gamesByDate = {};
   games.forEach(game => {
-    const card = createGameCard(game);
-    list.appendChild(card);
+    const gameDate = new Date(game.time);
+    const dateKey = gameDate.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    
+    if (!gamesByDate[dateKey]) {
+      gamesByDate[dateKey] = [];
+    }
+    gamesByDate[dateKey].push(game);
+  });
+  
+  // Render games grouped by date
+  Object.entries(gamesByDate).forEach(([date, gamesForDate]) => {
+    // Create date header
+    const dateHeader = document.createElement('div');
+    dateHeader.className = 'schedule-date-header';
+    dateHeader.innerHTML = `
+      <h3 class="date-title">${date}</h3>
+      <span class="game-count">${gamesForDate.length} game${gamesForDate.length !== 1 ? 's' : ''}</span>
+    `;
+    list.appendChild(dateHeader);
+    
+    // Create games container for this date
+    const gamesContainer = document.createElement('div');
+    gamesContainer.className = 'games-by-date';
+    
+    gamesForDate.forEach(game => {
+      const card = createGameCard(game);
+      gamesContainer.appendChild(card);
+    });
+    
+    list.appendChild(gamesContainer);
   });
 }
 
@@ -222,9 +256,15 @@ function createGameCard(game) {
     </div>
   `;
   
-  // Add click handler for watch button
+  // Make entire card clickable
+  card.addEventListener('click', () => {
+    router.navigateTo(`/match/${game.id}`);
+  });
+  
+  // Prevent button from bubbling up (button does same thing as card)
   const button = card.querySelector('.watch-button-small');
-  button.addEventListener('click', () => {
+  button.addEventListener('click', (e) => {
+    e.stopPropagation();
     router.navigateTo(`/match/${game.id}`);
   });
   
