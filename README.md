@@ -32,23 +32,11 @@ npm run dev
 
 Open http://localhost:5173 in your browser.
 
-### Optional: Configure API Keys
-
-For enhanced features (NHL schedules, team data):
-
-1. Copy `.env.example` to `.env`
-2. Get a free API key from [API-Sports](https://api-sports.io/)
-3. Add to `.env`:
-   ```
-   VITE_API_SPORTS_KEY=your_key_here
-   ```
-4. Restart the dev server
-
 ## Project Structure
 
 ```
 src/
-├── services/       # API integrations (Streamed.pk, API-Sports, TheSportsDB)
+├── services/       # API integrations (Streamed.pk, TheSportsDB)
 ├── components/     # Reusable UI components
 ├── pages/          # Page components
 ├── styles/         # Global and component styles
@@ -59,8 +47,7 @@ src/
 
 ## API Sources
 
-- **Streamed.pk** - Live stream links
-- **API-Sports** - NHL schedules and statistics (optional)
+- **Streamed.pk** - Live stream links and match schedules
 - **TheSportsDB** - Team logos and images
 
 ## Technology Stack

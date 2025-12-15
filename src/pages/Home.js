@@ -3,7 +3,7 @@
  * Displays hockey matches from Streamed.pk
  */
 
-import { getHockeyMatches } from '../services/streamedApi.js';
+import { getHockeyMatches, getTeamBadgeUrl } from '../services/streamedApi.js';
 import { createMatchCard } from '../components/MatchCard.js';
 
 export async function renderHomePage() {
@@ -26,7 +26,8 @@ export async function renderHomePage() {
   `;
   
   try {
-    const matches = await getHockeyMatches();
+    // Get today's hockey matches
+    const matches = await getHockeyMatches('today');
     
     if (matches.length === 0) {
       app.innerHTML = `
@@ -40,7 +41,7 @@ export async function renderHomePage() {
             <div class="empty-state">
               <div class="empty-state-icon">🏒</div>
               <h2 class="empty-state-title">No Matches Available</h2>
-              <p>There are no hockey matches streaming right now. Check back later!</p>
+              <p>There are no hockey matches streaming today. Check back later!</p>
             </div>
           </div>
         </div>
@@ -49,20 +50,9 @@ export async function renderHomePage() {
     }
     
     // Separate matches by status
-    const liveMatches = matches.filter(m => {
-      const status = determineStatus(m.time);
-      return status === 'live';
-    });
-    
-    const upcomingMatches = matches.filter(m => {
-      const status = determineStatus(m.time);
-      return status === 'upcoming';
-    });
-    
-    const finishedMatches = matches.filter(m => {
-      const status = determineStatus(m.time);
-      return status === 'finished';
-    });
+    const liveMatches = matches.filter(m => m.status === 'live');
+    const upcomingMatches = matches.filter(m => m.status === 'upcoming');
+    const finishedMatches = matches.filter(m => m.status === 'finished');
     
     // Render organized sections
     let html = `
@@ -112,24 +102,21 @@ export async function renderHomePage() {
     if (liveMatches.length > 0) {
       const liveContainer = document.getElementById('live-matches');
       liveMatches.forEach(match => {
-        const processedMatch = processMatch(match);
-        liveContainer.appendChild(createMatchCard(processedMatch));
+        liveContainer.appendChild(createMatchCard(match));
       });
     }
     
     if (upcomingMatches.length > 0) {
       const upcomingContainer = document.getElementById('upcoming-matches');
       upcomingMatches.forEach(match => {
-        const processedMatch = processMatch(match);
-        upcomingContainer.appendChild(createMatchCard(processedMatch));
+        upcomingContainer.appendChild(createMatchCard(match));
       });
     }
     
     if (finishedMatches.length > 0) {
       const finishedContainer = document.getElementById('finished-matches');
       finishedMatches.forEach(match => {
-        const processedMatch = processMatch(match);
-        finishedContainer.appendChild(createMatchCard(processedMatch));
+        finishedContainer.appendChild(createMatchCard(match));
       });
     }
     
@@ -152,27 +139,3 @@ export async function renderHomePage() {
   }
 }
 
-function processMatch(match) {
-  return {
-    id: match.id,
-    title: match.title,
-    time: match.time,
-    league: match.league || 'Hockey',
-    sources: match.sources || [],
-    status: determineStatus(match.time)
-  };
-}
-
-function determineStatus(matchTime) {
-  const now = new Date();
-  const matchDate = new Date(matchTime);
-  const endTime = new Date(matchDate.getTime() + 3 * 60 * 60 * 1000); // +3 hours
-  
-  if (now >= matchDate && now <= endTime) {
-    return 'live';
-  } else if (now < matchDate) {
-    return 'upcoming';
-  } else {
-    return 'finished';
-  }
-}

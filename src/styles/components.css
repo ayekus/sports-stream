@@ -907,6 +907,13 @@
   font-size: var(--font-size-sm);
 }
 
+.watch-button-small {
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  width: auto;
+  min-width: 120px;
+}
+
 /* Responsive Updates */
 @media (max-width: 768px) {
   .teams-grid {

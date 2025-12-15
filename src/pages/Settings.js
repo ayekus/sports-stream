@@ -16,24 +16,6 @@ export async function renderSettingsPage() {
         
         <div class="settings-content">
           <section class="card mb-lg">
-            <h3>API Configuration</h3>
-            <p class="text-secondary mb-md">Configure your API keys for enhanced features</p>
-            
-            <div class="form-group">
-              <label>API-Sports Key (Optional)</label>
-              <input 
-                type="text"
-                id="api-sports-key"
-                placeholder="Enter your API-Sports key..."
-                value="${import.meta.env.VITE_API_SPORTS_KEY || ''}"
-              />
-              <small class="text-muted">Get your free key at api-sports.io (100 requests/day)</small>
-            </div>
-            
-            <button id="save-api-key" class="mt-md">Save API Key</button>
-          </section>
-          
-          <section class="card mb-lg">
             <h3>Cache Management</h3>
             <p class="text-secondary mb-md">Manage cached data to improve performance</p>
             
@@ -55,7 +37,6 @@ export async function renderSettingsPage() {
               <h4>Data Sources</h4>
               <ul class="data-sources">
                 <li>🎥 Streamed.pk - Stream links</li>
-                <li>🏒 API-Sports - NHL schedules & data</li>
                 <li>🎨 TheSportsDB - Team logos & images</li>
               </ul>
             </div>
@@ -78,15 +59,7 @@ export async function renderSettingsPage() {
 }
 
 function setupSettingsHandlers() {
-  const saveButton = document.getElementById('save-api-key');
   const clearButton = document.getElementById('clear-cache');
-  
-  if (saveButton) {
-    saveButton.addEventListener('click', () => {
-      const keyInput = document.getElementById('api-sports-key');
-      alert('💡 To configure API keys, create a .env file in the project root with:\nVITE_API_SPORTS_KEY=your_key_here');
-    });
-  }
   
   if (clearButton) {
     clearButton.addEventListener('click', () => {

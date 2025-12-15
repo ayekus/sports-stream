@@ -1,35 +1,31 @@
 /**
  * Schedule Page
- * Calendar view of upcoming NHL games
+ * Shows upcoming and live hockey games from Streamed.pk
  */
 
-import { getGamesByDate } from '../services/hockeyApi.js';
-import { toAPIDate, formatDate, formatTime } from '../utils/date.js';
-import { searchTeam } from '../services/sportsDbApi.js';
+import { getHockeyMatches, getTeamBadgeUrl } from '../services/streamedApi.js';
+import { formatTime, formatDate } from '../utils/date.js';
+import { router } from '../router.js';
 
 let currentGames = [];
 
 export async function renderSchedulePage() {
   const app = document.getElementById('app-content');
   
-  const today = new Date();
-  const todayStr = toAPIDate(today);
-  
   app.innerHTML = `
     <div class="page">
       <div class="container">
         <div class="page-header">
           <h1 class="page-title">Game Schedule</h1>
-          <p class="page-subtitle">NHL games and fixtures</p>
+          <p class="page-subtitle">Live and upcoming hockey matches</p>
         </div>
         
         <div class="schedule-controls mb-lg">
-          <input 
-            type="date" 
-            id="date-picker" 
-            value="${todayStr}"
-            class="date-picker"
-          />
+          <select id="filter-select" class="sort-select">
+            <option value="all">All Games</option>
+            <option value="live">Live Only</option>
+            <option value="upcoming">Upcoming Only</option>
+          </select>
           <input 
             type="text" 
             id="schedule-search" 
@@ -46,23 +42,24 @@ export async function renderSchedulePage() {
     </div>
   `;
   
-  await loadSchedule(todayStr);
+  await loadSchedule();
   setupScheduleHandlers();
 }
 
-async function loadSchedule(date) {
+async function loadSchedule() {
   const app = document.getElementById('app-content');
   
   try {
-    const games = await getGamesByDate(date);
+    // Get all hockey games for today
+    const games = await getHockeyMatches('today');
     currentGames = games;
     
     if (games.length === 0) {
-      renderEmptySchedule(date);
+      renderEmptySchedule();
       return;
     }
     
-    renderScheduleUI(games, date);
+    renderScheduleUI(games);
     
   } catch (error) {
     console.error('Error loading schedule:', error);
@@ -72,16 +69,15 @@ async function loadSchedule(date) {
         <div class="container">
           <div class="page-header">
             <h1 class="page-title">Game Schedule</h1>
-            <p class="page-subtitle">NHL games and fixtures</p>
+            <p class="page-subtitle">Live and upcoming hockey matches</p>
           </div>
           
           <div class="schedule-controls mb-lg">
-            <input 
-              type="date" 
-              id="date-picker" 
-              value="${date}"
-              class="date-picker"
-            />
+            <select id="filter-select" class="sort-select">
+              <option value="all">All Games</option>
+              <option value="live">Live Only</option>
+              <option value="upcoming">Upcoming Only</option>
+            </select>
             <input 
               type="text" 
               id="schedule-search" 
@@ -91,18 +87,16 @@ async function loadSchedule(date) {
           </div>
           
           <div class="error-message">
-            <p>⚠️ Failed to load schedule. ${!import.meta.env.VITE_API_SPORTS_KEY ? 'API key not configured.' : 'Please try again later.'}</p>
-            ${!import.meta.env.VITE_API_SPORTS_KEY ? `
-              <p class="mt-md text-secondary">Configure your API-Sports key in Settings to enable this feature.</p>
-            ` : ''}
+            <p>⚠️ Failed to load schedule. Please try again later.</p>
           </div>
         </div>
       </div>
     `;
+    setupScheduleHandlers();
   }
 }
 
-function renderEmptySchedule(date) {
+function renderEmptySchedule() {
   const app = document.getElementById('app-content');
   
   app.innerHTML = `
@@ -110,16 +104,15 @@ function renderEmptySchedule(date) {
       <div class="container">
         <div class="page-header">
           <h1 class="page-title">Game Schedule</h1>
-          <p class="page-subtitle">NHL games and fixtures</p>
+          <p class="page-subtitle">Live and upcoming hockey matches</p>
         </div>
         
         <div class="schedule-controls mb-lg">
-          <input 
-            type="date" 
-            id="date-picker" 
-            value="${date}"
-            class="date-picker"
-          />
+          <select id="filter-select" class="sort-select">
+            <option value="all">All Games</option>
+            <option value="live">Live Only</option>
+            <option value="upcoming">Upcoming Only</option>
+          </select>
           <input 
             type="text" 
             id="schedule-search" 
@@ -131,7 +124,7 @@ function renderEmptySchedule(date) {
         <div class="empty-state">
           <div class="empty-state-icon">📅</div>
           <h2 class="empty-state-title">No Games Scheduled</h2>
-          <p>There are no NHL games scheduled for ${formatDate(new Date(date))}.</p>
+          <p>There are no hockey games scheduled for today.</p>
         </div>
       </div>
     </div>
@@ -140,24 +133,26 @@ function renderEmptySchedule(date) {
   setupScheduleHandlers();
 }
 
-function renderScheduleUI(games, date) {
+function renderScheduleUI(games) {
   const app = document.getElementById('app-content');
+  
+  const liveGames = games.filter(g => g.status === 'live');
+  const upcomingGames = games.filter(g => g.status === 'upcoming');
   
   app.innerHTML = `
     <div class="page">
       <div class="container">
         <div class="page-header">
           <h1 class="page-title">Game Schedule</h1>
-          <p class="page-subtitle">${games.length} game${games.length !== 1 ? 's' : ''} on ${formatDate(new Date(date))}</p>
+          <p class="page-subtitle">${games.length} game${games.length !== 1 ? 's' : ''} today</p>
         </div>
         
         <div class="schedule-controls mb-lg">
-          <input 
-            type="date" 
-            id="date-picker" 
-            value="${date}"
-            class="date-picker"
-          />
+          <select id="filter-select" class="sort-select">
+            <option value="all">All Games (${games.length})</option>
+            <option value="live">Live Only (${liveGames.length})</option>
+            <option value="upcoming">Upcoming Only (${upcomingGames.length})</option>
+          </select>
           <input 
             type="text" 
             id="schedule-search" 
@@ -180,6 +175,11 @@ function renderGameCards(games) {
   
   list.innerHTML = '';
   
+  if (games.length === 0) {
+    list.innerHTML = '<p class="text-center text-secondary">No games match your filter.</p>';
+    return;
+  }
+  
   games.forEach(game => {
     const card = createGameCard(game);
     list.appendChild(card);
@@ -190,9 +190,17 @@ function createGameCard(game) {
   const card = document.createElement('div');
   card.className = 'game-card card';
   
-  const gameTime = new Date(game.timestamp * 1000);
-  const status = game.status?.short || 'NS';
-  const isLive = status === '1P' || status === '2P' || status === '3P' || status === 'OT';
+  const gameTime = new Date(game.time);
+  const isLive = game.status === 'live';
+  
+  // Extract team names from title or use teams object
+  let homeTeam = 'TBA';
+  let awayTeam = 'TBA';
+  
+  if (game.teams) {
+    homeTeam = game.teams.home?.name || 'TBA';
+    awayTeam = game.teams.away?.name || 'TBA';
+  }
   
   card.innerHTML = `
     <div class="game-time">
@@ -202,47 +210,84 @@ function createGameCard(game) {
     
     <div class="game-teams">
       <div class="team">
-        ${game.teams?.away?.logo ? `<img src="${game.teams.away.logo}" alt="${game.teams.away.name}" class="team-logo-small" />` : ''}
-        <span class="team-name">${game.teams?.away?.name || 'TBA'}</span>
-        ${game.scores?.away !== null ? `<span class="team-score">${game.scores.away}</span>` : ''}
+        ${game.teams?.away?.badge ? `<img src="${getTeamBadgeUrl(game.teams.away.badge)}" alt="${awayTeam}" class="team-logo-small" onerror="this.style.display='none'" />` : ''}
+        <span class="team-name">${awayTeam}</span>
       </div>
       
       <div class="game-vs">VS</div>
       
       <div class="team">
-        ${game.teams?.home?.logo ? `<img src="${game.teams.home.logo}" alt="${game.teams.home.name}" class="team-logo-small" />` : ''}
-        <span class="team-name">${game.teams?.home?.name || 'TBA'}</span>
-        ${game.scores?.home !== null ? `<span class="team-score">${game.scores.home}</span>` : ''}
+        ${game.teams?.home?.badge ? `<img src="${getTeamBadgeUrl(game.teams.home.badge)}" alt="${homeTeam}" class="team-logo-small" onerror="this.style.display='none'" />` : ''}
+        <span class="team-name">${homeTeam}</span>
       </div>
     </div>
     
     <div class="game-status">
-      <span class="status-text">${game.status?.long || 'Not Started'}</span>
-      ${game.league?.name ? `<span class="league-name text-muted">${game.league.name}</span>` : ''}
+      <span class="status-text">${game.status === 'live' ? 'Live Now' : game.status === 'upcoming' ? 'Upcoming' : 'Finished'}</span>
+      <span class="league-name text-muted">${game.league || 'Hockey'}</span>
+      <button class="watch-button-small mt-sm" data-game-id="${game.id}">
+        ${isLive ? '🔴 Watch' : 'View Streams'}
+      </button>
     </div>
   `;
+  
+  // Add click handler for watch button
+  const button = card.querySelector('.watch-button-small');
+  button.addEventListener('click', () => {
+    router.navigateTo(`/match/${game.id}`);
+  });
   
   return card;
 }
 
 function setupScheduleHandlers() {
-  const datePicker = document.getElementById('date-picker');
+  const filterSelect = document.getElementById('filter-select');
   const searchInput = document.getElementById('schedule-search');
   
-  if (datePicker) {
-    datePicker.addEventListener('change', (e) => {
-      loadSchedule(e.target.value);
+  if (filterSelect) {
+    filterSelect.addEventListener('change', (e) => {
+      applyFilters();
     });
   }
   
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase();
-      const filtered = currentGames.filter(game =>
-        game.teams?.home?.name?.toLowerCase().includes(query) ||
-        game.teams?.away?.name?.toLowerCase().includes(query)
-      );
-      renderGameCards(filtered);
+      applyFilters();
     });
   }
+}
+
+function applyFilters() {
+  const filterSelect = document.getElementById('filter-select');
+  const searchInput = document.getElementById('schedule-search');
+  
+  let filtered = [...currentGames];
+  
+  // Apply status filter
+  if (filterSelect) {
+    const filterValue = filterSelect.value;
+    if (filterValue === 'live') {
+      filtered = filtered.filter(g => g.status === 'live');
+    } else if (filterValue === 'upcoming') {
+      filtered = filtered.filter(g => g.status === 'upcoming');
+    }
+  }
+  
+  // Apply search filter
+  if (searchInput) {
+    const query = searchInput.value.toLowerCase();
+    if (query) {
+      filtered = filtered.filter(game => {
+        const homeTeam = game.teams?.home?.name?.toLowerCase() || '';
+        const awayTeam = game.teams?.away?.name?.toLowerCase() || '';
+        const title = game.title?.toLowerCase() || '';
+        
+        return homeTeam.includes(query) || 
+               awayTeam.includes(query) || 
+               title.includes(query);
+      });
+    }
+  }
+  
+  renderGameCards(filtered);
 }

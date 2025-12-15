@@ -3,8 +3,7 @@
  * Shows stream player and match information
  */
 
-import { getStreamUrls } from '../services/streamedApi.js';
-import { getHockeyMatches } from '../services/streamedApi.js';
+import { getStreamUrls, getHockeyMatches, getTeamBadgeUrl } from '../services/streamedApi.js';
 import { createVideoPlayer } from '../components/VideoPlayer.js';
 
 let currentPlayer = null;
@@ -27,8 +26,8 @@ export async function renderMatchPage(params) {
   `;
   
   try {
-    // Get match data
-    const matches = await getHockeyMatches();
+    // Get match data from today's matches
+    const matches = await getHockeyMatches('today');
     const match = matches.find(m => m.id === matchId);
     
     if (!match) {
