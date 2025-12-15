@@ -9,6 +9,14 @@ export function createHeader() {
   const header = document.createElement('header');
   header.className = 'site-header';
   
+  const navItems = [
+    { path: '/', label: 'Home' },
+    { path: '/schedule', label: 'Schedule' },
+    { path: '/teams', label: 'Teams' },
+    { path: '/standings', label: 'Standings' },
+    { path: '/settings', label: 'Settings' }
+  ];
+  
   header.innerHTML = `
     <div class="container">
       <div class="header-content">
@@ -22,6 +30,7 @@ export function createHeader() {
           <a href="/" data-link class="nav-link">Home</a>
           <a href="/schedule" data-link class="nav-link">Schedule</a>
           <a href="/teams" data-link class="nav-link">Teams</a>
+          <a href="/standings" data-link class="nav-link">Standings</a>
           <a href="/settings" data-link class="nav-link">Settings</a>
         </nav>
       </div>

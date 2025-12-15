@@ -12,6 +12,7 @@ import { renderMatchPage } from './pages/Match.js';
 import { renderSettingsPage } from './pages/Settings.js';
 import { renderTeamsPage } from './pages/Teams.js';
 import { renderSchedulePage } from './pages/Schedule.js';
+import { renderStandingsPage } from './pages/Standings.js';
 
 // Initialize app
 function initApp() {
@@ -32,6 +33,7 @@ function initApp() {
   router.route('/match/:id', renderMatchPage);
   router.route('/schedule', renderSchedulePage);
   router.route('/teams', renderTeamsPage);
+  router.route('/standings', renderStandingsPage);
   router.route('/settings', renderSettingsPage);
   
   // Start router

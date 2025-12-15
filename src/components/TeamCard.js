@@ -81,10 +81,6 @@ export function createTeamModal(team) {
               <span class="detail-value">${team.strStadium || 'Unknown'}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Location</span>
-              <span class="detail-value">${team.strStadiumLocation || 'Unknown'}</span>
-            </div>
-            <div class="detail-item">
               <span class="detail-label">Founded</span>
               <span class="detail-value">${team.intFormedYear || 'N/A'}</span>
             </div>
