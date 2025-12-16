@@ -5,6 +5,7 @@
 
 import { getStreamUrls, getHockeyMatches, getTeamBadgeUrl } from '../services/streamedApi.js';
 import { createVideoPlayer } from '../components/VideoPlayer.js';
+import { extractStreamUrl } from '../utils/streamExtractor.js';
 
 let currentPlayer = null;
 let currentMatch = null;
@@ -70,6 +71,9 @@ export async function renderMatchPage(params) {
     // Load first stream
     await loadStream(0);
     
+    // Setup global redirect blocking
+    setupRedirectBlocking();
+    
   } catch (error) {
     console.error('Error loading match:', error);
     app.innerHTML = `
@@ -85,6 +89,53 @@ export async function renderMatchPage(params) {
   }
 }
 
+/**
+ * Setup global redirect blocking
+ * Prevents the page from being navigated away by ads
+ */
+function setupRedirectBlocking() {
+  console.log('🛡️ Setting up redirect blocking...');
+  
+  // 1. Block window.open (pop-ups)
+  window.open = function(...args) {
+    console.log('🛡️ Blocked window.open:', args[0]);
+    return null;
+  };
+  
+  // 2. Monitor URL changes and go back immediately
+  let lastUrl = window.location.href;
+  setInterval(() => {
+    const currentUrl = window.location.href;
+    if (currentUrl !== lastUrl) {
+      if (currentUrl.includes('/match/')) {
+        // Still on a match page, update tracker
+        lastUrl = currentUrl;
+      } else {
+        // Redirected away, go back
+        console.log('🛡️ Redirect detected, going back immediately');
+        window.history.back();
+        lastUrl = window.location.href;
+      }
+    }
+  }, 50);
+  
+  // 3. Block external links
+  document.addEventListener('click', (e) => {
+    let target = e.target;
+    while (target && target !== document) {
+      if (target.tagName === 'A' && target.href && !target.href.startsWith(window.location.origin)) {
+        console.log('🛡️ Blocked external link:', target.href);
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+      target = target.parentElement;
+    }
+  }, true);
+  
+  console.log('✅ Redirect blocking enabled');
+}
+
 function renderMatchUI(match) {
   const app = document.getElementById('app-content');
   
@@ -97,6 +148,16 @@ function renderMatchUI(match) {
         
         <h1 class="page-title">${match.title}</h1>
         <p class="text-secondary mb-lg">${match.league || 'Hockey'}</p>
+        
+        <div class="alert alert-info mb-lg" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 1rem;">
+          <div style="display: flex; align-items: start; gap: 0.75rem;">
+            <div style="font-size: 1.25rem;">ℹ️</div>
+            <div>
+              <strong style="display: block; margin-bottom: 0.25rem;">Stream Loading Notice</strong>
+              <p style="margin: 0; opacity: 0.9; font-size: 0.9rem;">Due to free streaming sources, you may need to click 2-3 times to bypass redirects and load the stream. This is a limitation of the embed provider.</p>
+            </div>
+          </div>
+        </div>
         
         <div class="player-wrapper">
           <div id="video-player-container" class="video-container"></div>
@@ -159,11 +220,34 @@ async function loadStream(sourceIndex) {
   
   try {
     // Show loading
-    if (loading) loading.style.display = 'flex';
+    if (loading) {
+      loading.style.display = 'flex';
+      loading.innerHTML = `
+        <div class="loading"></div>
+        <p>Extracting stream URL...</p>
+      `;
+    }
     if (container) container.style.display = 'none';
     
-    // Get stream URLs
+    // Get stream URLs from API
     const streamData = await getStreamUrls(source.source, source.id);
+    const embedUrl = streamData.embedUrl || streamData.streamUrl || streamData.url;
+    
+    if (!embedUrl) {
+      throw new Error('No embed URL available');
+    }
+    
+    console.log('📺 Embed URL:', embedUrl);
+    
+    // Try to extract direct stream URL
+    if (loading) {
+      loading.innerHTML = `
+        <div class="loading"></div>
+        <p>Extracting direct stream URL...</p>
+      `;
+    }
+    
+    const extractionResult = await extractStreamUrl(embedUrl);
     
     // Hide loading
     if (loading) loading.style.display = 'none';
@@ -176,12 +260,13 @@ async function loadStream(sourceIndex) {
     
     currentPlayer = createVideoPlayer(container);
     
-    // Load stream (default to iframe for compatibility)
-    const streamUrl = streamData.embedUrl || streamData.streamUrl || streamData.url;
-    if (streamUrl) {
-      currentPlayer.init(streamUrl, 'iframe');
+    // Use extracted URL if successful, otherwise fall back to iframe
+    if (extractionResult.success && extractionResult.streamUrl) {
+      console.log('✅ Using extracted stream URL');
+      currentPlayer.init(extractionResult.streamUrl, 'auto');
     } else {
-      throw new Error('No stream URL available');
+      console.log('⚠️ Extraction failed, using iframe embed');
+      currentPlayer.init(embedUrl, 'iframe');
     }
     
     // Update active button
