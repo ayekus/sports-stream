@@ -49,7 +49,7 @@ export function updateActiveNav() {
   links.forEach(link => {
     link.classList.remove('active');
     if (link.getAttribute('href') === currentPath || 
-        (currentPath === '/' && link.getAttribute('href') === '/')) {
+        (currentPath === '/' && link.getAttribute('href') === '/schedule')) {
       link.classList.add('active');
     }
   });
