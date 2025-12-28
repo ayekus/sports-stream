@@ -67,7 +67,7 @@ export async function renderMatchPage(params) {
     
     // Render match page
     renderMatchUI(match);
-    
+
     // Load first stream
     await loadStream(0);
     
@@ -102,32 +102,22 @@ function setupRedirectBlocking() {
     return null;
   };
   
-  // 2. Monitor URL changes and go back immediately
-  let lastUrl = window.location.href;
-  setInterval(() => {
-    const currentUrl = window.location.href;
-    if (currentUrl !== lastUrl) {
-      if (currentUrl.includes('/match/')) {
-        // Still on a match page, update tracker
-        lastUrl = currentUrl;
-      } else {
-        // Redirected away, go back
-        console.log('🛡️ Redirect detected, going back immediately');
-        window.history.back();
-        lastUrl = window.location.href;
-      }
-    }
-  }, 50);
-  
-  // 3. Block external links
+  // 2. Block external links (but allow internal navigation)
   document.addEventListener('click', (e) => {
     let target = e.target;
     while (target && target !== document) {
-      if (target.tagName === 'A' && target.href && !target.href.startsWith(window.location.origin)) {
-        console.log('🛡️ Blocked external link:', target.href);
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
+      if (target.tagName === 'A' && target.href) {
+        // Allow internal navigation links (with data-link attribute)
+        if (target.hasAttribute('data-link')) {
+          return; // Let the router handle it
+        }
+        // Block external links
+        if (!target.href.startsWith(window.location.origin)) {
+          console.log('🛡️ Blocked external link:', target.href);
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
       }
       target = target.parentElement;
     }
@@ -156,7 +146,7 @@ function renderMatchUI(match) {
               <strong style="display: block; margin-bottom: 0.25rem;">Stream Loading Notice</strong>
               <p style="margin: 0; opacity: 0.9; font-size: 0.9rem;">Due to free streaming sources, you may need to click 2-3 times to bypass redirects and load the stream. This is a limitation of the embed provider.</p>
             </div>
-          </div>
+            </div>
         </div>
         
         <div class="player-wrapper">
@@ -167,9 +157,9 @@ function renderMatchUI(match) {
           </div>
         </div>
         
-        ${currentSources.length > 1 ? `
-          <div class="stream-sources mt-lg">
-            <h3>Available Streams</h3>
+        <div class="stream-sources mt-lg">
+          <h3>Stream Information</h3>
+          ${currentSources.length > 1 ? `
             <div class="sources-list" id="sources-list">
               ${currentSources.map((source, idx) => `
                 <button 
@@ -182,8 +172,10 @@ function renderMatchUI(match) {
                 </button>
               `).join('')}
             </div>
-          </div>
-        ` : ''}
+          ` : `
+            <p class="text-secondary">Source: ${currentSources[0]?.source || 'Unknown'} (${currentSources[0]?.id || 'N/A'})</p>
+          `}
+        </div>
         
         <div class="match-details mt-xl card">
           <h3>Match Details</h3>
