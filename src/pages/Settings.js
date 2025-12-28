@@ -32,8 +32,9 @@ export async function renderSettingsPage() {
             <div class="mt-lg">
               <h4>Data Sources</h4>
               <ul class="data-sources">
-                <li>🎥 Streamed.pk - Stream links</li>
-                <li>🎨 TheSportsDB - Team logos & images</li>
+                <li>🎥 Streamed.pk - Live stream links & schedules</li>
+                <li>🏒 NHL API - Real-time standings & statistics</li>
+                <li>🎨 TheSportsDB - Team information & images</li>
               </ul>
             </div>
             

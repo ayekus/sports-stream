@@ -4,7 +4,7 @@
  */
 
 import { getHockeyMatches, getTeamBadgeUrl } from '../services/streamedApi.js';
-import { formatTime, formatDate } from '../utils/date.js';
+import { formatTime } from '../utils/date.js';
 import { router } from '../router.js';
 
 let currentGames = [];
