@@ -11,6 +11,12 @@ A modern, ad-free hockey streaming platform built with Vite and Vanilla JavaScri
 - 🎯 Match categorization (Live, Upcoming, Finished)
 - ⚙️ Cache management and settings
 
+## Demo
+
+![Demo Video](assets/demo.webp)
+
+*Video demonstration showing the StreamPuck interface, match listings, stream selection, and cache management features.*
+
 ## Getting Started
 
 ### Prerequisites
