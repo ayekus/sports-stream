@@ -1,0 +1,176 @@
+/* Enhanced Game Card Styles - Single Row Layout */
+
+.game-card {
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.game-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 255, 200, 0.15);
+}
+
+/* Single Row Layout */
+.game-card-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
+}
+
+/* Time Section - Left Side */
+.game-time-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 90px;
+  flex-shrink: 0;
+}
+
+.time-large {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.live-indicator {
+  color: #ff3366;
+  font-size: 1.25rem;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Vertical Divider */
+.game-divider {
+  width: 2px;
+  height: 40px;
+  background: linear-gradient(180deg, 
+    rgba(0, 255, 200, 0) 0%, 
+    rgba(0, 255, 200, 0.3) 50%, 
+    rgba(0, 255, 200, 0) 100%);
+  flex-shrink: 0;
+}
+
+/* Matchup Row - Center */
+.game-matchup-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  flex: 1;
+}
+
+.team-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.team-section.team-home {
+  flex-direction: row-reverse;
+}
+
+.team-logo-inline {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.team-name-large {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+/* Score Display */
+.score-display-large {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1rem;
+}
+
+.score-num {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  min-width: 2.5rem;
+  text-align: center;
+}
+
+.score-sep {
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  opacity: 0.5;
+}
+
+/* VS Text for Non-Live Games */
+.vs-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  opacity: 0.4;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .game-card-row {
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .team-name-large {
+    font-size: 1rem;
+  }
+  
+  .score-num {
+    font-size: 1.5rem;
+    min-width: 2rem;
+  }
+  
+  .time-large {
+    font-size: 1rem;
+  }
+  
+  .game-divider {
+    height: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-card-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  
+  .game-divider {
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, 
+      rgba(0, 255, 200, 0) 0%, 
+      rgba(0, 255, 200, 0.3) 50%, 
+      rgba(0, 255, 200, 0) 100%);
+  }
+  
+  .game-time-section {
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .game-matchup-row {
+    justify-content: space-between;
+  }
+}

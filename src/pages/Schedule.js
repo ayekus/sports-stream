@@ -162,6 +162,9 @@ function renderScheduleUI(games) {
             placeholder="Search teams..." 
             class="search-input"
           />
+          <button id="refresh-stats" class="refresh-stats-btn" title="Refresh live scores">
+            🔄 Refresh Stats
+          </button>
         </div>
         
         <div class="schedule-list" id="schedule-list"></div>
@@ -239,44 +242,74 @@ function createGameCard(game) {
     awayTeam = game.teams.away?.name || 'TBA';
   }
   
+  const liveData = game.liveData;
+  
+  // Format period display
+  let periodDisplay = '';
+  if (liveData && isLive) {
+    const periodMap = {
+      'REG': (num) => ['1st', '2nd', '3rd'][num - 1] || `${num}th`,
+      'OT': (num) => num > 4 ? `${num - 3}OT` : 'OT',
+      'SO': () => 'SO'
+    };
+    
+    const periodText = periodMap[liveData.periodType]?.(liveData.period) || '';
+    const time = liveData.timeRemaining || '';
+    
+    periodDisplay = liveData.inIntermission 
+      ? 'Intermission'
+      : `${periodText}${time ? ` - ${time}` : ''}`;
+  }
+  
   card.innerHTML = `
-    <div class="game-time">
-      <span class="time">${formatTime(gameTime)}</span>
-      ${isLive ? '<span class="badge live">Live</span>' : ''}
-    </div>
-    
-    <div class="game-teams">
-      <div class="team">
-        ${game.teams?.away?.badge ? `<img src="${getTeamBadgeUrl(game.teams.away.badge)}" alt="${awayTeam}" class="team-logo-small" onerror="this.style.display='none'" />` : ''}
-        <span class="team-name">${awayTeam}</span>
+    <div class="game-card-row">
+      <div class="game-time-section">
+        <span class="time-large">${formatTime(gameTime)}</span>
+        ${isLive ? '<span class="live-indicator">●</span>' : ''}
       </div>
       
-      <div class="game-vs">VS</div>
+      <div class="game-divider"></div>
       
-      <div class="team">
-        ${game.teams?.home?.badge ? `<img src="${getTeamBadgeUrl(game.teams.home.badge)}" alt="${homeTeam}" class="team-logo-small" onerror="this.style.display='none'" />` : ''}
-        <span class="team-name">${homeTeam}</span>
-      </div>
-    </div>
-    
-    <div class="game-status">
-      <span class="status-text">${game.status === 'live' ? 'Live Now' : game.status === 'upcoming' ? 'Upcoming' : 'Finished'}</span>
-      <span class="league-name text-muted">${game.league || 'Hockey'}</span>
-      <button class="watch-button-small mt-sm" data-game-id="${game.id}">
-        ${isLive ? '🔴 Watch' : 'View Streams'}
-      </button>
+      ${liveData ? `
+        <!-- Live game with score -->
+        <div class="game-matchup-row">
+          <div class="team-section">
+            ${game.teams?.away?.badge ? `<img src="${getTeamBadgeUrl(game.teams.away.badge)}" alt="${awayTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
+            <span class="team-name-large">${awayTeam}</span>
+          </div>
+          
+          <div class="score-display-large">
+            <span class="score-num">${liveData.score.away}</span>
+            <span class="score-sep">-</span>
+            <span class="score-num">${liveData.score.home}</span>
+          </div>
+          
+          <div class="team-section team-home">
+            <span class="team-name-large">${homeTeam}</span>
+            ${game.teams?.home?.badge ? `<img src="${getTeamBadgeUrl(game.teams.home.badge)}" alt="${homeTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
+          </div>
+        </div>
+      ` : `
+        <!-- Non-live game without score -->
+        <div class="game-matchup-row">
+          <div class="team-section">
+            ${game.teams?.away?.badge ? `<img src="${getTeamBadgeUrl(game.teams.away.badge)}" alt="${awayTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
+            <span class="team-name-large">${awayTeam}</span>
+          </div>
+          
+          <span class="vs-text">vs</span>
+          
+          <div class="team-section team-home">
+            <span class="team-name-large">${homeTeam}</span>
+            ${game.teams?.home?.badge ? `<img src="${getTeamBadgeUrl(game.teams.home.badge)}" alt="${homeTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
+          </div>
+        </div>
+      `}
     </div>
   `;
   
   // Make entire card clickable
   card.addEventListener('click', () => {
-    router.navigateTo(`/match/${game.id}`);
-  });
-  
-  // Prevent button from bubbling up (button does same thing as card)
-  const button = card.querySelector('.watch-button-small');
-  button.addEventListener('click', (e) => {
-    e.stopPropagation();
     router.navigateTo(`/match/${game.id}`);
   });
   
@@ -286,6 +319,7 @@ function createGameCard(game) {
 function setupScheduleHandlers() {
   const filterSelect = document.getElementById('filter-select');
   const searchInput = document.getElementById('schedule-search');
+  const refreshButton = document.getElementById('refresh-stats');
   
   if (filterSelect) {
     filterSelect.addEventListener('change', (e) => {
@@ -296,6 +330,41 @@ function setupScheduleHandlers() {
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       applyFilters();
+    });
+  }
+  
+  if (refreshButton) {
+    refreshButton.addEventListener('click', async () => {
+      // Show loading state
+      refreshButton.disabled = true;
+      refreshButton.innerHTML = '⏳ Loading...';
+      
+      try {
+        // Clear cache
+        const { cache } = await import('../utils/cache.js');
+        cache.clear();
+        
+        // Reload schedule with fresh data
+        await loadSchedule();
+        
+        // Success feedback
+        refreshButton.innerHTML = '✅ Refreshed!';
+        setTimeout(() => {
+          if (refreshButton) {
+            refreshButton.innerHTML = '🔄 Refresh Stats';
+            refreshButton.disabled = false;
+          }
+        }, 2000);
+      } catch (error) {
+        console.error('Error refreshing stats:', error);
+        refreshButton.innerHTML = '❌ Error';
+        setTimeout(() => {
+          if (refreshButton) {
+            refreshButton.innerHTML = '🔄 Refresh Stats';
+            refreshButton.disabled = false;
+          }
+        }, 2000);
+      }
     });
   }
 }

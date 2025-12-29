@@ -852,7 +852,38 @@
   display: flex;
   gap: var(--spacing-md);
   flex-wrap: wrap;
+  align-items: center;
 }
+
+.refresh-stats-btn {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-alt));
+  border: 1px solid rgba(0, 255, 200, 0.3);
+  border-radius: var(--radius-md);
+  color: white;
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.refresh-stats-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 255, 200, 0.3);
+  border-color: var(--color-accent);
+}
+
+.refresh-stats-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.refresh-stats-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
 
 .schedule-list {
   display: flex;

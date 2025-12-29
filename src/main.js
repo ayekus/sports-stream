@@ -5,6 +5,7 @@
 
 import './styles/index.css';
 import './styles/components.css';
+import './styles/game-cards.css';
 import { router } from './router.js';
 import { createHeader } from './components/Header.js';
 import { renderMatchPage } from './pages/Match.js';

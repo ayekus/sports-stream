@@ -5,6 +5,7 @@
  */
 
 import { cache } from '../utils/cache.js';
+import * as nhlScoreApi from './nhlScoreApi.js';
 
 const BASE_URL = 'https://streamed.pk/api';
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
@@ -42,11 +43,12 @@ export async function getSports() {
 }
 
 /**
- * Get hockey matches
+ * Get hockey matches with enriched NHL data
  * @param {string} filter - 'all', 'live', or 'today' (default: 'all')
+ * @param {boolean} enrichWithNHL - Whether to enrich with NHL live data (default: true)
  * @returns {Promise<Array>} Array of hockey matches
  */
-export async function getHockeyMatches(filter = 'all') {
+export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
   let endpoint;
   let cacheKey;
   
@@ -85,8 +87,50 @@ export async function getHockeyMatches(filter = 'all') {
       matches = matches.filter(m => m.category === 'hockey');
     }
     
-    // Process matches to add computed fields
-    const processedMatches = matches.map(processMatch);
+    // Fetch NHL live scores for enrichment
+    let nhlGames = [];
+    if (enrichWithNHL) {
+      try {
+        const scoresData = await nhlScoreApi.getLiveScores();
+        nhlGames = scoresData.games || [];
+        console.log(`✅ Fetched ${nhlGames.length} NHL games for enrichment`);
+      } catch (error) {
+        console.warn('Could not fetch NHL scores for enrichment:', error);
+      }
+    }
+    
+    // Process matches and enrich with NHL data
+    const processedMatches = matches.map(match => {
+      let nhlGame = null;
+      
+      // Try to match with NHL game data
+      if (nhlGames.length > 0 && match.teams) {
+        // Try direct abbreviation first, then fallback to name-based lookup
+        let homeAbbrev = match.teams.home?.abbrev;
+        let awayAbbrev = match.teams.away?.abbrev;
+        
+        // If abbreviations aren't available, try to map from team names
+        if (!homeAbbrev && match.teams.home?.name) {
+          homeAbbrev = nhlScoreApi.getTeamAbbreviation(match.teams.home.name);
+        }
+        if (!awayAbbrev && match.teams.away?.name) {
+          awayAbbrev = nhlScoreApi.getTeamAbbreviation(match.teams.away.name);
+        }
+        
+        if (homeAbbrev && awayAbbrev) {
+          nhlGame = nhlGames.find(g =>
+            g.homeTeam?.abbrev === homeAbbrev &&
+            g.awayTeam?.abbrev === awayAbbrev
+          );
+          
+          if (nhlGame) {
+            console.log(`✅ Matched ${awayAbbrev} @ ${homeAbbrev} with NHL data`);
+          }
+        }
+      }
+      
+      return processMatch(match, nhlGame);
+    });
     
     // Cache for 15 minutes
     cache.set(cacheKey, processedMatches, CACHE_TTL);
@@ -198,24 +242,76 @@ export async function getStreamUrls(source, id) {
 /**
  * Process raw match data
  * @param {Object} match - Raw match object from API
+ * @param {Object} nhlGame - Optional NHL game data for accurate live status
  * @returns {Object} Processed match object
  */
-function processMatch(match) {
+function processMatch(match, nhlGame = null) {
   const now = Date.now();
   const matchTime = match.date;
-  const threeHoursLater = matchTime + (3 * 60 * 60 * 1000); // Assume matches last ~3 hours
   
-  // Determine status
+  // Determine status using NHL data if available, otherwise use time-based logic
   let status;
-  if (now >= matchTime && now <= threeHoursLater) {
-    status = 'live';
-  } else if (now < matchTime) {
-    status = 'upcoming';
+  let liveData = null;
+  
+  if (nhlGame) {
+    // Use NHL API data for accurate status
+    const gameState = nhlGame.gameState;
+    
+    if (gameState === 'LIVE' || gameState === 'CRIT') {
+      status = 'live';
+      liveData = {
+        period: nhlGame.period,
+        periodType: nhlGame.periodDescriptor?.periodType,
+        timeRemaining: nhlGame.clock?.timeRemaining,
+        inIntermission: nhlGame.clock?.inIntermission,
+        score: {
+          home: nhlGame.homeTeam?.score || 0,
+          away: nhlGame.awayTeam?.score || 0
+        },
+        sog: {
+          home: nhlGame.homeTeam?.sog || 0,
+          away: nhlGame.awayTeam?.sog || 0
+        }
+      };
+    } else if (gameState === 'FINAL' || gameState === 'OFF') {
+      status = 'finished';
+      // Still show final score for finished games
+      liveData = {
+        score: {
+          home: nhlGame.homeTeam?.score || 0,
+          away: nhlGame.awayTeam?.score || 0
+        },
+        sog: {
+          home: nhlGame.homeTeam?.sog || 0,
+          away: nhlGame.awayTeam?.sog || 0
+        }
+      };
+    } else if (gameState === 'FUT' || gameState === 'PRE') {
+      status = 'upcoming';
+    } else {
+      // Fallback to time-based if unknown state
+      status = now < matchTime ? 'upcoming' : 'finished';
+    }
   } else {
-    status = 'finished';
+    // Fallback to time-based logic for non-NHL games (World Juniors, etc.)
+    // Use a combination of time and stream availability to determine status
+    const fourHoursLater = matchTime + (4 * 60 * 60 * 1000); // Extended to 4 hours for potential overtime
+    const hasStreams = match.sources && match.sources.length > 0;
+    
+    if (now < matchTime) {
+      // Game hasn't started yet
+      status = 'upcoming';
+    } else if (now >= matchTime && now <= fourHoursLater) {
+      // Within 4-hour window from start - likely live or recently finished
+      // If streams are available, assume it's live
+      status = hasStreams ? 'live' : 'finished';
+    } else {
+      // More than 4 hours after start time
+      status = 'finished';
+    }
   }
   
-  return {
+  const processedMatch = {
     id: match.id,
     title: match.title,
     category: match.category,
@@ -227,6 +323,13 @@ function processMatch(match) {
     sources: match.sources || [],
     status
   };
+  
+  // Add live data if available
+  if (liveData) {
+    processedMatch.liveData = liveData;
+  }
+  
+  return processedMatch;
 }
 
 /**

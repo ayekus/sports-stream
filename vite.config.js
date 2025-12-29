@@ -7,7 +7,8 @@ export default defineConfig({
         target: 'https://api-web.nhle.com/v1',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/nhl/, ''),
-        secure: false
+        secure: false,
+        followRedirects: true
       }
     }
   }
