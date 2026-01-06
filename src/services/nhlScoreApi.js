@@ -258,6 +258,7 @@ export function getTeamAbbreviation(teamName) {
     'Vegas': 'VGK',
     'Golden Knights': 'VGK',
     'Utah Hockey Club': 'UTA',
+    'Utah Mammoth': 'UTA',
     'Utah': 'UTA'
   };
   
