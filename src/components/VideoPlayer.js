@@ -30,6 +30,7 @@ export class VideoPlayer {
         default: 720,
         options: [1080, 720, 480, 360]
       },
+      sandbox: false, // Default to false to prevent playback issues with some providers
       ...options
     };
   }
@@ -75,12 +76,24 @@ export class VideoPlayer {
     iframe.src = url;
     iframe.allowFullscreen = true;
     iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
+
+    // Add sandbox restrictions only if enabled in options
+    // Some providers block sandboxed iframes, so this is opt-in
+    if (this.options.sandbox) {
+      const sandboxValue = typeof this.options.sandbox === 'string'
+        ? this.options.sandbox
+        : 'allow-scripts allow-same-origin allow-presentation allow-encrypted-media allow-forms';
+
+      iframe.setAttribute('sandbox', sandboxValue);
+    }
+
     iframe.style.width = '100%';
     iframe.style.height = '100%';
     iframe.style.border = 'none';
     iframe.style.borderRadius = 'var(--radius-lg)';
     
     this.container.appendChild(iframe);
+    this.setupIframeProtection(iframe);
     
     console.log('🎬 Iframe player loaded');
   }
