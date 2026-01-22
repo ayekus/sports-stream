@@ -75,12 +75,16 @@ export class VideoPlayer {
     iframe.src = url;
     iframe.allowFullscreen = true;
     iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
+    // Add sandbox restrictions to improve security and control content
+    // We allow scripts and same-origin (needed for many players) but block popups/top-navigation
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-encrypted-media allow-forms');
     iframe.style.width = '100%';
     iframe.style.height = '100%';
     iframe.style.border = 'none';
     iframe.style.borderRadius = 'var(--radius-lg)';
     
     this.container.appendChild(iframe);
+    this.setupIframeProtection(iframe);
     
     console.log('🎬 Iframe player loaded');
   }
