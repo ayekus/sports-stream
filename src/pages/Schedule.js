@@ -6,6 +6,7 @@
 import { getHockeyMatches, getTeamBadgeUrl } from '../services/streamedApi.js';
 import { formatTime } from '../utils/date.js';
 import { router } from '../router.js';
+import { isNHLTeam, isOlympicGame } from '../services/nhlScoreApi.js';
 
 let currentGames = [];
 
@@ -61,12 +62,34 @@ async function loadSchedule() {
     // Get all hockey games for today
     const games = await getHockeyMatches('today');
     
-    // Filter out TBA games
+    // Filter out TBA games and non-NHL/non-Olympic games
     const filteredGames = games.filter(game => {
       const homeTeam = game.teams?.home?.name || 'TBA';
       const awayTeam = game.teams?.away?.name || 'TBA';
+      
       // Exclude games where both teams are TBA
-      return !(homeTeam === 'TBA' && awayTeam === 'TBA');
+      if (homeTeam === 'TBA' && awayTeam === 'TBA') {
+        return false;
+      }
+      
+      // Check if it's an Olympic/IIHF game (World Juniors, etc.)
+      if (isOlympicGame(game.title, game.teams)) {
+        console.log(`✅ Including Olympic/IIHF game: ${game.title}`);
+        return true;
+      }
+      
+      // Check if both teams are NHL teams
+      const homeIsNHL = isNHLTeam(homeTeam);
+      const awayIsNHL = isNHLTeam(awayTeam);
+      
+      if (homeIsNHL && awayIsNHL) {
+        console.log(`✅ Including NHL game: ${awayTeam} @ ${homeTeam}`);
+        return true;
+      }
+      
+      // Exclude all other games (European leagues, etc.)
+      console.log(`❌ Excluding non-NHL/non-Olympic game: ${game.title}`);
+      return false;
     });
     
     currentGames = filteredGames;

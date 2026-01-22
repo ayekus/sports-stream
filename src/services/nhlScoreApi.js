@@ -264,3 +264,64 @@ export function getTeamAbbreviation(teamName) {
   
   return nameMap[teamName] || null;
 }
+
+/**
+ * Check if a team is an NHL team
+ * @param {string} teamName - Team name to check
+ * @returns {boolean} True if team is NHL team
+ */
+export function isNHLTeam(teamName) {
+  if (!teamName || teamName === 'TBA') return false;
+  return getTeamAbbreviation(teamName) !== null;
+}
+
+/**
+ * Check if a game is an Olympic or IIHF tournament game
+ * @param {string} title - Game title
+ * @param {Object} teams - Teams object with home and away teams
+ * @returns {boolean} True if game is Olympic/IIHF
+ */
+export function isOlympicGame(title, teams) {
+  if (!title) return false;
+  
+  const olympicKeywords = [
+    'olympic',
+    'olympics',
+    'world juniors',
+    'world championship',
+    'iihf',
+    'u18',
+    'u20',
+    'world cup',
+    'spengler cup'
+  ];
+  
+  const titleLower = title.toLowerCase();
+  
+  // Check if title contains Olympic/IIHF keywords
+  if (olympicKeywords.some(keyword => titleLower.includes(keyword))) {
+    return true;
+  }
+  
+  // Check for national teams (e.g., "Canada", "USA", "Sweden")
+  const nationalTeamKeywords = [
+    'canada', 'usa', 'united states', 'sweden', 'finland', 'russia',
+    'czechia', 'czech republic', 'switzerland', 'germany', 'slovakia',
+    'latvia', 'norway', 'denmark', 'austria', 'france', 'kazakhstan'
+  ];
+  
+  if (teams?.home?.name && teams?.away?.name) {
+    const homeLower = teams.home.name.toLowerCase();
+    const awayLower = teams.away.name.toLowerCase();
+    
+    // If both teams are national teams, it's likely an Olympic/IIHF game
+    const homeIsNational = nationalTeamKeywords.some(keyword => homeLower.includes(keyword));
+    const awayIsNational = nationalTeamKeywords.some(keyword => awayLower.includes(keyword));
+    
+    if (homeIsNational && awayIsNational) {
+      return true;
+    }
+  }
+  
+  return false;
+}
