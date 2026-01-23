@@ -227,6 +227,36 @@ function renderGameCards(games) {
   
   // Render games grouped by date
   Object.entries(gamesByDate).forEach(([date, gamesForDate]) => {
+    // Smart sorting within the same date:
+    // 1. Live games first, sorted by MOST RECENT start time (desc)
+    // 2. Upcoming games next, sorted by EARLIEST start time (asc)
+    // 3. Finished games last, sorted by MOST RECENT start time (desc)
+    gamesForDate.sort((a, b) => {
+      const statusPriority = { live: 0, upcoming: 1, finished: 2 };
+      const priorityA = statusPriority[a.status] ?? 3;
+      const priorityB = statusPriority[b.status] ?? 3;
+      
+      // If different status, sort by status priority
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+      
+      // Same status - apply different time sorting based on status
+      const timeA = new Date(a.time).getTime();
+      const timeB = new Date(b.time).getTime();
+      
+      if (a.status === 'live') {
+        // Live games: most recent start time first (descending)
+        return timeB - timeA;
+      } else if (a.status === 'upcoming') {
+        // Upcoming games: earliest start time first (ascending)
+        return timeA - timeB;
+      } else {
+        // Finished games: most recent start time first (descending)
+        return timeB - timeA;
+      }
+    });
+    
     // Create date header
     const dateHeader = document.createElement('div');
     dateHeader.className = 'schedule-date-header';
@@ -253,8 +283,14 @@ function createGameCard(game) {
   const card = document.createElement('div');
   card.className = 'game-card card';
   
+  // Add finished class for styling
+  if (game.status === 'finished') {
+    card.classList.add('game-finished');
+  }
+  
   const gameTime = new Date(game.time);
   const isLive = game.status === 'live';
+  const isFinished = game.status === 'finished';
   
   // Extract team names from title or use teams object
   let homeTeam = 'TBA';
@@ -294,9 +330,9 @@ function createGameCard(game) {
       <div class="game-divider"></div>
       
       ${liveData ? `
-        <!-- Live game with score -->
+        <!-- Live or finished game with score -->
         <div class="game-matchup-row">
-          <div class="team-section">
+          <div class="team-section team-away">
             ${game.teams?.away?.badge ? `<img src="${getTeamBadgeUrl(game.teams.away.badge)}" alt="${awayTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
             <span class="team-name-large">${awayTeam}</span>
           </div>
@@ -305,6 +341,7 @@ function createGameCard(game) {
             <span class="score-num">${liveData.score.away}</span>
             <span class="score-sep">-</span>
             <span class="score-num">${liveData.score.home}</span>
+            ${isFinished ? '<span class="final-badge">FINAL</span>' : ''}
           </div>
           
           <div class="team-section team-home">
@@ -315,7 +352,7 @@ function createGameCard(game) {
       ` : `
         <!-- Non-live game without score -->
         <div class="game-matchup-row">
-          <div class="team-section">
+          <div class="team-section team-away">
             ${game.teams?.away?.badge ? `<img src="${getTeamBadgeUrl(game.teams.away.badge)}" alt="${awayTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
             <span class="team-name-large">${awayTeam}</span>
           </div>
