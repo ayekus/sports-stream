@@ -10,6 +10,7 @@ import { extractStreamUrl } from '../utils/streamExtractor.js';
 let currentPlayer = null;
 let currentMatch = null;
 let currentSources = [];
+let feedCounts = {}; // Store feed counts for each source
 
 export async function renderMatchPage(params) {
   const app = document.getElementById('app-content');
@@ -68,6 +69,9 @@ export async function renderMatchPage(params) {
     // Render match page
     renderMatchUI(match);
 
+    // Pre-fetch feed counts for all sources in parallel
+    fetchFeedCounts();
+
     // Load first stream
     await loadStream(0);
     
@@ -86,6 +90,71 @@ export async function renderMatchPage(params) {
         </div>
       </div>
     `;
+  }
+}
+
+/**
+ * Fetch feed counts for all sources in parallel
+ * Updates the UI as each count becomes available
+ */
+async function fetchFeedCounts() {
+  console.log('📊 Fetching feed counts for all providers...');
+  
+  // Fetch all feed counts in parallel
+  const promises = currentSources.map(async (source, index) => {
+    try {
+      const streamData = await getStreamUrls(source.source, source.id);
+      const streams = streamData.streams || streamData.allStreams || [];
+      const count = streams.length;
+      
+      // Store the count
+      feedCounts[index] = count;
+      
+      // Store streams for quick access later
+      if (!window.currentProviderStreams) {
+        window.currentProviderStreams = {};
+      }
+      window.currentProviderStreams[index] = streams;
+      
+      console.log(`✅ ${source.source}: ${count} feed(s)`);
+      
+      // Update UI to show the count
+      updateSourceButtonCount(index, count);
+      
+      return { index, count };
+    } catch (error) {
+      console.error(`❌ Error fetching feeds for ${source.source}:`, error);
+      feedCounts[index] = 0;
+      updateSourceButtonCount(index, 0);
+      return { index, count: 0 };
+    }
+  });
+  
+  // Wait for all to complete
+  await Promise.all(promises);
+  console.log('✅ All feed counts loaded');
+}
+
+/**
+ * Update a single source button to show feed count
+ * This updates the badge that was already rendered in the HTML
+ * Also hides the button if there are 0 feeds
+ */
+function updateSourceButtonCount(sourceIndex, count) {
+  const button = document.querySelector(`[data-source-idx="${sourceIndex}"]`);
+  if (!button) return;
+  
+  const countBadge = button.querySelector('.feed-count-badge');
+  if (countBadge) {
+    countBadge.textContent = `${count} feed${count !== 1 ? 's' : ''}`;
+  }
+  
+  // Hide button if there are 0 feeds
+  if (count === 0) {
+    button.style.display = 'none';
+    console.log(`🚫 Hiding ${currentSources[sourceIndex]?.source} (0 feeds)`);
+  } else {
+    button.style.display = ''; // Show button if it was previously hidden
   }
 }
 
@@ -167,8 +236,8 @@ function renderMatchUI(match) {
                   data-source-idx="${idx}"
                   onclick="window.switchStream(${idx})"
                 >
-                  Stream ${idx + 1}
                   <span class="source-provider">${source.source}</span>
+                  <span class="feed-count-badge">...</span>
                 </button>
               `).join('')}
             </div>
@@ -204,6 +273,9 @@ async function loadStream(sourceIndex) {
     return;
   }
   
+  // Update active button immediately when clicked, before loading
+  updateActiveSource(sourceIndex);
+  
   const source = currentSources[sourceIndex];
   const container = document.getElementById('video-player-container');
   const loading = document.getElementById('stream-loading');
@@ -221,21 +293,33 @@ async function loadStream(sourceIndex) {
     }
     if (container) container.style.display = 'none';
     
-    // Get all stream URLs from API for this source
-    const streamData = await getStreamUrls(source.source, source.id);
-    const streams = streamData.streams || streamData.allStreams || [];
+    // Check if we already have the streams from pre-fetch
+    let streams = window.currentProviderStreams?.[sourceIndex];
+    
+    if (!streams) {
+      // If not pre-fetched, fetch now
+      console.log(`📺 Fetching streams for ${source.source}...`);
+      const streamData = await getStreamUrls(source.source, source.id);
+      streams = streamData.streams || streamData.allStreams || [];
+      
+      // Store for future use
+      if (!window.currentProviderStreams) {
+        window.currentProviderStreams = {};
+      }
+      window.currentProviderStreams[sourceIndex] = streams;
+      
+      // Update feed count badge
+      feedCounts[sourceIndex] = streams.length;
+      updateSourceButtonCount(sourceIndex, streams.length);
+    } else {
+      console.log(`✅ Using cached streams for ${source.source}`);
+    }
     
     if (!streams || streams.length === 0) {
       throw new Error('No streams available for this source');
     }
     
     console.log(`📺 Found ${streams.length} stream(s) for ${source.source}`);
-    
-    // Store streams for this source
-    if (!window.currentProviderStreams) {
-      window.currentProviderStreams = {};
-    }
-    window.currentProviderStreams[sourceIndex] = streams;
     
     // Update stream options UI to show all available streams for this provider
     updateStreamOptions(sourceIndex, streams);
@@ -246,11 +330,11 @@ async function loadStream(sourceIndex) {
     
     await playStream(defaultStream, container, loading);
     
-    // Update active button
-    updateActiveSource(sourceIndex);
-    
   } catch (error) {
     console.error('Error loading stream:', error);
+    
+    // Update stream options UI to show the correct provider name even when failed
+    updateStreamOptions(sourceIndex, []);
     
     if (loading) loading.style.display = 'none';
     if (container) {
@@ -323,22 +407,34 @@ function updateStreamOptions(sourceIndex, streams) {
   if (currentSources.length > 1) {
     streamOptionsHtml += `
       <div class="sources-list" id="sources-list">
-        ${currentSources.map((src, idx) => `
-          <button 
-            class="source-button ${idx === sourceIndex ? 'active' : ''}" 
-            data-source-idx="${idx}"
-            onclick="window.switchStream(${idx})"
-          >
-            Stream ${idx + 1}
-            <span class="source-provider">${src.source}</span>
-          </button>
-        `).join('')}
+        ${currentSources.map((src, idx) => {
+          // Get feed count for this source (if available)
+          const count = feedCounts[idx];
+          const countText = count !== undefined 
+            ? `<span class="feed-count-badge">${count} feed${count !== 1 ? 's' : ''}</span>`
+            : '<span class="feed-count-badge">...</span>';
+          
+          // Hide button if it has 0 feeds
+          const hideStyle = count === 0 ? 'style="display: none;"' : '';
+          
+          return `
+            <button 
+              class="source-button ${idx === sourceIndex ? 'active' : ''}" 
+              data-source-idx="${idx}"
+              onclick="window.switchStream(${idx})"
+              ${hideStyle}
+            >
+              <span class="source-provider">${src.source}</span>
+              ${countText}
+            </button>
+          `;
+        }).join('')}
       </div>
     `;
   }
   
   // Show individual streams for the selected provider
-  if (streams.length > 1) {
+  if (streams && streams.length > 1) {
     streamOptionsHtml += `
       <div class="mt-lg">
         <h4 style="margin-bottom: 0.75rem; font-size: 0.95rem; color: var(--text-secondary);">
@@ -359,7 +455,7 @@ function updateStreamOptions(sourceIndex, streams) {
         </div>
       </div>
     `;
-  } else {
+  } else if (streams && streams.length === 1) {
     // Single stream - just show info
     const stream = streams[0];
     streamOptionsHtml += `
@@ -368,6 +464,13 @@ function updateStreamOptions(sourceIndex, streams) {
         ${stream.language ? `(${stream.language})` : ''}
         ${stream.hd ? ' • HD' : ''}
         ${stream.viewers ? ` • ${stream.viewers} viewers` : ''}
+      </p>
+    `;
+  } else {
+    // No streams available - show error message
+    streamOptionsHtml += `
+      <p class="text-secondary mt-md" style="color: var(--color-error);">
+        ⚠️ No feeds available for ${source.source}
       </p>
     `;
   }

@@ -520,14 +520,29 @@
 
 .source-provider {
   display: block;
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+  text-transform: capitalize;
 }
 
 .source-button.active .source-provider {
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
 }
+
+.feed-count-badge {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--color-accent-primary);
+  margin-top: 2px;
+  font-weight: var(--font-weight-semibold);
+  opacity: 0.9;
+}
+
+.source-button.active .feed-count-badge {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 
 /* Stream Feed Selection */
 .stream-feeds-list {
