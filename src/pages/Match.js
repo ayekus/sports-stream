@@ -216,50 +216,35 @@ async function loadStream(sourceIndex) {
       loading.style.display = 'flex';
       loading.innerHTML = `
         <div class="loading"></div>
-        <p>Extracting stream URL...</p>
+        <p>Extracting stream URLs...</p>
       `;
     }
     if (container) container.style.display = 'none';
     
-    // Get stream URLs from API
+    // Get all stream URLs from API for this source
     const streamData = await getStreamUrls(source.source, source.id);
-    const embedUrl = streamData.embedUrl || streamData.streamUrl || streamData.url;
+    const streams = streamData.streams || streamData.allStreams || [];
     
-    if (!embedUrl) {
-      throw new Error('No embed URL available');
+    if (!streams || streams.length === 0) {
+      throw new Error('No streams available for this source');
     }
     
-    console.log('📺 Embed URL:', embedUrl);
+    console.log(`📺 Found ${streams.length} stream(s) for ${source.source}`);
     
-    // Try to extract direct stream URL
-    if (loading) {
-      loading.innerHTML = `
-        <div class="loading"></div>
-        <p>Extracting direct stream URL...</p>
-      `;
+    // Store streams for this source
+    if (!window.currentProviderStreams) {
+      window.currentProviderStreams = {};
     }
+    window.currentProviderStreams[sourceIndex] = streams;
     
-    const extractionResult = await extractStreamUrl(embedUrl);
+    // Update stream options UI to show all available streams for this provider
+    updateStreamOptions(sourceIndex, streams);
     
-    // Hide loading
-    if (loading) loading.style.display = 'none';
-    if (container) container.style.display = 'block';
+    // Load the first stream by default (or HD stream if available)
+    const hdStream = streams.find(s => s.hd);
+    const defaultStream = hdStream || streams[0];
     
-    // Initialize player
-    if (currentPlayer) {
-      currentPlayer.destroy();
-    }
-    
-    currentPlayer = createVideoPlayer(container);
-    
-    // Use extracted URL if successful, otherwise fall back to iframe
-    if (extractionResult.success && extractionResult.streamUrl) {
-      console.log('✅ Using extracted stream URL');
-      currentPlayer.init(extractionResult.streamUrl, 'auto');
-    } else {
-      console.log('⚠️ Extraction failed, using iframe embed');
-      currentPlayer.init(embedUrl, 'iframe');
-    }
+    await playStream(defaultStream, container, loading);
     
     // Update active button
     updateActiveSource(sourceIndex);
@@ -284,6 +269,138 @@ async function loadStream(sourceIndex) {
     }
   }
 }
+
+async function playStream(stream, container, loading) {
+  const embedUrl = stream.embedUrl || stream.streamUrl || stream.url;
+  
+  if (!embedUrl) {
+    throw new Error('No embed URL available');
+  }
+  
+  console.log('📺 Playing stream:', stream.language || `Stream ${stream.streamNo}`, embedUrl);
+  
+  // Try to extract direct stream URL
+  if (loading) {
+    loading.innerHTML = `
+      <div class="loading"></div>
+      <p>Extracting direct stream URL...</p>
+    `;
+  }
+  
+  const extractionResult = await extractStreamUrl(embedUrl);
+  
+  // Hide loading
+  if (loading) loading.style.display = 'none';
+  if (container) container.style.display = 'block';
+  
+  // Initialize player
+  if (currentPlayer) {
+    currentPlayer.destroy();
+  }
+  
+  currentPlayer = createVideoPlayer(container);
+  
+  // Use extracted URL if successful, otherwise fall back to iframe
+  if (extractionResult.success && extractionResult.streamUrl) {
+    console.log('✅ Using extracted stream URL');
+    currentPlayer.init(extractionResult.streamUrl, 'auto');
+  } else {
+    console.log('⚠️ Extraction failed, using iframe embed');
+    currentPlayer.init(embedUrl, 'iframe');
+  }
+}
+
+function updateStreamOptions(sourceIndex, streams) {
+  const streamInfoDiv = document.querySelector('.stream-sources');
+  if (!streamInfoDiv) return;
+  
+  const source = currentSources[sourceIndex];
+  
+  // Build the stream options HTML
+  let streamOptionsHtml = '<h3>Stream Information</h3>';
+  
+  // Show provider buttons
+  if (currentSources.length > 1) {
+    streamOptionsHtml += `
+      <div class="sources-list" id="sources-list">
+        ${currentSources.map((src, idx) => `
+          <button 
+            class="source-button ${idx === sourceIndex ? 'active' : ''}" 
+            data-source-idx="${idx}"
+            onclick="window.switchStream(${idx})"
+          >
+            Stream ${idx + 1}
+            <span class="source-provider">${src.source}</span>
+          </button>
+        `).join('')}
+      </div>
+    `;
+  }
+  
+  // Show individual streams for the selected provider
+  if (streams.length > 1) {
+    streamOptionsHtml += `
+      <div class="mt-lg">
+        <h4 style="margin-bottom: 0.75rem; font-size: 0.95rem; color: var(--text-secondary);">
+          Available Feeds for ${source.source}:
+        </h4>
+        <div class="stream-feeds-list">
+          ${streams.map((stream, idx) => `
+            <button 
+              class="feed-button ${idx === 0 ? 'active' : ''}" 
+              data-feed-idx="${idx}"
+              onclick="window.switchFeed(${sourceIndex}, ${idx})"
+            >
+              <span class="feed-label">${stream.language || `Stream ${stream.streamNo}`}</span>
+              ${stream.hd ? '<span class="hd-badge">HD</span>' : ''}
+              ${stream.viewers ? `<span class="viewers-count">👁️ ${stream.viewers}</span>` : ''}
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  } else {
+    // Single stream - just show info
+    const stream = streams[0];
+    streamOptionsHtml += `
+      <p class="text-secondary mt-md">
+        Source: ${source.source} 
+        ${stream.language ? `(${stream.language})` : ''}
+        ${stream.hd ? ' • HD' : ''}
+        ${stream.viewers ? ` • ${stream.viewers} viewers` : ''}
+      </p>
+    `;
+  }
+  
+  streamInfoDiv.innerHTML = streamOptionsHtml;
+}
+
+// Function to switch between feeds within the same provider
+window.switchFeed = async function(sourceIndex, feedIndex) {
+  const streams = window.currentProviderStreams?.[sourceIndex];
+  
+  if (!streams || feedIndex < 0 || feedIndex >= streams.length) {
+    console.error('Invalid feed index');
+    return;
+  }
+  
+  const stream = streams[feedIndex];
+  const container = document.getElementById('video-player-container');
+  const loading = document.getElementById('stream-loading');
+  
+  // Update active feed button
+  const feedButtons = document.querySelectorAll('.feed-button');
+  feedButtons.forEach((btn, idx) => {
+    if (idx === feedIndex) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+  
+  // Play the selected stream
+  await playStream(stream, container, loading);
+};
 
 function updateActiveSource(activeIndex) {
   const buttons = document.querySelectorAll('.source-button');

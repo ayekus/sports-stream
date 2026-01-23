@@ -217,16 +217,11 @@ export async function getStreamUrls(source, id) {
     
     const streams = await response.json();
     
-    // Get the first HD stream or first stream available
-    const hdStream = streams.find(s => s.hd);
-    const selectedStream = hdStream || streams[0];
-    
+    // Return all streams instead of just selecting one
+    // This allows the UI to display all available feeds (Home, Away, French, etc.)
     const streamData = {
-      embedUrl: selectedStream?.embedUrl,
-      language: selectedStream?.language,
-      hd: selectedStream?.hd,
-      streamNo: selectedStream?.streamNo,
-      allStreams: streams
+      streams: streams, // All available streams for this source
+      allStreams: streams // Keep for backwards compatibility
     };
     
     // Cache for 5 minutes (streams can change)
@@ -235,7 +230,7 @@ export async function getStreamUrls(source, id) {
     return streamData;
   } catch (error) {
     console.error(`Error fetching stream ${source}/${id}:`, error);
-    return cached || { embedUrl: null, allStreams: [] };
+    return cached || { streams: [], allStreams: [] };
   }
 }
 
