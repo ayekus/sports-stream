@@ -9,6 +9,7 @@ class Router {
   constructor() {
     this.routes = {};
     this.currentRoute = null;
+    this.currentCleanup = null; // Store cleanup function for current route
     
     // Listen for navigation events
     window.addEventListener('popstate', () => this.handleRoute());
@@ -26,9 +27,10 @@ class Router {
    * Register a route
    * @param {string} path - Route path (supports :param syntax)
    * @param {Function} handler - Route handler function
+   * @param {Function} cleanup - Optional cleanup function to call when leaving route
    */
-  route(path, handler) {
-    this.routes[path] = handler;
+  route(path, handler, cleanup = null) {
+    this.routes[path] = { handler, cleanup };
   }
 
   /**
@@ -44,11 +46,22 @@ class Router {
    * Handle current route
    */
   async handleRoute() {
+    // Run cleanup for previous route
+    if (this.currentCleanup) {
+      try {
+        this.currentCleanup();
+      } catch (error) {
+        console.error('Error during route cleanup:', error);
+      }
+      this.currentCleanup = null;
+    }
+    
     const path = window.location.pathname;
-    const { handler, params } = this.matchRoute(path);
+    const { handler, cleanup, params } = this.matchRoute(path);
     
     if (handler) {
       this.currentRoute = path;
+      this.currentCleanup = cleanup;
       await handler(params);
       // Update nav active state after route changes
       updateActiveNav();
@@ -61,23 +74,32 @@ class Router {
   /**
    * Match current path to registered routes
    * @param {string} path - Current path
-   * @returns {Object} { handler, params }
+   * @returns {Object} { handler, cleanup, params }
    */
   matchRoute(path) {
     // Try exact match first
     if (this.routes[path]) {
-      return { handler: this.routes[path], params: {} };
+      const route = this.routes[path];
+      return { 
+        handler: route.handler, 
+        cleanup: route.cleanup,
+        params: {} 
+      };
     }
     
     // Try parameterized routes
-    for (const [route, handler] of Object.entries(this.routes)) {
-      const params = this.extractParams(route, path);
+    for (const [routePath, route] of Object.entries(this.routes)) {
+      const params = this.extractParams(routePath, path);
       if (params) {
-        return { handler, params };
+        return { 
+          handler: route.handler, 
+          cleanup: route.cleanup,
+          params 
+        };
       }
     }
     
-    return { handler: null, params: {} };
+    return { handler: null, cleanup: null, params: {} };
   }
 
   /**

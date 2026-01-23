@@ -12,9 +12,40 @@ let currentMatch = null;
 let currentSources = [];
 let feedCounts = {}; // Store feed counts for each source
 
+/**
+ * Cleanup function to destroy player and reset state
+ * Called when navigating away from match page
+ */
+export function cleanupMatchPage() {
+  console.log('🧹 Cleaning up match page...');
+  
+  if (currentPlayer) {
+    try {
+      currentPlayer.destroy();
+      console.log('✅ Player destroyed');
+    } catch (error) {
+      console.error('Error destroying player:', error);
+    }
+    currentPlayer = null;
+  }
+  
+  // Clear state
+  currentMatch = null;
+  currentSources = [];
+  feedCounts = {};
+  
+  // Clear cached streams
+  if (window.currentProviderStreams) {
+    window.currentProviderStreams = {};
+  }
+}
+
 export async function renderMatchPage(params) {
   const app = document.getElementById('app-content');
   const matchId = params.id;
+  
+  // Cleanup any existing player before loading new match
+  cleanupMatchPage();
   
   app.innerHTML = `
     <div class="page">

@@ -8,7 +8,7 @@ import './styles/components.css';
 import './styles/game-cards.css';
 import { router } from './router.js';
 import { createHeader } from './components/Header.js';
-import { renderMatchPage } from './pages/Match.js';
+import { renderMatchPage, cleanupMatchPage } from './pages/Match.js';
 import { renderSettingsPage } from './pages/Settings.js';
 import { renderTeamsPage } from './pages/Teams.js';
 import { renderSchedulePage } from './pages/Schedule.js';
@@ -30,7 +30,7 @@ function initApp() {
   
   // Setup routes
   router.route('/', renderSchedulePage); // Redirect home to schedule
-  router.route('/match/:id', renderMatchPage);
+  router.route('/match/:id', renderMatchPage, cleanupMatchPage); // Include cleanup
   router.route('/schedule', renderSchedulePage);
   router.route('/teams', renderTeamsPage);
   router.route('/standings', renderStandingsPage);
