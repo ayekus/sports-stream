@@ -55,15 +55,15 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
   switch (filter) {
     case 'live':
       endpoint = '/matches/live';
-      cacheKey = 'streamed_hockey_live';
+      cacheKey = 'streamed_hockey_live_v2'; // v2 = includes nhlGameId
       break;
     case 'today':
       endpoint = '/matches/all-today';
-      cacheKey = 'streamed_hockey_today';
+      cacheKey = 'streamed_hockey_today_v2'; // v2 = includes nhlGameId
       break;
     default:
       endpoint = '/matches/hockey';
-      cacheKey = 'streamed_hockey_all';
+      cacheKey = 'streamed_hockey_all_v2'; // v2 = includes nhlGameId
   }
   
   const cached = cache.get(cacheKey);
@@ -316,8 +316,14 @@ function processMatch(match, nhlGame = null) {
     league: getCategoryDisplayName(match.category),
     teams: match.teams,
     sources: match.sources || [],
-    status
+    status,
+    nhlGameId: nhlGame?.id || null // Store NHL game ID for highlights
   };
+  
+  // Debug log for highlights feature
+  if (nhlGame?.id) {
+    console.log(`   📊 Stored NHL game ID ${nhlGame.id} for ${match.title}`);
+  }
   
   // Add live data if available
   if (liveData) {

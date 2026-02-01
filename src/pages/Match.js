@@ -6,11 +6,15 @@
 import { getStreamUrls, getHockeyMatches, getTeamBadgeUrl } from '../services/streamedApi.js';
 import { createVideoPlayer } from '../components/VideoPlayer.js';
 import { extractStreamUrl } from '../utils/streamExtractor.js';
+import { getGameHighlights } from '../services/nhlHighlightsApi.js';
+import { createHighlightsSection, setupHighlightHandlers, createHighlightsLoadingSkeleton } from '../components/HighlightsSection.js';
+import { openHighlightModal, destroyHighlightModal } from '../components/HighlightModal.js';
 
 let currentPlayer = null;
 let currentMatch = null;
 let currentSources = [];
 let feedCounts = {}; // Store feed counts for each source
+let currentHighlights = []; // Store goal highlights
 
 /**
  * Cleanup function to destroy player and reset state
@@ -29,10 +33,14 @@ export function cleanupMatchPage() {
     currentPlayer = null;
   }
   
+  // Cleanup highlight modal
+  destroyHighlightModal();
+  
   // Clear state
   currentMatch = null;
   currentSources = [];
   feedCounts = {};
+  currentHighlights = [];
   
   // Clear cached streams
   if (window.currentProviderStreams) {
@@ -108,6 +116,11 @@ export async function renderMatchPage(params) {
     
     // Setup global redirect blocking
     setupRedirectBlocking();
+    
+    // Fetch and render highlights if game has started
+    if (match.status === 'live' || match.status === 'finished') {
+      fetchAndRenderHighlights(match);
+    }
     
   } catch (error) {
     console.error('Error loading match:', error);
@@ -293,6 +306,9 @@ function renderMatchUI(match) {
             <dd><span class="badge ${getStatusClass(match)}">${getStatusText(match)}</span></dd>
           </dl>
         </div>
+        
+        <!-- Highlights Section (will be populated if goals are available) -->
+        <div id="highlights-container"></div>
       </div>
     </div>
   `;
@@ -560,6 +576,67 @@ function getStatusClass(match) {
 function getStatusText(match) {
   const status = getStatusClass(match);
   return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
+/**
+ * Fetch and render goal highlights for the match
+ */
+async function fetchAndRenderHighlights(match) {
+  const container = document.getElementById('highlights-container');
+  if (!container) return;
+  
+  // Show loading skeleton
+  container.innerHTML = createHighlightsLoadingSkeleton();
+  
+  try {
+    // Get game date in YYYY-MM-DD format (use local date, not UTC)
+    const gameDate = new Date(match.time);
+    const year = gameDate.getFullYear();
+    const month = String(gameDate.getMonth() + 1).padStart(2, '0');
+    const day = String(gameDate.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+    
+    // Extract NHL game ID if available
+    // The match should already have the NHL game ID from enrichment
+    const gameId = match.nhlGameId;
+    
+    if (!gameId) {
+      console.log('ℹ️ No NHL game ID for this match - may not be an NHL game or enrichment failed');
+      container.innerHTML = ''; // Clear loading skeleton
+      return;
+    }
+    
+    console.log(`🎯 Fetching highlights for NHL game ${gameId}...`);
+    
+    // Fetch highlights
+    const highlights = await getGameHighlights(gameId, dateStr);
+    currentHighlights = highlights;
+    
+    if (highlights.length === 0) {
+      console.log('No highlights available for this game');
+      container.innerHTML = ''; // Clear loading skeleton
+      return;
+    }
+    
+    // Render highlights section
+    container.innerHTML = createHighlightsSection(highlights, handleHighlightClick);
+    
+    // Setup click handlers
+    setupHighlightHandlers(highlights, handleHighlightClick);
+    
+    console.log(`✅ Rendered ${highlights.length} goal highlights`);
+    
+  } catch (error) {
+    console.error('Error fetching highlights:', error);
+    container.innerHTML = ''; // Clear loading skeleton on error
+  }
+}
+
+/**
+ * Handle highlight card click
+ */
+function handleHighlightClick(highlight, index) {
+  openHighlightModal(highlight, index, currentHighlights);
 }
 
 // Expose stream switching to window for onclick handlers
