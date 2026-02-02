@@ -102,6 +102,7 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
     // Process matches and enrich with NHL data
     const processedMatches = matches.map(match => {
       let nhlGame = null;
+      let teamsReversed = false; // Track if home/away are swapped between APIs
       
       // Try to match with NHL game data
       if (nhlGames.length > 0 && match.teams) {
@@ -139,6 +140,10 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
               g.homeTeam?.abbrev === awayAbbrev &&
               g.awayTeam?.abbrev === homeAbbrev
             );
+            if (nhlGame) {
+              teamsReversed = true; // Mark that we need to swap scores
+              console.log(`   ⚠️ Teams are reversed in NHL API`);
+            }
           }
           
           if (nhlGame) {
@@ -152,7 +157,7 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
         }
       }
       
-      return processMatch(match, nhlGame);
+      return processMatch(match, nhlGame, teamsReversed);
     });
     
     // Cache for 15 minutes
@@ -261,9 +266,10 @@ export async function getStreamUrls(source, id) {
  * Process raw match data
  * @param {Object} match - Raw match object from API
  * @param {Object} nhlGame - Optional NHL game data for accurate live status
+ * @param {boolean} teamsReversed - Whether home/away teams are swapped between APIs
  * @returns {Object} Processed match object
  */
-function processMatch(match, nhlGame = null) {
+function processMatch(match, nhlGame = null, teamsReversed = false) {
   const now = Date.now();
   const matchTime = match.date;
   
@@ -275,6 +281,22 @@ function processMatch(match, nhlGame = null) {
     // Use NHL API data for accurate status
     const gameState = nhlGame.gameState;
     
+    // If teams are reversed, we need to swap home/away scores
+    const getScore = (isHome) => {
+      if (teamsReversed) {
+        // Swap: match.home should get NHL away score, match.away should get NHL home score
+        return isHome ? (nhlGame.awayTeam?.score || 0) : (nhlGame.homeTeam?.score || 0);
+      }
+      return isHome ? (nhlGame.homeTeam?.score || 0) : (nhlGame.awayTeam?.score || 0);
+    };
+    
+    const getSog = (isHome) => {
+      if (teamsReversed) {
+        return isHome ? (nhlGame.awayTeam?.sog || 0) : (nhlGame.homeTeam?.sog || 0);
+      }
+      return isHome ? (nhlGame.homeTeam?.sog || 0) : (nhlGame.awayTeam?.sog || 0);
+    };
+    
     if (gameState === 'LIVE' || gameState === 'CRIT') {
       status = 'live';
       liveData = {
@@ -283,12 +305,12 @@ function processMatch(match, nhlGame = null) {
         timeRemaining: nhlGame.clock?.timeRemaining,
         inIntermission: nhlGame.clock?.inIntermission,
         score: {
-          home: nhlGame.homeTeam?.score || 0,
-          away: nhlGame.awayTeam?.score || 0
+          home: getScore(true),
+          away: getScore(false)
         },
         sog: {
-          home: nhlGame.homeTeam?.sog || 0,
-          away: nhlGame.awayTeam?.sog || 0
+          home: getSog(true),
+          away: getSog(false)
         }
       };
     } else if (gameState === 'FINAL' || gameState === 'OFF') {
@@ -296,12 +318,12 @@ function processMatch(match, nhlGame = null) {
       // Still show final score for finished games
       liveData = {
         score: {
-          home: nhlGame.homeTeam?.score || 0,
-          away: nhlGame.awayTeam?.score || 0
+          home: getScore(true),
+          away: getScore(false)
         },
         sog: {
-          home: nhlGame.homeTeam?.sog || 0,
-          away: nhlGame.awayTeam?.sog || 0
+          home: getSog(true),
+          away: getSog(false)
         }
       };
     } else if (gameState === 'FUT' || gameState === 'PRE') {
