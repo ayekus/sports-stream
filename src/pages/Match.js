@@ -67,7 +67,12 @@ export async function renderMatchPage(params) {
   `;
   
   try {
-    // Get match data from today's matches
+    // Clear cache to ensure fresh data with latest scores
+    const { cache } = await import('../utils/cache.js');
+    cache.clear();
+    console.log('🔄 Cache cleared, fetching fresh match data...');
+    
+    // Get match data from today's matches with fresh NHL enrichment
     const matches = await getHockeyMatches('today');
     const match = matches.find(m => m.id === matchId);
     

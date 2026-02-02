@@ -109,23 +109,46 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
         let homeAbbrev = match.teams.home?.abbrev;
         let awayAbbrev = match.teams.away?.abbrev;
         
+        console.log(`🔍 Enriching: ${match.teams.away?.name} @ ${match.teams.home?.name}`);
+        console.log(`   Raw abbrevs: away=${awayAbbrev}, home=${homeAbbrev}`);
+        
         // If abbreviations aren't available, try to map from team names
         if (!homeAbbrev && match.teams.home?.name) {
           homeAbbrev = nhlScoreApi.getTeamAbbreviation(match.teams.home.name);
+          console.log(`   Mapped home "${match.teams.home.name}" -> ${homeAbbrev}`);
         }
         if (!awayAbbrev && match.teams.away?.name) {
           awayAbbrev = nhlScoreApi.getTeamAbbreviation(match.teams.away.name);
+          console.log(`   Mapped away "${match.teams.away.name}" -> ${awayAbbrev}`);
         }
         
         if (homeAbbrev && awayAbbrev) {
+          console.log(`   Looking for NHL game: ${awayAbbrev} @ ${homeAbbrev}`);
+          
+          // Try exact match first (Away @ Home)
           nhlGame = nhlGames.find(g =>
             g.homeTeam?.abbrev === homeAbbrev &&
             g.awayTeam?.abbrev === awayAbbrev
           );
           
-          if (nhlGame) {
-            console.log(`✅ Matched ${awayAbbrev} @ ${homeAbbrev} with NHL data`);
+          // If not found, try reversed (in case APIs have different home/away designations)
+          // This happens with outdoor series games and some special events
+          if (!nhlGame) {
+            console.log(`   Trying reversed: ${homeAbbrev} @ ${awayAbbrev}`);
+            nhlGame = nhlGames.find(g =>
+              g.homeTeam?.abbrev === awayAbbrev &&
+              g.awayTeam?.abbrev === homeAbbrev
+            );
           }
+          
+          if (nhlGame) {
+            console.log(`   ✅ MATCH FOUND! NHL Game ID: ${nhlGame.id}, Score: ${nhlGame.awayTeam.score}-${nhlGame.homeTeam.score}`);
+          } else {
+            console.log(`   ❌ No NHL game found for ${awayAbbrev} @ ${homeAbbrev}`);
+            console.log(`   Available NHL games:`, nhlGames.map(g => `${g.awayTeam?.abbrev} @ ${g.homeTeam?.abbrev}`));
+          }
+        } else {
+          console.log(`   ⚠️ Missing abbreviations: home=${homeAbbrev}, away=${awayAbbrev}`);
         }
       }
       

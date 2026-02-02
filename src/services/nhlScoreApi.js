@@ -14,14 +14,6 @@ const CACHE_TTL = 2 * 60 * 1000; // 2 minutes for live data
  * @returns {Promise<Object>} Live scores data with game details
  */
 export async function getLiveScores() {
-  const cacheKey = 'nhl_live_scores';
-  const cached = cache.get(cacheKey);
-  
-  if (cached) {
-    console.log('✅ Using cached live scores');
-    return cached;
-  }
-  
   try {
     // Use local date to avoid UTC rollover issues
     // When it's 7:30 PM PST on Dec 28, we want Dec 28, not Dec 29 (UTC)
@@ -31,6 +23,8 @@ export async function getLiveScores() {
     const day = String(now.getDate()).padStart(2, '0');
     const today = `${year}-${month}-${day}`;
     
+    console.log(`🔄 Fetching fresh NHL scores for ${today}...`);
+    
     const response = await fetch(`${BASE_URL}/score/${today}`);
     
     if (!response.ok) {
@@ -39,13 +33,12 @@ export async function getLiveScores() {
     
     const data = await response.json();
     
-    // Cache for 2 minutes (live scores change frequently)
-    cache.set(cacheKey, data, CACHE_TTL);
+    console.log(`✅ Fetched ${data.games?.length || 0} NHL games`);
     
     return data;
   } catch (error) {
     console.error('Error fetching live scores:', error);
-    return cached || { games: [] };
+    return { games: [] };
   }
 }
 
@@ -55,15 +48,9 @@ export async function getLiveScores() {
  * @returns {Promise<Object>} Scores data for the date
  */
 export async function getScoresByDate(date) {
-  const cacheKey = `nhl_scores_${date}`;
-  const cached = cache.get(cacheKey);
-  
-  if (cached) {
-    console.log(`✅ Using cached scores for ${date}`);
-    return cached;
-  }
-  
   try {
+    console.log(`🔄 Fetching fresh NHL scores for ${date}...`);
+    
     const response = await fetch(`${BASE_URL}/score/${date}`);
     
     if (!response.ok) {
@@ -72,13 +59,12 @@ export async function getScoresByDate(date) {
     
     const data = await response.json();
     
-    // Cache for 2 minutes
-    cache.set(cacheKey, data, CACHE_TTL);
+    console.log(`✅ Fetched ${data.games?.length || 0} NHL games for ${date}`);
     
     return data;
   } catch (error) {
     console.error(`Error fetching scores for ${date}:`, error);
-    return cached || { games: [] };
+    return { games: [] };
   }
 }
 
