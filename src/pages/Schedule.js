@@ -7,8 +7,25 @@ import { getHockeyMatches, getTeamBadgeUrl } from '../services/streamedApi.js';
 import { formatTime } from '../utils/date.js';
 import { router } from '../router.js';
 import { isNHLTeam, isOlympicGame } from '../services/nhlScoreApi.js';
+import { getTeamLogoUrl } from '../services/nhlApi.js';
 
 let currentGames = [];
+
+/**
+ * Get logo URL for a team
+ * Uses NHL official logos if team has abbreviation, falls back to streamed badge
+ */
+function getLogoUrl(team) {
+  // If team has abbreviation, use NHL official logo
+  if (team?.abbrev) {
+    return getTeamLogoUrl(team.abbrev);
+  }
+  // Fallback to streamed badge if available
+  if (team?.badge) {
+    return getTeamBadgeUrl(team.badge);
+  }
+  return null;
+}
 
 export async function renderSchedulePage() {
   const app = document.getElementById('app-content');
@@ -374,7 +391,7 @@ function createGameCard(game) {
         <!-- Live or finished game with score -->
         <div class="game-matchup-row">
           <div class="team-section team-away">
-            ${game.teams?.away?.badge ? `<img src="${getTeamBadgeUrl(game.teams.away.badge)}" alt="${awayTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
+            ${game.teams?.away ? `<img src="${getLogoUrl(game.teams.away)}" alt="${awayTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
             <span class="team-name-large">${awayTeam}</span>
           </div>
           
@@ -387,14 +404,14 @@ function createGameCard(game) {
           
           <div class="team-section team-home">
             <span class="team-name-large">${homeTeam}</span>
-            ${game.teams?.home?.badge ? `<img src="${getTeamBadgeUrl(game.teams.home.badge)}" alt="${homeTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
+            ${game.teams?.home ? `<img src="${getLogoUrl(game.teams.home)}" alt="${homeTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
           </div>
         </div>
       ` : `
         <!-- Non-live game without score -->
         <div class="game-matchup-row">
           <div class="team-section team-away">
-            ${game.teams?.away?.badge ? `<img src="${getTeamBadgeUrl(game.teams.away.badge)}" alt="${awayTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
+            ${game.teams?.away ? `<img src="${getLogoUrl(game.teams.away)}" alt="${awayTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
             <span class="team-name-large">${awayTeam}</span>
           </div>
           
@@ -402,7 +419,7 @@ function createGameCard(game) {
           
           <div class="team-section team-home">
             <span class="team-name-large">${homeTeam}</span>
-            ${game.teams?.home?.badge ? `<img src="${getTeamBadgeUrl(game.teams.home.badge)}" alt="${homeTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
+            ${game.teams?.home ? `<img src="${getLogoUrl(game.teams.home)}" alt="${homeTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
           </div>
         </div>
       `}

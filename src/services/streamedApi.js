@@ -123,6 +123,14 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
           console.log(`   Mapped away "${match.teams.away.name}" -> ${awayAbbrev}`);
         }
         
+        // Store abbreviations on team objects for logo display
+        if (homeAbbrev && match.teams.home) {
+          match.teams.home.abbrev = homeAbbrev;
+        }
+        if (awayAbbrev && match.teams.away) {
+          match.teams.away.abbrev = awayAbbrev;
+        }
+        
         if (homeAbbrev && awayAbbrev) {
           console.log(`   Looking for NHL game: ${awayAbbrev} @ ${homeAbbrev}`);
           
