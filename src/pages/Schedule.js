@@ -64,29 +64,39 @@ async function loadSchedule() {
     const allGames = await getHockeyMatches('all');
     
     // Filter to show:
-    // 1. Games scheduled for today
-    // 2. Finished games from yesterday that ended before 6 AM today
+    // 1. All upcoming games (today and future)
+    // 2. All live games
+    // 3. Finished games only if they're recent (hide after 6 AM the next day)
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-    const tomorrow6AM = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 6, 0, 0);
+    const today6AM = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 6, 0, 0);
     
     const relevantGames = allGames.filter(game => {
       const gameTime = new Date(game.time);
       
-      // Include all games scheduled for today
-      if (gameTime >= todayStart && gameTime < tomorrow6AM) {
+      // Always show upcoming and live games
+      if (game.status === 'upcoming' || game.status === 'live') {
         return true;
       }
       
-      // Also include finished games from yesterday if it's still before 6 AM
-      if (game.status === 'finished' && now < tomorrow6AM) {
-        // Check if game was from yesterday (started before today)
-        if (gameTime < todayStart) {
-          return true; // Keep showing until 6 AM
+      // For finished games, only hide them after 6 AM if they started yesterday or earlier
+      if (game.status === 'finished') {
+        // If it's before 6 AM today, keep all finished games from yesterday
+        if (now < today6AM) {
+          // Show finished games from yesterday
+          if (gameTime >= todayStart.getTime() - 24 * 60 * 60 * 1000) {
+            return true;
+          }
+        } else {
+          // After 6 AM, only show finished games from today
+          if (gameTime >= todayStart) {
+            return true;
+          }
         }
+        return false; // Hide old finished games
       }
       
-      return false;
+      return true; // Show everything else
     });
     
     // Filter out TBA games and non-NHL/non-Olympic games
