@@ -22,6 +22,7 @@ export async function renderSchedulePage() {
             <option value="all">All Games</option>
             <option value="live">Live Only</option>
             <option value="upcoming">Upcoming Only</option>
+            <option value="finished">Finished</option>
           </select>
           <input 
             type="text" 
@@ -59,11 +60,37 @@ async function loadSchedule() {
   const app = document.getElementById('app-content');
   
   try {
-    // Get all hockey games for today
-    const games = await getHockeyMatches('today');
+    // Get all hockey games (not just "today" to capture finished games)
+    const allGames = await getHockeyMatches('all');
+    
+    // Filter to show:
+    // 1. Games scheduled for today
+    // 2. Finished games from yesterday that ended before 6 AM today
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    const tomorrow6AM = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 6, 0, 0);
+    
+    const relevantGames = allGames.filter(game => {
+      const gameTime = new Date(game.time);
+      
+      // Include all games scheduled for today
+      if (gameTime >= todayStart && gameTime < tomorrow6AM) {
+        return true;
+      }
+      
+      // Also include finished games from yesterday if it's still before 6 AM
+      if (game.status === 'finished' && now < tomorrow6AM) {
+        // Check if game was from yesterday (started before today)
+        if (gameTime < todayStart) {
+          return true; // Keep showing until 6 AM
+        }
+      }
+      
+      return false;
+    });
     
     // Filter out TBA games and non-NHL/non-Olympic games
-    const filteredGames = games.filter(game => {
+    const filteredGames = relevantGames.filter(game => {
       const homeTeam = game.teams?.home?.name || 'TBA';
       const awayTeam = game.teams?.away?.name || 'TBA';
       
@@ -112,6 +139,7 @@ async function loadSchedule() {
               <option value="all">All Games</option>
               <option value="live">Live Only</option>
               <option value="upcoming">Upcoming Only</option>
+              <option value="finished">Finished</option>
             </select>
             <input 
               type="text" 
@@ -143,6 +171,7 @@ function renderEmptySchedule() {
             <option value="all">All Games</option>
             <option value="live">Live Only</option>
             <option value="upcoming">Upcoming Only</option>
+            <option value="finished">Finished</option>
           </select>
           <input 
             type="text" 
@@ -169,6 +198,7 @@ function renderScheduleUI(games) {
   
   const liveGames = games.filter(g => g.status === 'live');
   const upcomingGames = games.filter(g => g.status === 'upcoming');
+  const finishedGames = games.filter(g => g.status === 'finished');
   
   app.innerHTML = `
     <div class="page">
@@ -178,6 +208,7 @@ function renderScheduleUI(games) {
             <option value="all">All Games (${games.length})</option>
             <option value="live">Live Only (${liveGames.length})</option>
             <option value="upcoming">Upcoming Only (${upcomingGames.length})</option>
+            <option value="finished">Finished (${finishedGames.length})</option>
           </select>
           <input 
             type="text" 
@@ -442,6 +473,8 @@ function applyFilters() {
       filtered = filtered.filter(g => g.status === 'live');
     } else if (filterValue === 'upcoming') {
       filtered = filtered.filter(g => g.status === 'upcoming');
+    } else if (filterValue === 'finished') {
+      filtered = filtered.filter(g => g.status === 'finished');
     }
   }
   
