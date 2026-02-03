@@ -150,7 +150,7 @@ function setupTeamsHandlers() {
         team.strStadium?.toLowerCase().includes(query)
       );
       renderTeamCards(getSortedTeams(filtered, sortSelect?.value || 'name'));
-    }, 300));
+    }, 150));
   }
   
   if (sortSelect) {

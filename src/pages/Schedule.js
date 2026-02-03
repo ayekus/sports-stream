@@ -449,7 +449,7 @@ function setupScheduleHandlers() {
   if (searchInput) {
     searchInput.addEventListener('input', debounce((e) => {
       applyFilters();
-    }, 300));
+    }, 150));
   }
   
   if (refreshButton) {
