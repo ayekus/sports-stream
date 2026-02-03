@@ -5,6 +5,7 @@
 
 import { getHockeyMatches, getTeamBadgeUrl } from '../services/streamedApi.js';
 import { formatTime } from '../utils/date.js';
+import { debounce } from '../utils/helpers.js';
 import { router } from '../router.js';
 import { isNHLTeam, isOlympicGame } from '../services/nhlScoreApi.js';
 import { getTeamLogoUrl } from '../services/nhlApi.js';
@@ -446,9 +447,9 @@ function setupScheduleHandlers() {
   }
   
   if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
+    searchInput.addEventListener('input', debounce((e) => {
       applyFilters();
-    });
+    }, 300));
   }
   
   if (refreshButton) {

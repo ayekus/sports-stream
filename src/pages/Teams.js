@@ -5,6 +5,7 @@
 
 import { getAllNHLTeams } from '../services/sportsDbApi.js';
 import { createTeamCard, createTeamModal } from '../components/TeamCard.js';
+import { debounce } from '../utils/helpers.js';
 
 let allTeams = [];
 
@@ -142,14 +143,14 @@ function setupTeamsHandlers() {
   const sortSelect = document.getElementById('sort-select');
   
   if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
+    searchInput.addEventListener('input', debounce((e) => {
       const query = e.target.value.toLowerCase();
       const filtered = allTeams.filter(team => 
         team.strTeam.toLowerCase().includes(query) ||
         team.strStadium?.toLowerCase().includes(query)
       );
       renderTeamCards(getSortedTeams(filtered, sortSelect?.value || 'name'));
-    });
+    }, 300));
   }
   
   if (sortSelect) {
