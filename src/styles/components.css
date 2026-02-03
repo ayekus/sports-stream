@@ -1235,9 +1235,17 @@
   border-left: 3px solid #00ff88;
 }
 
+.standings-table tbody tr.playoff-spot:hover {
+  background: rgba(0, 255, 136, 0.12);
+}
+
 .standings-table tbody tr.wildcard-spot {
   background: rgba(255, 215, 0, 0.05);
   border-left: 3px solid #ffd700;
+}
+
+.standings-table tbody tr.wildcard-spot:hover {
+  background: rgba(255, 215, 0, 0.12);
 }
 
 .standings-table td {
@@ -1255,6 +1263,41 @@
   text-align: left;
   padding-left: var(--spacing-md);
   font-family: var(--font-body);
+  max-width: 200px;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.standings-table td.team-col::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 30px;
+  background: linear-gradient(to right, transparent 0%, var(--color-bg-secondary) 100%);
+  pointer-events: none;
+}
+
+.standings-table tbody tr:hover td.team-col::after {
+  background: linear-gradient(to right, transparent 0%, rgba(0, 212, 255, 0.05) 100%);
+}
+
+.standings-table tbody tr.playoff-spot td.team-col::after {
+  background: linear-gradient(to right, transparent 0%, rgba(0, 255, 136, 0.05) 100%);
+}
+
+.standings-table tbody tr.playoff-spot:hover td.team-col::after {
+  background: linear-gradient(to right, transparent 0%, rgba(0, 255, 136, 0.12) 100%);
+}
+
+.standings-table tbody tr.wildcard-spot td.team-col::after {
+  background: linear-gradient(to right, transparent 0%, rgba(255, 215, 0, 0.05) 100%);
+}
+
+.standings-table tbody tr.wildcard-spot:hover td.team-col::after {
+  background: linear-gradient(to right, transparent 0%, rgba(255, 215, 0, 0.12) 100%);
 }
 
 .team-logo-small {
@@ -1268,6 +1311,7 @@
 .team-name {
   font-weight: var(--font-weight-medium);
   vertical-align: middle;
+  white-space: nowrap;
 }
 
 .standings-table td.points-col {
@@ -1348,6 +1392,7 @@
   .standings-table th.team-col,
   .standings-table td.team-col {
     min-width: 140px;
+    max-width: 140px;
     padding-left: var(--spacing-sm);
   }
   

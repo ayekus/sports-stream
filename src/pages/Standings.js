@@ -158,11 +158,12 @@ function renderDivisionView(standings) {
   
   // Calculate all playoff teams (including wild cards)
   const playoffTeams = calculatePlayoffTeams(standings);
+  const wildcardTeams = calculateWildcardTeams(standings);
   
   let html = '<div class="division-grid">';
   
   for (const [divisionName, teams] of Object.entries(divisions)) {
-    html += createDivisionTable(divisionName, teams, false, playoffTeams);
+    html += createDivisionTable(divisionName, teams, false, playoffTeams, wildcardTeams);
   }
   
   html += '</div>';
@@ -170,27 +171,30 @@ function renderDivisionView(standings) {
 }
 
 function renderConferenceView(standings) {
-  const eastern = standings.filter(t => t.conferenceAbbrev === 'E').sort((a, b) => b.points - a.points);
-  const western = standings.filter(t => t.conferenceAbbrev === 'W').sort((a, b) => b.points - a.points);
+  const eastern = standings.filter(t => t.conferenceAbbrev === 'E').sort((a, b) => a.conferenceSequence - b.conferenceSequence);
+  const western = standings.filter(t => t.conferenceAbbrev === 'W').sort((a, b) => a.conferenceSequence - b.conferenceSequence);
+  
+  const wildcardTeams = calculateWildcardTeams(standings);
   
   let html = '<div class="conference-grid">';
-  html += createConferenceTable('Eastern Conference', eastern);
-  html += createConferenceTable('Western Conference', western);
+  html += createConferenceTable('Eastern Conference', eastern, wildcardTeams);
+  html += createConferenceTable('Western Conference', western, wildcardTeams);
   html += '</div>';
   
   return html;
 }
 
 function renderLeagueView(standings) {
-  const sorted = [...standings].sort((a, b) => b.points - a.points);
+  const sorted = [...standings].sort((a, b) => a.leagueSequence - b.leagueSequence);
   
   // Calculate playoff teams
   const playoffTeams = calculatePlayoffTeams(standings);
+  const wildcardTeams = calculateWildcardTeams(standings);
   
-  return createLeagueTable(sorted, playoffTeams);
+  return createLeagueTable(sorted, playoffTeams, wildcardTeams);
 }
 
-function createDivisionTable(title, teams, isWildCardView, playoffTeamsOrFlag = false) {
+function createDivisionTable(title, teams, isWildCardView, playoffTeamsOrFlag = false, wildcardTeamsOrFlag = false) {
   let html = `
     <section class="standings-table-container card mb-lg">
       <h3 class="table-header">${title}</h3>
@@ -209,7 +213,6 @@ function createDivisionTable(title, teams, isWildCardView, playoffTeamsOrFlag = 
               <th class="hide-mobile">GA</th>
               <th class="hide-mobile">DIFF</th>
               <th class="hide-mobile">L10</th>
-              <th class="hide-mobile">STRK</th>
             </tr>
           </thead>
           <tbody>
@@ -219,15 +222,17 @@ function createDivisionTable(title, teams, isWildCardView, playoffTeamsOrFlag = 
     const rank = isWildCardView ? index + 1 : team.divisionSequence;
     let playoffClass = '';
     
+    const teamAbbrev = team.teamAbbrev?.default;
+    
     if (isWildCardView && index < 3) {
       // Wild card view: highlight top 3 in each division
       playoffClass = 'playoff-spot';
-    } else if (playoffTeamsOrFlag instanceof Set) {
-      // Division view: check if team is in playoff teams set
-      const teamAbbrev = team.teamAbbrev?.default;
-      if (playoffTeamsOrFlag.has(teamAbbrev)) {
-        playoffClass = 'playoff-spot';
-      }
+    } else if (wildcardTeamsOrFlag instanceof Set && wildcardTeamsOrFlag.has(teamAbbrev)) {
+      // Check if team is a wildcard team first
+      playoffClass = 'wildcard-spot';
+    } else if (playoffTeamsOrFlag instanceof Set && playoffTeamsOrFlag.has(teamAbbrev)) {
+      // Check if team is a playoff team (top 3 in division)
+      playoffClass = 'playoff-spot';
     }
     
     html += createTeamRow(team, rank, playoffClass);
@@ -262,7 +267,6 @@ function createWildCardTable(title, teams) {
               <th class="hide-mobile">GA</th>
               <th class="hide-mobile">DIFF</th>
               <th class="hide-mobile">L10</th>
-              <th class="hide-mobile">STRK</th>
             </tr>
           </thead>
           <tbody>
@@ -283,7 +287,7 @@ function createWildCardTable(title, teams) {
   return html;
 }
 
-function createConferenceTable(title, teams) {
+function createConferenceTable(title, teams, wildcardTeams) {
   let html = `
     <section class="standings-table-container card mb-lg">
       <h3 class="table-header">${title}</h3>
@@ -302,14 +306,21 @@ function createConferenceTable(title, teams) {
               <th class="hide-mobile">GA</th>
               <th class="hide-mobile">DIFF</th>
               <th class="hide-mobile">L10</th>
-              <th class="hide-mobile">STRK</th>
             </tr>
           </thead>
           <tbody>
   `;
   
   teams.forEach((team, index) => {
-    const playoffClass = index < 8 ? 'playoff-spot' : '';
+    const teamAbbrev = team.teamAbbrev?.default;
+    let playoffClass = '';
+    
+    if (wildcardTeams.has(teamAbbrev)) {
+      playoffClass = 'wildcard-spot';
+    } else if (index < 8) {
+      playoffClass = 'playoff-spot';
+    }
+    
     html += createTeamRow(team, index + 1, playoffClass);
   });
   
@@ -323,7 +334,7 @@ function createConferenceTable(title, teams) {
   return html;
 }
 
-function createLeagueTable(teams, playoffTeams) {
+function createLeagueTable(teams, playoffTeams, wildcardTeams) {
   let html = `
     <section class="standings-table-container card">
       <h3 class="table-header">NHL League Standings</h3>
@@ -343,7 +354,6 @@ function createLeagueTable(teams, playoffTeams) {
               <th class="hide-mobile">GA</th>
               <th class="hide-mobile">DIFF</th>
               <th class="hide-mobile">L10</th>
-              <th class="hide-mobile">STRK</th>
             </tr>
           </thead>
           <tbody>
@@ -351,8 +361,13 @@ function createLeagueTable(teams, playoffTeams) {
   
   teams.forEach((team, index) => {
     const teamAbbrev = team.teamAbbrev?.default;
-    const isPlayoffTeam = playoffTeams.has(teamAbbrev);
-    const playoffClass = isPlayoffTeam ? 'playoff-spot' : '';
+    let playoffClass = '';
+    
+    if (wildcardTeams.has(teamAbbrev)) {
+      playoffClass = 'wildcard-spot';
+    } else if (playoffTeams.has(teamAbbrev)) {
+      playoffClass = 'playoff-spot';
+    }
     
     html += createTeamRow(team, index + 1, playoffClass, true);
   });
@@ -388,7 +403,6 @@ function createTeamRow(team, rank, playoffClass = '', showDivision = false) {
       <td class="hide-mobile">${team.goalAgainst || 0}</td>
       <td class="hide-mobile ${team.goalDifferential > 0 ? 'positive' : team.goalDifferential < 0 ? 'negative' : ''}">${team.goalDifferential > 0 ? '+' : ''}${team.goalDifferential || 0}</td>
       <td class="hide-mobile">${l10Record}</td>
-      <td class="hide-mobile">${team.streakCode || '-'}</td>
     </tr>
   `;
 }
@@ -406,7 +420,7 @@ function groupByDivision(standings) {
   
   // Sort teams within each division
   for (const division in divisions) {
-    divisions[division].sort((a, b) => b.points - a.points || b.wins - a.wins);
+    divisions[division].sort((a, b) => a.divisionSequence - b.divisionSequence);
   }
   
   return divisions;
@@ -427,8 +441,8 @@ function calculateWildCard(conferenceTeams) {
     return !divisionLeaders.find(leader => leader.teamAbbrev?.default === team.teamAbbrev?.default);
   });
   
-  // Sort by points
-  wildCardCandidates.sort((a, b) => b.points - a.points || b.wins - a.wins);
+  // Sort by wildcard sequence
+  wildCardCandidates.sort((a, b) => a.wildcardSequence - b.wildcardSequence);
   
   // Return top 10 (show more context)
   return wildCardCandidates.slice(0, 10);
@@ -469,6 +483,48 @@ function calculatePlayoffTeams(standings) {
   });
   
   return playoffTeams;
+}
+
+function calculateWildcardTeams(standings) {
+  /**
+   * Calculate which teams are wildcard teams
+   * Returns a Set of team abbreviations for the 2 wildcard teams from each conference
+   */
+  const wildcardTeams = new Set();
+  
+  // Get top 3 from each division (these are NOT wildcard teams)
+  const divisions = groupByDivision(standings);
+  const divisionLeaders = new Set();
+  
+  for (const teams of Object.values(divisions)) {
+    teams.slice(0, 3).forEach(team => {
+      divisionLeaders.add(team.teamAbbrev?.default);
+    });
+  }
+  
+  // Get wild card teams from each conference
+  const eastern = standings.filter(t => t.conferenceAbbrev === 'E');
+  const western = standings.filter(t => t.conferenceAbbrev === 'W');
+  
+  const easternWildCard = calculateWildCard(eastern);
+  const westernWildCard = calculateWildCard(western);
+  
+  // Add top 2 wild card teams from each conference (only if they're not division leaders)
+  easternWildCard.slice(0, 2).forEach(team => {
+    const teamAbbrev = team.teamAbbrev?.default;
+    if (!divisionLeaders.has(teamAbbrev)) {
+      wildcardTeams.add(teamAbbrev);
+    }
+  });
+  
+  westernWildCard.slice(0, 2).forEach(team => {
+    const teamAbbrev = team.teamAbbrev?.default;
+    if (!divisionLeaders.has(teamAbbrev)) {
+      wildcardTeams.add(teamAbbrev);
+    }
+  });
+  
+  return wildcardTeams;
 }
 
 function setupStandingsHandlers() {
