@@ -338,8 +338,11 @@ function renderGameCards(games) {
 }
 
 function createGameCard(game) {
-  const card = document.createElement('div');
+  const card = document.createElement('a');
   card.className = 'game-card card';
+  card.href = `/match/${game.id}`;
+  card.style.textDecoration = 'none';
+  card.style.color = 'inherit';
   
   // Add finished class for styling
   if (game.status === 'finished') {
@@ -427,7 +430,8 @@ function createGameCard(game) {
   `;
   
   // Make entire card clickable
-  card.addEventListener('click', () => {
+  card.addEventListener('click', (e) => {
+    e.preventDefault();
     router.navigateTo(`/match/${game.id}`);
   });
   
