@@ -78,20 +78,20 @@ function createModal() {
     <div class="modal-backdrop"></div>
     
     <button class="modal-nav modal-prev" aria-label="Previous highlight">
-      <svg viewBox="0 0 24 24" fill="currentColor">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
         <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
       </svg>
     </button>
     
     <button class="modal-nav modal-next" aria-label="Next highlight">
-      <svg viewBox="0 0 24 24" fill="currentColor">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
         <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
       </svg>
     </button>
     
     <div class="modal-content">
       <button class="modal-close" aria-label="Close">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
