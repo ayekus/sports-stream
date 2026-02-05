@@ -9,11 +9,6 @@ import './styles/game-cards.css';
 import './styles/highlights.css';
 import { router } from './router.js';
 import { createHeader } from './components/Header.js';
-import { renderMatchPage, cleanupMatchPage } from './pages/Match.js';
-import { renderSettingsPage } from './pages/Settings.js';
-import { renderTeamsPage } from './pages/Teams.js';
-import { renderSchedulePage } from './pages/Schedule.js';
-import { renderStandingsPage } from './pages/Standings.js';
 
 // Initialize app
 function initApp() {
@@ -29,13 +24,42 @@ function initApp() {
   const headerContainer = document.getElementById('app-header');
   headerContainer.appendChild(createHeader());
   
-  // Setup routes
-  router.route('/', renderSchedulePage); // Redirect home to schedule
-  router.route('/match/:id', renderMatchPage, cleanupMatchPage); // Include cleanup
-  router.route('/schedule', renderSchedulePage);
-  router.route('/teams', renderTeamsPage);
-  router.route('/standings', renderStandingsPage);
-  router.route('/settings', renderSettingsPage);
+  // Setup routes with code splitting
+  router.route('/', async (params) => {
+    const { renderSchedulePage } = await import('./pages/Schedule.js');
+    return renderSchedulePage(params);
+  });
+
+  router.route('/match/:id',
+    async (params) => {
+      const { renderMatchPage } = await import('./pages/Match.js');
+      return renderMatchPage(params);
+    },
+    async () => {
+      const { cleanupMatchPage } = await import('./pages/Match.js');
+      return cleanupMatchPage();
+    }
+  );
+
+  router.route('/schedule', async (params) => {
+    const { renderSchedulePage } = await import('./pages/Schedule.js');
+    return renderSchedulePage(params);
+  });
+
+  router.route('/teams', async (params) => {
+    const { renderTeamsPage } = await import('./pages/Teams.js');
+    return renderTeamsPage(params);
+  });
+
+  router.route('/standings', async (params) => {
+    const { renderStandingsPage } = await import('./pages/Standings.js');
+    return renderStandingsPage(params);
+  });
+
+  router.route('/settings', async (params) => {
+    const { renderSettingsPage } = await import('./pages/Settings.js');
+    return renderSettingsPage(params);
+  });
   
   // Start router
   router.start();
