@@ -36,7 +36,7 @@ export async function renderSchedulePage() {
       <div class="container">
         
         <div class="schedule-controls mb-lg">
-          <select id="filter-select" class="sort-select">
+          <select id="filter-select" class="sort-select" aria-label="Filter games by status">
             <option value="all">All Games</option>
             <option value="live">Live Only</option>
             <option value="upcoming">Upcoming Only</option>
@@ -47,6 +47,7 @@ export async function renderSchedulePage() {
             id="schedule-search" 
             placeholder="Search teams..." 
             class="search-input"
+            aria-label="Search teams"
           />
         </div>
         
@@ -163,7 +164,7 @@ async function loadSchedule() {
       <div class="page">
         <div class="container">
           <div class="schedule-controls mb-lg">
-            <select id="filter-select" class="sort-select">
+            <select id="filter-select" class="sort-select" aria-label="Filter games by status">
               <option value="all">All Games</option>
               <option value="live">Live Only</option>
               <option value="upcoming">Upcoming Only</option>
@@ -174,6 +175,7 @@ async function loadSchedule() {
               id="schedule-search" 
               placeholder="Search teams..." 
               class="search-input"
+              aria-label="Search teams"
             />
           </div>
           
@@ -195,7 +197,7 @@ function renderEmptySchedule() {
       <div class="container">
         
         <div class="schedule-controls mb-lg">
-          <select id="filter-select" class="sort-select">
+          <select id="filter-select" class="sort-select" aria-label="Filter games by status">
             <option value="all">All Games</option>
             <option value="live">Live Only</option>
             <option value="upcoming">Upcoming Only</option>
@@ -206,6 +208,7 @@ function renderEmptySchedule() {
             id="schedule-search" 
             placeholder="Search teams..." 
             class="search-input"
+            aria-label="Search teams"
           />
         </div>
         
@@ -232,7 +235,7 @@ function renderScheduleUI(games) {
     <div class="page">
       <div class="container">
         <div class="schedule-controls mb-lg">
-          <select id="filter-select" class="sort-select">
+          <select id="filter-select" class="sort-select" aria-label="Filter games by status">
             <option value="all">All Games (${games.length})</option>
             <option value="live">Live Only (${liveGames.length})</option>
             <option value="upcoming">Upcoming Only (${upcomingGames.length})</option>
@@ -243,6 +246,7 @@ function renderScheduleUI(games) {
             id="schedule-search" 
             placeholder="Search teams..." 
             class="search-input"
+            aria-label="Search teams"
           />
           <button id="refresh-stats" class="refresh-stats-btn" title="Refresh live scores">
             🔄 Refresh Stats
@@ -285,7 +289,29 @@ function renderGameCards(games) {
   list.innerHTML = '';
   
   if (games.length === 0) {
-    list.innerHTML = '<p class="text-center text-secondary">No games match your filter.</p>';
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🔍</div>
+        <h3 class="empty-state-title">No Games Found</h3>
+        <p>No games match your current filters.</p>
+        <button id="clear-filters-btn" class="view-games-button" style="max-width: 200px; margin-top: 1rem;">Clear Filters</button>
+      </div>
+    `;
+
+    // Add event listener for the clear button
+    const clearBtn = document.getElementById('clear-filters-btn');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        const filterSelect = document.getElementById('filter-select');
+        const searchInput = document.getElementById('schedule-search');
+
+        if (filterSelect) filterSelect.value = 'all';
+        if (searchInput) searchInput.value = '';
+
+        // Trigger filter update
+        applyFilters();
+      });
+    }
     return;
   }
   
