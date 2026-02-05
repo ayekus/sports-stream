@@ -254,7 +254,28 @@ function renderScheduleUI(games) {
     </div>
   `;
   
+  // Optimization: Use event delegation on the list container
+  const list = document.getElementById('schedule-list');
+  if (list) {
+    list.addEventListener('click', handleGameCardClick);
+  }
+
   renderGameCards(games);
+}
+
+/**
+ * Handle clicks on game cards via event delegation
+ * Reduces memory usage by using a single listener instead of one per card
+ */
+function handleGameCardClick(e) {
+  const card = e.target.closest('.game-card');
+  if (card) {
+    e.preventDefault();
+    const href = card.getAttribute('href');
+    if (href) {
+      router.navigateTo(href);
+    }
+  }
 }
 
 function renderGameCards(games) {
@@ -268,6 +289,9 @@ function renderGameCards(games) {
     return;
   }
   
+  // Optimization: Use DocumentFragment to batch DOM updates
+  const fragment = document.createDocumentFragment();
+
   // Group games by date
   const gamesByDate = {};
   games.forEach(game => {
@@ -323,7 +347,7 @@ function renderGameCards(games) {
       <h3 class="date-title">${date}</h3>
       <span class="game-count">${gamesForDate.length} game${gamesForDate.length !== 1 ? 's' : ''}</span>
     `;
-    list.appendChild(dateHeader);
+    fragment.appendChild(dateHeader);
     
     // Create games container for this date
     const gamesContainer = document.createElement('div');
@@ -334,8 +358,10 @@ function renderGameCards(games) {
       gamesContainer.appendChild(card);
     });
     
-    list.appendChild(gamesContainer);
+    fragment.appendChild(gamesContainer);
   });
+
+  list.appendChild(fragment);
 }
 
 function createGameCard(game) {
@@ -430,11 +456,7 @@ function createGameCard(game) {
     </div>
   `;
   
-  // Make entire card clickable
-  card.addEventListener('click', (e) => {
-    e.preventDefault();
-    router.navigateTo(`/match/${game.id}`);
-  });
+  // Optimization: Event listener removed in favor of delegation in renderScheduleUI
   
   return card;
 }
