@@ -35,6 +35,9 @@ function createHighlightCard(highlight, index, onClickCallback) {
   
   return `
     <div class="highlight-card" 
+         role="button"
+         tabindex="0"
+         aria-label="Watch goal by ${highlight.scorer.name}, ${highlight.timeInPeriod} in ${highlight.periodDisplay}"
          data-highlight-index="${index}"
          style="--team-color: ${teamColor}">
       
@@ -144,18 +147,19 @@ export function setupHighlightHandlers(highlights, onHighlightClick) {
   const cards = document.querySelectorAll('.highlight-card');
   
   cards.forEach(card => {
-    card.addEventListener('click', () => {
+    const handleClick = () => {
       const index = parseInt(card.dataset.highlightIndex);
       onHighlightClick(highlights[index], index);
-    });
+    };
+
+    card.addEventListener('click', handleClick);
     
-    // Add hover effect
-    card.addEventListener('mouseenter', () => {
-      card.style.transform = 'translateY(-4px)';
-    });
-    
-    card.addEventListener('mouseleave', () => {
-      card.style.transform = 'translateY(0)';
+    // Add keyboard support
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleClick();
+      }
     });
   });
 }

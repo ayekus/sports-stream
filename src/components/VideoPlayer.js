@@ -266,7 +266,7 @@ export class VideoPlayer {
       <div class="error-content">
         <p>⚠️ Unable to load stream</p>
         <p class="text-secondary">The stream source may be unavailable or incompatible.</p>
-        <button class="retry-button" onclick="window.location.reload()">Retry</button>
+        <button class="retry-button" onclick="window.location.reload()" aria-label="Retry loading stream">Retry</button>
       </div>
     `;
     
