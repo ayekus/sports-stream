@@ -293,7 +293,9 @@ export function isOlympicGame(title, teams) {
   const nationalTeamKeywords = [
     'canada', 'usa', 'united states', 'sweden', 'finland', 'russia',
     'czechia', 'czech republic', 'switzerland', 'germany', 'slovakia',
-    'latvia', 'norway', 'denmark', 'austria', 'france', 'kazakhstan'
+    'latvia', 'norway', 'denmark', 'austria', 'france', 'kazakhstan',
+    'japan', 'italy', 'china', 'great britain', 'korea', 'poland',
+    'hungary', 'slovenia', 'ukraine', 'belarus'
   ];
   
   if (teams?.home?.name && teams?.away?.name) {
