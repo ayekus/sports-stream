@@ -13,7 +13,7 @@ export function createTeamCard(team) {
   
   card.innerHTML = `
     <div class="team-logo">
-      ${logo ? `<img src="${logo}" alt="${team.strTeam}" />` : `
+      ${logo ? `<img src="${logo}" alt="${team.strTeam}" loading="lazy" />` : `
         <div class="logo-placeholder">🏒</div>
       `}
     </div>
@@ -61,13 +61,13 @@ export function createTeamModal(team) {
       
       ${banner ? `
         <div class="modal-banner">
-          <img src="${banner}" alt="${team.strTeam}" />
+          <img src="${banner}" alt="${team.strTeam}" loading="lazy" />
         </div>
       ` : ''}
       
       <div class="modal-body">
         <div class="modal-header">
-          ${logo ? `<img src="${logo}" alt="${team.strTeam}" class="modal-logo" />` : ''}
+          ${logo ? `<img src="${logo}" alt="${team.strTeam}" class="modal-logo" loading="lazy" />` : ''}
           <div>
             <h2>${team.strTeam}</h2>
             <p class="text-secondary">${team.strLeague || 'NHL'}</p>

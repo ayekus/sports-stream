@@ -447,7 +447,7 @@ function createGameCard(game) {
         <!-- Live or finished game with score -->
         <div class="game-matchup-row">
           <div class="team-section team-away">
-            ${game.teams?.away ? `<img src="${getLogoUrl(game.teams.away)}" alt="${awayTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
+            ${game.teams?.away ? `<img src="${getLogoUrl(game.teams.away)}" alt="${awayTeam}" class="team-logo-inline" onerror="this.style.display='none'" loading="lazy" />` : ''}
             <span class="team-name-large">${awayTeam}</span>
           </div>
           
@@ -460,14 +460,14 @@ function createGameCard(game) {
           
           <div class="team-section team-home">
             <span class="team-name-large">${homeTeam}</span>
-            ${game.teams?.home ? `<img src="${getLogoUrl(game.teams.home)}" alt="${homeTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
+            ${game.teams?.home ? `<img src="${getLogoUrl(game.teams.home)}" alt="${homeTeam}" class="team-logo-inline" onerror="this.style.display='none'" loading="lazy" />` : ''}
           </div>
         </div>
       ` : `
         <!-- Non-live game without score -->
         <div class="game-matchup-row">
           <div class="team-section team-away">
-            ${game.teams?.away ? `<img src="${getLogoUrl(game.teams.away)}" alt="${awayTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
+            ${game.teams?.away ? `<img src="${getLogoUrl(game.teams.away)}" alt="${awayTeam}" class="team-logo-inline" onerror="this.style.display='none'" loading="lazy" />` : ''}
             <span class="team-name-large">${awayTeam}</span>
           </div>
           
@@ -475,7 +475,7 @@ function createGameCard(game) {
           
           <div class="team-section team-home">
             <span class="team-name-large">${homeTeam}</span>
-            ${game.teams?.home ? `<img src="${getLogoUrl(game.teams.home)}" alt="${homeTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
+            ${game.teams?.home ? `<img src="${getLogoUrl(game.teams.home)}" alt="${homeTeam}" class="team-logo-inline" onerror="this.style.display='none'" loading="lazy" />` : ''}
           </div>
         </div>
       `}
