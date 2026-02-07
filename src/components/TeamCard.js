@@ -13,7 +13,7 @@ export function createTeamCard(team) {
   
   card.innerHTML = `
     <div class="team-logo">
-      ${logo ? `<img src="${logo}" alt="${team.strTeam}" />` : `
+      ${logo ? `<img src="${logo}" alt="${team.strTeam}" loading="lazy" />` : `
         <div class="logo-placeholder">🏒</div>
       `}
     </div>

@@ -43,7 +43,7 @@ function createHighlightCard(highlight, index, onClickCallback) {
       
       <div class="highlight-thumbnail">
         ${highlight.team.logo ? 
-          `<img src="${highlight.team.logo}" alt="${highlight.team.name}" class="team-logo-bg">` : 
+          `<img src="${highlight.team.logo}" alt="${highlight.team.name}" class="team-logo-bg" loading="lazy">` :
           ''
         }
         <div class="play-button">
