@@ -390,7 +390,7 @@ function createTeamRow(team, rank, playoffClass = '', showDivision = false) {
     <tr class="${playoffClass}">
       <td class="rank-col">${rank}</td>
       <td class="team-col">
-        <img src="${logoUrl}" alt="${team.teamName?.default}" class="team-logo-small" onerror="this.style.display='none'" />
+        <img src="${logoUrl}" alt="${team.teamName?.default}" class="team-logo-small" onerror="this.style.display='none'" loading="lazy" />
         <span class="team-name">${team.teamName?.default || 'Unknown'}</span>
       </td>
       ${showDivision ? `<td>${team.divisionAbbrev}</td>` : ''}
