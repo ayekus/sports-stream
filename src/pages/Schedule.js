@@ -336,6 +336,13 @@ function renderGameCards(games) {
   
   // Render games grouped by date
   Object.entries(gamesByDate).forEach(([date, gamesForDate]) => {
+    // Pre-calculate timestamps for sorting to avoid creating Date objects in the sort loop
+    gamesForDate.forEach(game => {
+      if (!game._timestamp) {
+        game._timestamp = new Date(game.time).getTime();
+      }
+    });
+
     // Smart sorting within the same date:
     // 1. Live games first, sorted by MOST RECENT start time (desc)
     // 2. Upcoming games next, sorted by EARLIEST start time (asc)
@@ -351,8 +358,8 @@ function renderGameCards(games) {
       }
       
       // Same status - apply different time sorting based on status
-      const timeA = new Date(a.time).getTime();
-      const timeB = new Date(b.time).getTime();
+      const timeA = a._timestamp;
+      const timeB = b._timestamp;
       
       if (a.status === 'live') {
         // Live games: most recent start time first (descending)
@@ -409,10 +416,15 @@ function createGameCard(game) {
   // Extract team names from title or use teams object
   let homeTeam = 'TBA';
   let awayTeam = 'TBA';
+  let homeLogoUrl = null;
+  let awayLogoUrl = null;
   
   if (game.teams) {
     homeTeam = game.teams.home?.name || 'TBA';
     awayTeam = game.teams.away?.name || 'TBA';
+    // Get logo URLs once
+    homeLogoUrl = getLogoUrl(game.teams.home);
+    awayLogoUrl = getLogoUrl(game.teams.away);
   }
   
   const liveData = game.liveData;
@@ -447,7 +459,7 @@ function createGameCard(game) {
         <!-- Live or finished game with score -->
         <div class="game-matchup-row">
           <div class="team-section team-away">
-            ${game.teams?.away ? `<img src="${getLogoUrl(game.teams.away)}" alt="${awayTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
+            ${awayLogoUrl ? `<img src="${awayLogoUrl}" alt="${awayTeam}" class="team-logo-inline" loading="lazy" onerror="this.style.display='none'" />` : ''}
             <span class="team-name-large">${awayTeam}</span>
           </div>
           
@@ -460,14 +472,14 @@ function createGameCard(game) {
           
           <div class="team-section team-home">
             <span class="team-name-large">${homeTeam}</span>
-            ${game.teams?.home ? `<img src="${getLogoUrl(game.teams.home)}" alt="${homeTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
+            ${homeLogoUrl ? `<img src="${homeLogoUrl}" alt="${homeTeam}" class="team-logo-inline" loading="lazy" onerror="this.style.display='none'" />` : ''}
           </div>
         </div>
       ` : `
         <!-- Non-live game without score -->
         <div class="game-matchup-row">
           <div class="team-section team-away">
-            ${game.teams?.away ? `<img src="${getLogoUrl(game.teams.away)}" alt="${awayTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
+            ${awayLogoUrl ? `<img src="${awayLogoUrl}" alt="${awayTeam}" class="team-logo-inline" loading="lazy" onerror="this.style.display='none'" />` : ''}
             <span class="team-name-large">${awayTeam}</span>
           </div>
           
@@ -475,7 +487,7 @@ function createGameCard(game) {
           
           <div class="team-section team-home">
             <span class="team-name-large">${homeTeam}</span>
-            ${game.teams?.home ? `<img src="${getLogoUrl(game.teams.home)}" alt="${homeTeam}" class="team-logo-inline" onerror="this.style.display='none'" />` : ''}
+            ${homeLogoUrl ? `<img src="${homeLogoUrl}" alt="${homeTeam}" class="team-logo-inline" loading="lazy" onerror="this.style.display='none'" />` : ''}
           </div>
         </div>
       `}
