@@ -142,23 +142,36 @@ function getTeamColor(teamAbbrev) {
 
 /**
  * Setup event handlers for highlight clicks
+ * OPTIMIZATION: Uses event delegation to attach listeners to the grid container
+ * instead of each individual card. This reduces memory usage and initialization time,
+ * especially when there are many highlights.
  */
 export function setupHighlightHandlers(highlights, onHighlightClick) {
-  const cards = document.querySelectorAll('.highlight-card');
+  const grids = document.querySelectorAll('.highlights-grid');
   
-  cards.forEach(card => {
-    const handleClick = () => {
+  grids.forEach(grid => {
+    const handleAction = (target) => {
+      const card = target.closest('.highlight-card');
+      if (!card) return;
+
       const index = parseInt(card.dataset.highlightIndex);
-      onHighlightClick(highlights[index], index);
+      if (!isNaN(index) && highlights[index]) {
+        onHighlightClick(highlights[index], index);
+      }
     };
 
-    card.addEventListener('click', handleClick);
+    grid.addEventListener('click', (e) => {
+      handleAction(e.target);
+    });
     
     // Add keyboard support
-    card.addEventListener('keydown', (e) => {
+    grid.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        handleClick();
+        // Only handle if we're on a card
+        if (e.target.closest('.highlight-card')) {
+          e.preventDefault();
+          handleAction(e.target);
+        }
       }
     });
   });
