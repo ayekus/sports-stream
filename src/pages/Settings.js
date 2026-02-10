@@ -27,7 +27,7 @@ export async function renderSettingsPage() {
             <h3>About</h3>
             <p class="text-secondary">StreamPuck - Ad-free hockey streaming platform</p>
             <p class="text-muted mt-md">Version 1.0.0</p>
-            <p class="text-muted">Built with ❤️ for hockey fans</p>
+            <p class="text-muted">Built with ❤️ for sens fans</p>
             
             <div class="mt-lg">
               <h4>Data Sources</h4>

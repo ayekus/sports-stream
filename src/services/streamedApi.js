@@ -19,7 +19,6 @@ export async function getSports() {
   const cached = cache.get(cacheKey);
   
   if (cached) {
-    console.log('✅ Using cached sports');
     return cached;
   }
   
@@ -69,7 +68,6 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
   const cached = cache.get(cacheKey);
   
   if (cached) {
-    console.log(`✅ Using cached hockey matches (${filter})`);
     return cached;
   }
   
@@ -93,7 +91,6 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
       try {
         const scoresData = await nhlScoreApi.getLiveScores();
         nhlGames = scoresData.games || [];
-        console.log(`✅ Fetched ${nhlGames.length} NHL games for enrichment`);
       } catch (error) {
         console.warn('Could not fetch NHL scores for enrichment:', error);
       }
@@ -110,17 +107,12 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
         let homeAbbrev = match.teams.home?.abbrev;
         let awayAbbrev = match.teams.away?.abbrev;
         
-        console.log(`🔍 Enriching: ${match.teams.away?.name} @ ${match.teams.home?.name}`);
-        console.log(`   Raw abbrevs: away=${awayAbbrev}, home=${homeAbbrev}`);
-        
         // If abbreviations aren't available, try to map from team names
         if (!homeAbbrev && match.teams.home?.name) {
           homeAbbrev = nhlScoreApi.getTeamAbbreviation(match.teams.home.name);
-          console.log(`   Mapped home "${match.teams.home.name}" -> ${homeAbbrev}`);
         }
         if (!awayAbbrev && match.teams.away?.name) {
           awayAbbrev = nhlScoreApi.getTeamAbbreviation(match.teams.away.name);
-          console.log(`   Mapped away "${match.teams.away.name}" -> ${awayAbbrev}`);
         }
         
         // Store abbreviations on team objects for logo display
@@ -132,8 +124,6 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
         }
         
         if (homeAbbrev && awayAbbrev) {
-          console.log(`   Looking for NHL game: ${awayAbbrev} @ ${homeAbbrev}`);
-          
           // Try exact match first (Away @ Home)
           nhlGame = nhlGames.find(g =>
             g.homeTeam?.abbrev === homeAbbrev &&
@@ -143,25 +133,14 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
           // If not found, try reversed (in case APIs have different home/away designations)
           // This happens with outdoor series games and some special events
           if (!nhlGame) {
-            console.log(`   Trying reversed: ${homeAbbrev} @ ${awayAbbrev}`);
             nhlGame = nhlGames.find(g =>
               g.homeTeam?.abbrev === awayAbbrev &&
               g.awayTeam?.abbrev === homeAbbrev
             );
             if (nhlGame) {
               teamsReversed = true; // Mark that we need to swap scores
-              console.log(`   ⚠️ Teams are reversed in NHL API`);
             }
           }
-          
-          if (nhlGame) {
-            console.log(`   ✅ MATCH FOUND! NHL Game ID: ${nhlGame.id}, Score: ${nhlGame.awayTeam.score}-${nhlGame.homeTeam.score}`);
-          } else {
-            console.log(`   ❌ No NHL game found for ${awayAbbrev} @ ${homeAbbrev}`);
-            console.log(`   Available NHL games:`, nhlGames.map(g => `${g.awayTeam?.abbrev} @ ${g.homeTeam?.abbrev}`));
-          }
-        } else {
-          console.log(`   ⚠️ Missing abbreviations: home=${homeAbbrev}, away=${awayAbbrev}`);
         }
       }
       
@@ -170,8 +149,6 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
     
     // Cache for 15 minutes
     cache.set(cacheKey, processedMatches, CACHE_TTL);
-    
-    console.log(`✅ Fetched ${processedMatches.length} hockey matches (${filter})`);
     
     return processedMatches;
   } catch (error) {
@@ -206,7 +183,6 @@ export async function getAllMatches(filter = 'all') {
   const cached = cache.get(cacheKey);
   
   if (cached) {
-    console.log(`✅ Using cached all matches (${filter})`);
     return cached;
   }
   
@@ -240,7 +216,6 @@ export async function getStreamUrls(source, id) {
   const cached = cache.get(cacheKey);
   
   if (cached) {
-    console.log(`✅ Using cached stream for ${source}/${id}`);
     return cached;
   }
   
@@ -373,10 +348,7 @@ function processMatch(match, nhlGame = null, teamsReversed = false) {
     nhlGameId: nhlGame?.id || null // Store NHL game ID for highlights
   };
   
-  // Debug log for highlights feature
-  if (nhlGame?.id) {
-    console.log(`   📊 Stored NHL game ID ${nhlGame.id} for ${match.title}`);
-  }
+  // Store NHL game ID for highlights feature
   
   // Add live data if available
   if (liveData) {

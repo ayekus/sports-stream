@@ -77,6 +77,119 @@
   background: var(--color-accent-gradient);
 }
 
+/* Settings Icon Button */
+.settings-icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  font-size: 1.25rem;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+
+.settings-icon-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: rotate(90deg);
+}
+
+/* Sens Fan Hub Button */
+.sens-hub-button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: linear-gradient(135deg, #CE1126, #991020);
+  color: white;
+  font-weight: var(--font-weight-bold);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all var(--transition-base);
+  box-shadow: 0 4px 12px rgba(206, 17, 38, 0.4);
+}
+
+.sens-hub-button:hover {
+  background: linear-gradient(135deg, #E01530, #CE1126);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(206, 17, 38, 0.6);
+}
+
+.sens-hub-button.active {
+  background: linear-gradient(135deg, #C8A878, #B89968);
+  box-shadow: 0 4px 12px rgba(200, 168, 120, 0.4);
+}
+
+/* Back to StreamPuck Button (in Sens mode) */
+.back-to-streampuck-button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  color: white;
+  font-weight: var(--font-weight-bold);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all var(--transition-base);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+}
+
+.back-to-streampuck-button:hover {
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.6);
+}
+
+/* Sens Mode - Global Theme Transformation */
+body.sens-mode {
+  background: linear-gradient(135deg, #0a0506 0%, #1a0a0d 50%, #2a0610 100%);
+}
+
+body.sens-mode .site-header {
+  background: rgba(10, 5, 6, 0.95);
+  border-bottom: 2px solid var(--color-sens-red);
+  box-shadow: 0 4px 20px rgba(206, 17, 38, 0.3);
+}
+
+body.sens-mode .logo a {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+body.sens-mode .nav-link {
+  color: var(--color-sens-gold);
+}
+
+body.sens-mode .nav-link:hover {
+  color: white;
+}
+
+body.sens-mode .nav-link.active {
+  color: var(--color-sens-red);
+}
+
+body.sens-mode .nav-link.active::after {
+  background: linear-gradient(90deg, var(--color-sens-red), var(--color-sens-gold));
+}
+
+body.sens-mode .sens-hub-title {
+  background: linear-gradient(90deg, var(--color-sens-red), var(--color-sens-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: var(--font-weight-bold);
+}
+
 /* Match Card */
 .match-card {
   display: flex;

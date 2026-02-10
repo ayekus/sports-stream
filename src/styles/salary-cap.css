@@ -1,0 +1,585 @@
+/* Salary Cap Page Styles */
+.salary-cap-page {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.salary-cap-summary {
+  margin-bottom: 3rem;
+}
+
+.salary-cap-summary h2 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: var(--sens-gold);
+  text-align: center;
+}
+
+.cap-stats {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.cap-stat {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(183, 146, 87, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  min-width: 180px;
+  text-align: center;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.cap-stat:hover {
+  transform: translateY(-2px);
+  border-color: var(--sens-gold);
+}
+
+.cap-label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.cap-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--sens-gold);
+}
+
+.cap-space {
+  color: #4ade80;
+}
+
+/* Player Tables */
+.player-category {
+  margin-bottom: 3rem;
+}
+
+.player-category h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: var(--sens-gold);
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(183, 146, 87, 0.3);
+}
+
+.player-table-container {
+  overflow-x: auto;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.player-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.player-table thead {
+  background: rgba(183, 146, 87, 0.2);
+}
+
+.player-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--sens-gold);
+  border-bottom: 2px solid rgba(183, 146, 87, 0.3);
+  white-space: nowrap;
+}
+
+.player-table td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.player-table tbody tr {
+  transition: background-color 0.2s;
+}
+
+.player-table tbody tr:hover {
+  background: rgba(183, 146, 87, 0.1);
+}
+
+.player-name {
+  font-weight: 600;
+  color: #fff;
+}
+
+/* Loading and Error States */
+.loading,
+.error {
+  text-align: center;
+  padding: 4rem 2rem;
+  font-size: 1.2rem;
+}
+
+.error {
+  color: #ef4444;
+}
+
+/* Data Info */
+.data-info {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+}
+
+.data-info p {
+  margin: 0.25rem 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .salary-cap-page {
+    padding: 1rem;
+  }
+  
+  .cap-stats {
+    gap: 1rem;
+  }
+  
+  .cap-stat {
+    min-width: 140px;
+    padding: 1rem;
+  }
+  
+  .cap-value {
+    font-size: 1.25rem;
+  }
+  
+  .player-table {
+    font-size: 0.85rem;
+  }
+  
+  .player-table th,
+  .player-table td {
+    padding: 0.75rem 0.5rem;
+  }
+}
+
+/* Sort and Filter Controls - MODERN SEGMENTED STYLE */
+.modern-control-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.control-label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.segmented-control {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(183, 146, 87, 0.2);
+  border-radius: 10px;
+  padding: 0.25rem;
+  gap: 0.25rem;
+}
+
+.segment-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  position: relative;
+}
+
+.segment-btn:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.segment-btn.active {
+  background: linear-gradient(135deg, #b79257 0%, #d4af37 100%);
+  color: #000;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(183, 146, 87, 0.3);
+}
+
+.segment-btn.active:hover {
+  background: linear-gradient(135deg, #c9a567 0%, #e0bf47 100%);
+}
+
+.segment-icon {
+  font-size: 1rem;
+}
+
+.segment-text {
+  font-size: 0.875rem;
+}
+
+/* Expiring Years Highlight - SUBTLE */
+.expiring-years {
+  color: #ef4444 !important;
+  font-weight: 700 !important;
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+  animation: pulse-red 2s ease-in-out infinite;
+}
+
+@keyframes pulse-red {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .modern-control-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .segmented-control {
+    width: 100%;
+  }
+  
+  .segment-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .segment-text {
+    font-size: 0.8rem;
+  }
+}
+
+/* Vertical Timeline Design */
+.timeline-vertical-container {
+  position: relative;
+  padding-left: var(--spacing-2xl);
+}
+
+.timeline-year-section {
+  position: relative;
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: var(--spacing-2xl);
+  margin-bottom: var(--spacing-3xl);
+}
+
+.timeline-year-section.timeline-last .timeline-connector-line {
+  display: none;
+}
+
+/* Year Marker with Dot and Line */
+.timeline-year-marker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timeline-connector-line {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  height: calc(100% + var(--spacing-3xl));
+  background: linear-gradient(180deg, 
+    rgba(183, 146, 87, 0.6) 0%, 
+    rgba(183, 146, 87, 0.2) 100%);
+  box-shadow: 0 0 10px rgba(183, 146, 87, 0.3);
+}
+
+.timeline-year-dot {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid rgba(0, 0, 0, 0.8);
+  position: relative;
+  z-index: 2;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.timeline-year-dot:hover {
+  transform: scale(1.15) rotate(5deg);
+}
+
+.timeline-year-text {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  letter-spacing: 0.05em;
+}
+
+/* Timeline Content Section */
+.timeline-content-section {
+  animation: slideInRight 0.6s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Stats Header */
+.timeline-stats-header {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(183, 146, 87, 0.2);
+  border-left: 4px solid var(--sens-gold);
+  border-radius: 12px;
+  padding: var(--spacing-lg);
+  display: flex;
+  gap: var(--spacing-2xl);
+  margin-bottom: var(--spacing-lg);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.timeline-stats-header:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(183, 146, 87, 0.4);
+  transform: translateX(4px);
+}
+
+.timeline-stat-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex: 1;
+}
+
+.timeline-stat-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(183, 146, 87, 0.15);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sens-gold);
+  flex-shrink: 0;
+}
+
+.timeline-stat-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
+.timeline-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Player Cards Grid */
+.timeline-player-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.timeline-player-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(183, 146, 87, 0.2);
+  border-radius: 12px;
+  padding: var(--spacing-md);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.timeline-player-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--sens-gold), var(--sens-red));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.timeline-player-card:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+  border-color: var(--sens-gold);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(183, 146, 87, 0.2);
+}
+
+.timeline-player-card:hover::before {
+  transform: scaleX(1);
+}
+
+.timeline-player-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.timeline-player-position {
+  background: rgba(183, 146, 87, 0.2);
+  color: var(--sens-gold);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
+}
+
+.timeline-player-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  flex: 1;
+}
+
+.timeline-player-salary {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--sens-gold);
+  margin-bottom: var(--spacing-sm);
+}
+
+.timeline-player-meta {
+  display: flex;
+  gap: var(--spacing-sm);
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.timeline-player-meta span {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* Responsive Timeline */
+@media (max-width: 1024px) {
+  .timeline-year-section {
+    grid-template-columns: 100px 1fr;
+    gap: var(--spacing-lg);
+  }
+  
+  .timeline-year-dot {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .timeline-year-text {
+    font-size: 1.1rem;
+  }
+  
+  .timeline-player-cards {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .timeline-vertical-container {
+    padding-left: var(--spacing-md);
+  }
+  
+  .timeline-year-section {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+  
+  .timeline-year-marker {
+    flex-direction: row;
+    justify-content: flex-start;
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .timeline-connector-line {
+    display: none;
+  }
+  
+  .timeline-year-dot {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .timeline-stats-header {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  
+  .timeline-player-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Injured Status Badge */
+.contract-status-badge.injured {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border-color: #ef4444;
+}
+
+/* Refresh Data Button */
+.refresh-btn {
+  background: linear-gradient(135deg, rgba(183, 146, 87, 0.2) 0%, rgba(212, 175, 55, 0.2) 100%);
+  border: 1px solid rgba(183, 146, 87, 0.4);
+  color: var(--sens-gold);
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.refresh-btn:hover {
+  background: linear-gradient(135deg, #b79257 0%, #d4af37 100%);
+  color: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(183, 146, 87, 0.3);
+}
+
+.refresh-btn:active {
+  transform: translateY(0);
+}
+
+

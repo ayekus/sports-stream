@@ -127,19 +127,56 @@ button:disabled {
   transform: translateY(-4px);
 }
 
-/* Loading State */
-.loading {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: var(--color-accent-primary);
-  animation: spin 1s linear infinite;
+/* Loading State - Three Dots Wave Animation */
+.loading-container {
+  text-align: center;
+  padding: 2rem 0;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.loading {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 0 auto 1rem;
+}
+
+.loading span {
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, #00D4FF 0%, #0099CC 100%);
+  border-radius: 50%;
+  display: inline-block;
+  animation: dotWave 1.4s ease-in-out infinite;
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.6);
+}
+
+.loading span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.loading span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dotWave {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.6);
+  }
+  30% {
+    transform: translateY(-18px);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.8);
+  }
+}
+
+.loading-text {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
 }
 
 /* Status Badges */

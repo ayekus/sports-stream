@@ -36,6 +36,9 @@ export function cleanupMatchPage() {
   // Cleanup highlight modal
   destroyHighlightModal();
   
+  // Remove sens-mode if it was applied
+  document.body.classList.remove('sens-mode');
+  
   // Clear state
   currentMatch = null;
   currentSources = [];
@@ -247,8 +250,22 @@ function setupRedirectBlocking() {
 function renderMatchUI(match) {
   const app = document.getElementById('app-content');
   
+  // Check if this is a Sens game
+  const isSensGame = match.title && (
+    match.title.toLowerCase().includes('ottawa') ||
+    match.title.toLowerCase().includes('senators') ||
+    match.title.toLowerCase().includes('sens')
+  );
+  
+  // Apply Sens theme if it's a Sens game
+  if (isSensGame) {
+    document.body.classList.add('sens-mode');
+  } else {
+    document.body.classList.remove('sens-mode');
+  }
+  
   app.innerHTML = `
-    <div class="page match-page">
+    <div class="page match-page ${isSensGame ? 'sens-game' : ''}">
       <div class="container">
         <button class="back-button mb-lg" onclick="window.history.back()">
           ← Back to Matches

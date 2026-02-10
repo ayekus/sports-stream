@@ -6,7 +6,7 @@
 import { cache } from '../utils/cache.js';
 
 const BASE_URL = 'https://www.thesportsdb.com/api/v1/json';
-const API_KEY = import.meta.env.VITE_SPORTSDB_KEY;
+const API_KEY = 3;
 const CACHE_TTL = {
   TEAMS: 30 * 24 * 60 * 60 * 1000, // 30 days - team data rarely changes
 };

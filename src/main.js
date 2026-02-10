@@ -7,6 +7,9 @@ import './styles/index.css';
 import './styles/components.css';
 import './styles/game-cards.css';
 import './styles/highlights.css';
+import './styles/sens-hub.css';
+import './styles/salary-cap.css';
+import './styles/player-contract-modal.css';
 import { router } from './router.js';
 import { createHeader } from './components/Header.js';
 
@@ -59,6 +62,39 @@ function initApp() {
   router.route('/settings', async (params) => {
     const { renderSettingsPage } = await import('./pages/Settings.js');
     return renderSettingsPage(params);
+  });
+  
+  // Senators Fan Hub routes with code splitting
+  router.route('/sens-hub',
+    async (params) => {
+      const { renderSensCountdown } = await import('./pages/SensCountdown.js');
+      return renderSensCountdown(params);
+    },
+    async () => {
+      const { cleanupSensCountdown } = await import('./pages/SensCountdown.js');
+      return cleanupSensCountdown();
+    }
+  );
+
+  router.route('/sens-hub/salary-cap', async (params) => {
+    const { renderSensSalaryCap } = await import('./pages/SensSalaryCap.js');
+    return renderSensSalaryCap(params);
+  });
+
+  router.route('/sens-hub/team',
+    async (params) => {
+      const { renderSensTeamInfo } = await import('./pages/SensTeamInfo.js');
+      return renderSensTeamInfo(params);
+    },
+    async () => {
+      const { cleanupSensTeamInfo } = await import('./pages/SensTeamInfo.js');
+      return cleanupSensTeamInfo();
+    }
+  );
+
+  router.route('/sens-hub/season', async (params) => {
+    const { renderSensSeasonTracker } = await import('./pages/SensSeasonTracker.js');
+    return renderSensSeasonTracker(params);
   });
   
   // Start router
