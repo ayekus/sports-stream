@@ -10,6 +10,9 @@ import * as nhlScoreApi from './nhlScoreApi.js';
 const BASE_URL = 'https://streamed.pk/api';
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
+// Track pending requests to avoid duplicate fetches
+const pendingRequests = new Map();
+
 /**
  * Get all available sports
  * @returns {Promise<Array>} Array of sports
@@ -243,31 +246,48 @@ export async function getStreamUrls(source, id) {
     console.log(`✅ Using cached stream for ${source}/${id}`);
     return cached;
   }
-  
-  try {
-    const response = await fetch(`${BASE_URL}/stream/${source}/${id}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const streams = await response.json();
-    
-    // Return all streams instead of just selecting one
-    // This allows the UI to display all available feeds (Home, Away, French, etc.)
-    const streamData = {
-      streams: streams, // All available streams for this source
-      allStreams: streams // Keep for backwards compatibility
-    };
-    
-    // Cache for 5 minutes (streams can change)
-    cache.set(cacheKey, streamData, 5 * 60 * 1000);
-    
-    return streamData;
-  } catch (error) {
-    console.error(`Error fetching stream ${source}/${id}:`, error);
-    return cached || { streams: [], allStreams: [] };
+
+  // Check for pending request to avoid race conditions
+  if (pendingRequests.has(cacheKey)) {
+    console.log(`⚡ Joining pending request for ${source}/${id}`);
+    return pendingRequests.get(cacheKey);
   }
+  
+  // Create new request promise
+  const promise = (async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/stream/${source}/${id}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const streams = await response.json();
+
+      // Return all streams instead of just selecting one
+      // This allows the UI to display all available feeds (Home, Away, French, etc.)
+      const streamData = {
+        streams: streams, // All available streams for this source
+        allStreams: streams // Keep for backwards compatibility
+      };
+
+      // Cache for 5 minutes (streams can change)
+      cache.set(cacheKey, streamData, 5 * 60 * 1000);
+
+      return streamData;
+    } catch (error) {
+      console.error(`Error fetching stream ${source}/${id}:`, error);
+      return cached || { streams: [], allStreams: [] };
+    } finally {
+      // Clean up pending request
+      pendingRequests.delete(cacheKey);
+    }
+  })();
+
+  // Store promise
+  pendingRequests.set(cacheKey, promise);
+
+  return promise;
 }
 
 /**
