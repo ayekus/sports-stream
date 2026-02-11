@@ -24,24 +24,41 @@ export async function getSports() {
   if (cached) {
     return cached;
   }
-  
-  try {
-    const response = await fetch(`${BASE_URL}/sports`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const sports = await response.json();
-    
-    // Cache for 24 hours (sports don't change often)
-    cache.set(cacheKey, sports, 24 * 60 * 60 * 1000);
-    
-    return sports;
-  } catch (error) {
-    console.error('Error fetching sports:', error);
-    return cached || [];
+
+  // Check for pending request to avoid race conditions
+  if (pendingRequests.has(cacheKey)) {
+    console.log(`⚡ Joining pending request for sports`);
+    return pendingRequests.get(cacheKey);
   }
+  
+  // Create new request promise
+  const promise = (async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/sports`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const sports = await response.json();
+
+      // Cache for 24 hours (sports don't change often)
+      cache.set(cacheKey, sports, 24 * 60 * 60 * 1000);
+
+      return sports;
+    } catch (error) {
+      console.error('Error fetching sports:', error);
+      return cached || [];
+    } finally {
+      // Clean up pending request
+      pendingRequests.delete(cacheKey);
+    }
+  })();
+
+  // Store promise
+  pendingRequests.set(cacheKey, promise);
+
+  return promise;
 }
 
 /**
@@ -67,97 +84,119 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
       endpoint = '/matches/hockey';
       cacheKey = 'streamed_hockey_all_v2'; // v2 = includes nhlGameId
   }
+
+  // Append enrichment status to cache key to separate enriched/non-enriched results
+  if (enrichWithNHL) {
+    cacheKey += '_enriched';
+  }
   
   const cached = cache.get(cacheKey);
   
   if (cached) {
     return cached;
   }
+
+  // Check for pending request to avoid race conditions
+  if (pendingRequests.has(cacheKey)) {
+    console.log(`⚡ Joining pending request for hockey matches (${filter})`);
+    return pendingRequests.get(cacheKey);
+  }
   
-  try {
-    const response = await fetch(`${BASE_URL}${endpoint}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    let matches = await response.json();
-    
-    // If fetching all live or all today, filter for hockey only
-    if (filter === 'live' || filter === 'today') {
-      matches = matches.filter(m => m.category === 'hockey');
-    }
-    
-    // Fetch NHL live scores for enrichment
-    let nhlGames = [];
-    if (enrichWithNHL) {
-      try {
-        const scoresData = await nhlScoreApi.getLiveScores();
-        nhlGames = scoresData.games || [];
-      } catch (error) {
-        console.warn('Could not fetch NHL scores for enrichment:', error);
+  // Create new request promise
+  const promise = (async () => {
+    try {
+      const response = await fetch(`${BASE_URL}${endpoint}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    }
-    
-    // Process matches and enrich with NHL data
-    const processedMatches = matches.map(match => {
-      let nhlGame = null;
-      let teamsReversed = false; // Track if home/away are swapped between APIs
       
-      // Try to match with NHL game data
-      if (nhlGames.length > 0 && match.teams) {
-        // Try direct abbreviation first, then fallback to name-based lookup
-        let homeAbbrev = match.teams.home?.abbrev;
-        let awayAbbrev = match.teams.away?.abbrev;
+      let matches = await response.json();
+
+      // If fetching all live or all today, filter for hockey only
+      if (filter === 'live' || filter === 'today') {
+        matches = matches.filter(m => m.category === 'hockey');
+      }
+
+      // Fetch NHL live scores for enrichment
+      let nhlGames = [];
+      if (enrichWithNHL) {
+        try {
+          const scoresData = await nhlScoreApi.getLiveScores();
+          nhlGames = scoresData.games || [];
+        } catch (error) {
+          console.warn('Could not fetch NHL scores for enrichment:', error);
+        }
+      }
+
+      // Process matches and enrich with NHL data
+      const processedMatches = matches.map(match => {
+        let nhlGame = null;
+        let teamsReversed = false; // Track if home/away are swapped between APIs
         
-        // If abbreviations aren't available, try to map from team names
-        if (!homeAbbrev && match.teams.home?.name) {
-          homeAbbrev = nhlScoreApi.getTeamAbbreviation(match.teams.home.name);
-        }
-        if (!awayAbbrev && match.teams.away?.name) {
-          awayAbbrev = nhlScoreApi.getTeamAbbreviation(match.teams.away.name);
-        }
-        
-        // Store abbreviations on team objects for logo display
-        if (homeAbbrev && match.teams.home) {
-          match.teams.home.abbrev = homeAbbrev;
-        }
-        if (awayAbbrev && match.teams.away) {
-          match.teams.away.abbrev = awayAbbrev;
-        }
-        
-        if (homeAbbrev && awayAbbrev) {
-          // Try exact match first (Away @ Home)
-          nhlGame = nhlGames.find(g =>
-            g.homeTeam?.abbrev === homeAbbrev &&
-            g.awayTeam?.abbrev === awayAbbrev
-          );
+        // Try to match with NHL game data
+        if (nhlGames.length > 0 && match.teams) {
+          // Try direct abbreviation first, then fallback to name-based lookup
+          let homeAbbrev = match.teams.home?.abbrev;
+          let awayAbbrev = match.teams.away?.abbrev;
           
-          // If not found, try reversed (in case APIs have different home/away designations)
-          // This happens with outdoor series games and some special events
-          if (!nhlGame) {
+          // If abbreviations aren't available, try to map from team names
+          if (!homeAbbrev && match.teams.home?.name) {
+            homeAbbrev = nhlScoreApi.getTeamAbbreviation(match.teams.home.name);
+          }
+          if (!awayAbbrev && match.teams.away?.name) {
+            awayAbbrev = nhlScoreApi.getTeamAbbreviation(match.teams.away.name);
+          }
+
+          // Store abbreviations on team objects for logo display
+          if (homeAbbrev && match.teams.home) {
+            match.teams.home.abbrev = homeAbbrev;
+          }
+          if (awayAbbrev && match.teams.away) {
+            match.teams.away.abbrev = awayAbbrev;
+          }
+
+          if (homeAbbrev && awayAbbrev) {
+            // Try exact match first (Away @ Home)
             nhlGame = nhlGames.find(g =>
-              g.homeTeam?.abbrev === awayAbbrev &&
-              g.awayTeam?.abbrev === homeAbbrev
+              g.homeTeam?.abbrev === homeAbbrev &&
+              g.awayTeam?.abbrev === awayAbbrev
             );
-            if (nhlGame) {
-              teamsReversed = true; // Mark that we need to swap scores
+
+            // If not found, try reversed (in case APIs have different home/away designations)
+            // This happens with outdoor series games and some special events
+            if (!nhlGame) {
+              nhlGame = nhlGames.find(g =>
+                g.homeTeam?.abbrev === awayAbbrev &&
+                g.awayTeam?.abbrev === homeAbbrev
+              );
+              if (nhlGame) {
+                teamsReversed = true; // Mark that we need to swap scores
+              }
             }
           }
         }
-      }
+
+        return processMatch(match, nhlGame, teamsReversed);
+      });
       
-      return processMatch(match, nhlGame, teamsReversed);
-    });
-    
-    // Cache for 15 minutes
-    cache.set(cacheKey, processedMatches, CACHE_TTL);
-    
-    return processedMatches;
-  } catch (error) {
-    console.error('Error fetching hockey matches:', error);
-    return cached || [];
-  }
+      // Cache for 15 minutes
+      cache.set(cacheKey, processedMatches, CACHE_TTL);
+
+      return processedMatches;
+    } catch (error) {
+      console.error('Error fetching hockey matches:', error);
+      return cached || [];
+    } finally {
+      // Clean up pending request
+      pendingRequests.delete(cacheKey);
+    }
+  })();
+
+  // Store promise
+  pendingRequests.set(cacheKey, promise);
+
+  return promise;
 }
 
 /**
@@ -188,24 +227,41 @@ export async function getAllMatches(filter = 'all') {
   if (cached) {
     return cached;
   }
-  
-  try {
-    const response = await fetch(`${BASE_URL}${endpoint}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const matches = await response.json();
-    const processedMatches = matches.map(processMatch);
-    
-    cache.set(cacheKey, processedMatches, CACHE_TTL);
-    
-    return processedMatches;
-  } catch (error) {
-    console.error('Error fetching all matches:', error);
-    return cached || [];
+
+  // Check for pending request to avoid race conditions
+  if (pendingRequests.has(cacheKey)) {
+    console.log(`⚡ Joining pending request for all matches (${filter})`);
+    return pendingRequests.get(cacheKey);
   }
+  
+  // Create new request promise
+  const promise = (async () => {
+    try {
+      const response = await fetch(`${BASE_URL}${endpoint}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const matches = await response.json();
+      const processedMatches = matches.map(processMatch);
+
+      cache.set(cacheKey, processedMatches, CACHE_TTL);
+
+      return processedMatches;
+    } catch (error) {
+      console.error('Error fetching all matches:', error);
+      return cached || [];
+    } finally {
+      // Clean up pending request
+      pendingRequests.delete(cacheKey);
+    }
+  })();
+
+  // Store promise
+  pendingRequests.set(cacheKey, promise);
+
+  return promise;
 }
 
 /**
