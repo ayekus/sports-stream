@@ -9,37 +9,23 @@ import { cache } from '../utils/cache.js';
 const BASE_URL = '/api/nhl';
 const CACHE_TTL = 2 * 60 * 1000; // 2 minutes for live data
 
+// Track pending requests to avoid duplicate fetches
+const pendingRequests = new Map();
+
 /**
  * Get live NHL scores for today
  * @returns {Promise<Object>} Live scores data with game details
  */
 export async function getLiveScores() {
-  try {
-    // Use local date to avoid UTC rollover issues
-    // When it's 7:30 PM PST on Dec 28, we want Dec 28, not Dec 29 (UTC)
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const today = `${year}-${month}-${day}`;
-    
-    console.log(`🔄 Fetching fresh NHL scores for ${today}...`);
-    
-    const response = await fetch(`${BASE_URL}/score/${today}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    console.log(`✅ Fetched ${data.games?.length || 0} NHL games`);
-    
-    return data;
-  } catch (error) {
-    console.error('Error fetching live scores:', error);
-    return { games: [] };
-  }
+  // Use local date to avoid UTC rollover issues
+  // When it's 7:30 PM PST on Dec 28, we want Dec 28, not Dec 29 (UTC)
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const today = `${year}-${month}-${day}`;
+
+  return getScoresByDate(today);
 }
 
 /**
@@ -48,24 +34,52 @@ export async function getLiveScores() {
  * @returns {Promise<Object>} Scores data for the date
  */
 export async function getScoresByDate(date) {
-  try {
-    console.log(`🔄 Fetching fresh NHL scores for ${date}...`);
-    
-    const response = await fetch(`${BASE_URL}/score/${date}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    console.log(`✅ Fetched ${data.games?.length || 0} NHL games for ${date}`);
-    
-    return data;
-  } catch (error) {
-    console.error(`Error fetching scores for ${date}:`, error);
-    return { games: [] };
+  const cacheKey = `nhl_scores_${date}`;
+
+  // 1. Check Cache
+  const cached = cache.get(cacheKey);
+  if (cached) {
+    return cached;
   }
+
+  // 2. Check Pending Requests (Coalescing)
+  if (pendingRequests.has(cacheKey)) {
+    console.log(`⚡ Joining pending request for NHL scores (${date})`);
+    return pendingRequests.get(cacheKey);
+  }
+
+  // 3. Create New Request
+  const promise = (async () => {
+    try {
+      console.log(`🔄 Fetching fresh NHL scores for ${date}...`);
+
+      const response = await fetch(`${BASE_URL}/score/${date}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      console.log(`✅ Fetched ${data.games?.length || 0} NHL games for ${date}`);
+
+      // Cache the result
+      cache.set(cacheKey, data, CACHE_TTL);
+
+      return data;
+    } catch (error) {
+      console.error(`Error fetching scores for ${date}:`, error);
+      return { games: [] };
+    } finally {
+      // Clean up pending request
+      pendingRequests.delete(cacheKey);
+    }
+  })();
+
+  // Store promise
+  pendingRequests.set(cacheKey, promise);
+
+  return promise;
 }
 
 /**
