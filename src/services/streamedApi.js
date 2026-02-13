@@ -105,6 +105,14 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
   // Create new request promise
   const promise = (async () => {
     try {
+      // Start fetching NHL scores early if needed for parallel execution
+      const nhlPromise = enrichWithNHL
+        ? nhlScoreApi.getLiveScores().catch(error => {
+            console.warn('Could not fetch NHL scores for enrichment:', error);
+            return { games: [] };
+          })
+        : Promise.resolve({ games: [] });
+
       const response = await fetch(`${BASE_URL}${endpoint}`);
 
       if (!response.ok) {
@@ -118,15 +126,11 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
         matches = matches.filter(m => m.category === 'hockey');
       }
 
-      // Fetch NHL live scores for enrichment
+      // Get NHL live scores result
       let nhlGames = [];
       if (enrichWithNHL) {
-        try {
-          const scoresData = await nhlScoreApi.getLiveScores();
-          nhlGames = scoresData.games || [];
-        } catch (error) {
-          console.warn('Could not fetch NHL scores for enrichment:', error);
-        }
+        const scoresData = await nhlPromise;
+        nhlGames = scoresData.games || [];
       }
 
       // Process matches and enrich with NHL data
