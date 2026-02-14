@@ -12,4 +12,4 @@
 
 ## 2026-02-13 - [Sequential API Calls in Streamed API]
 **Learning:** `getHockeyMatches` was fetching matches first, awaiting the response, and then fetching NHL scores for enrichment. This created a waterfall effect, doubling the latency.
-**Action:** Initiate independent API calls in parallel using detached promises (with `.catch()` to prevent unhandled rejections) before awaiting them. This reduced the total execution time by approximately 50% in verified tests.
+**Action:** Use `Promise.all` to fetch both data sources in parallel when they are independent. This reduced the total time to `max(T1, T2)`. Be careful to handle errors in the enrichment promise so it doesn't fail the main request.
