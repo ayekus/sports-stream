@@ -105,8 +105,19 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
   // Create new request promise
   const promise = (async () => {
     try {
-      // Start fetching NHL live scores for enrichment immediately (if needed)
-      // This allows parallel execution with the main request
+      // 1. Fetch matches from Streamed.pk
+      const matchesPromise = fetch(`${BASE_URL}${endpoint}`)
+        .then(async res => {
+          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+          let matches = await res.json();
+          // If fetching all live or all today, filter for hockey only
+          if (filter === 'live' || filter === 'today') {
+            matches = matches.filter(m => m.category === 'hockey');
+          }
+          return matches;
+        });
+
+      // 2. Fetch NHL live scores for enrichment (in parallel)
       const nhlScoresPromise = enrichWithNHL
         ? nhlScoreApi.getLiveScores().catch(error => {
             console.warn('Could not fetch NHL scores for enrichment:', error);
@@ -114,25 +125,9 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
           })
         : Promise.resolve({ games: [] });
 
-      const responsePromise = fetch(`${BASE_URL}${endpoint}`);
-
-      // Wait for both requests in parallel
-      const [response, scoresData] = await Promise.all([
-        responsePromise,
-        nhlScoresPromise
-      ]);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      let matches = await response.json();
+      // Wait for both requests to complete
+      const [matches, scoresData] = await Promise.all([matchesPromise, nhlScoresPromise]);
       const nhlGames = scoresData.games || [];
-
-      // If fetching all live or all today, filter for hockey only
-      if (filter === 'live' || filter === 'today') {
-        matches = matches.filter(m => m.category === 'hockey');
-      }
 
       // Process matches and enrich with NHL data
       const processedMatches = matches.map(match => {
@@ -439,23 +434,23 @@ function processMatch(match, nhlGame = null, teamsReversed = false) {
   return processedMatch;
 }
 
+const CATEGORY_DISPLAY_NAMES = {
+  'hockey': 'NHL',
+  'basketball': 'NBA',
+  'football': 'Soccer',
+  'american-football': 'NFL',
+  'baseball': 'MLB',
+  'fight': 'UFC/Boxing',
+  'motor-sports': 'Racing'
+};
+
 /**
  * Get display name for category
  * @param {string} category - Category ID
  * @returns {string} Display name
  */
 function getCategoryDisplayName(category) {
-  const names = {
-    'hockey': 'NHL',
-    'basketball': 'NBA',
-    'football': 'Soccer',
-    'american-football': 'NFL',
-    'baseball': 'MLB',
-    'fight': 'UFC/Boxing',
-    'motor-sports': 'Racing'
-  };
-  
-  return names[category] || category;
+  return CATEGORY_DISPLAY_NAMES[category] || category;
 }
 
 /**
