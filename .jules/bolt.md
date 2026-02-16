@@ -13,3 +13,7 @@
 ## 2026-02-13 - [Sequential API Calls in Streamed API]
 **Learning:** `getHockeyMatches` was fetching matches first, awaiting the response, and then fetching NHL scores for enrichment. This created a waterfall effect, doubling the latency.
 **Action:** Initiate independent API calls in parallel using detached promises (with `.catch()` to prevent unhandled rejections) before awaiting them. This reduced the total execution time by approximately 50% in verified tests.
+
+## 2026-02-14 - [Duplicate Requests in Highlights API]
+**Learning:** `nhlHighlightsApi.js` was performing raw `fetch` calls to `/api/nhl/score/*` independently of `nhlScoreApi.js`. This bypassed the request coalescing and caching logic in `nhlScoreApi.js`, causing duplicate network requests when components requested both highlights and scores/recaps concurrently.
+**Action:** Refactor `nhlHighlightsApi.js` to import and use `getScoresByDate` from `nhlScoreApi.js` instead of raw `fetch`. This ensures all requests for score data share the same pending promise and cache entry.
