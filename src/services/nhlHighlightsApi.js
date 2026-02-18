@@ -4,6 +4,7 @@
  */
 
 import { cache } from '../utils/cache.js';
+import { getScoresByDate } from './nhlScoreApi.js';
 
 const CACHE_TTL = 30 * 60 * 1000; // 30 minutes for highlights
 
@@ -24,18 +25,8 @@ export async function getGameHighlights(gameId, date) {
   
   try {
     // Fetch game data from NHL API which includes goals array
-    console.log(`📅 Fetching NHL scores for date: ${date}`);
-    const response = await fetch(`/api/nhl/score/${date}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    console.log(`📊 NHL API returned ${data.games?.length || 0} games`);
-    if (data.games) {
-      console.log(`📋 Game IDs in response:`, data.games.map(g => g.id));
-    }
+    // Use shared service for request coalescing and caching
+    const data = await getScoresByDate(date);
     
     // Find the specific game by ID
     const game = data.games?.find(g => g.id === gameId);
@@ -44,11 +35,6 @@ export async function getGameHighlights(gameId, date) {
       console.log(`❌ Game ${gameId} not found in NHL API response for date ${date}`);
       return [];
     }
-    
-    // Debug: log what we got
-    console.log(`🔍 Game found:`, game.id, game.homeTeam?.abbrev, 'vs', game.awayTeam?.abbrev);
-    console.log(`🔍 Game keys:`, Object.keys(game));
-    console.log(`🔍 Has goals property:`, 'goals' in game, 'goals count:', game.goals?.length);
     
     if (!game.goals || game.goals.length === 0) {
       console.log(`No goals found for game ${gameId}`);
@@ -197,13 +183,7 @@ export async function getGameRecaps(gameId, date) {
   }
   
   try {
-    const response = await fetch(`/api/nhl/score/${date}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
+    const data = await getScoresByDate(date);
     const game = data.games?.find(g => g.id === gameId);
     
     if (!game) {
