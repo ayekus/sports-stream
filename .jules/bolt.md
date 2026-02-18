@@ -17,3 +17,4 @@
 ## 2026-02-14 - [Duplicate Requests in Highlights API]
 **Learning:** `nhlHighlightsApi.js` was performing raw `fetch` calls to `/api/nhl/score/*` independently of `nhlScoreApi.js`. This bypassed the request coalescing and caching logic in `nhlScoreApi.js`, causing duplicate network requests when components requested both highlights and scores/recaps concurrently.
 **Action:** Refactor `nhlHighlightsApi.js` to import and use `getScoresByDate` from `nhlScoreApi.js` instead of raw `fetch`. This ensures all requests for score data share the same pending promise and cache entry.
+**Action:** Use `Promise.all` to fetch both data sources in parallel when they are independent. This reduced the total time to `max(T1, T2)`. Be careful to handle errors in the enrichment promise so it doesn't fail the main request.
