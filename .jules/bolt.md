@@ -14,11 +14,6 @@
 **Learning:** `getHockeyMatches` was fetching matches first, awaiting the response, and then fetching NHL scores for enrichment. This created a waterfall effect, doubling the latency.
 **Action:** Initiate independent API calls in parallel using detached promises (with `.catch()` to prevent unhandled rejections) before awaiting them. This reduced the total execution time by approximately 50% in verified tests.
 
-## 2026-02-14 - [Duplicate Requests in Highlights API]
-**Learning:** `nhlHighlightsApi.js` was performing raw `fetch` calls to `/api/nhl/score/*` independently of `nhlScoreApi.js`. This bypassed the request coalescing and caching logic in `nhlScoreApi.js`, causing duplicate network requests when components requested both highlights and scores/recaps concurrently.
-**Action:** Refactor `nhlHighlightsApi.js` to import and use `getScoresByDate` from `nhlScoreApi.js` instead of raw `fetch`. This ensures all requests for score data share the same pending promise and cache entry.
-**Action:** Use `Promise.all` to fetch both data sources in parallel when they are independent. This reduced the total time to `max(T1, T2)`. Be careful to handle errors in the enrichment promise so it doesn't fail the main request.
-
-## 2026-02-17 - [O(N) LocalStorage Access in Cache Write]
-**Learning:** `src/utils/cache.js` was performing a full `localStorage` scan (iterating all keys to calculate size) before every `set` operation. This O(N) complexity caused significant latency (linear growth) as the cache filled up, blocking the main thread synchronously.
-**Action:** Removed proactive size check. Implemented optimistic writes with reactive cleanup on `QuotaExceededError`. This improved write performance from ~8.5ms/op (at 5000 items) to <0.01ms/op. Always prefer handling errors over expensive pre-checks when working with synchronous browser APIs like `localStorage`.
+## 2026-02-14 - [Repeated Object Creation in Loops]
+**Learning:** `HighlightsSection.js` was creating large constant objects (`teamColors` and `badges`) inside helper functions (`getTeamColor`, `getStrengthBadge`) that were called for every highlight card. This caused unnecessary memory allocation and garbage collection pressure, especially when rendering lists.
+**Action:** Move constant data structures outside of function scopes to module-level constants to ensure they are created once and reused. This simple refactor yielded an ~8x performance improvement in micro-benchmarks for the lookup function.

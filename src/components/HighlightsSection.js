@@ -77,67 +77,75 @@ function createHighlightCard(highlight, index, onClickCallback) {
 }
 
 /**
+ * Strength badges lookup
+ * Defined outside function to prevent recreation on every call
+ */
+const STRENGTH_BADGES = {
+  'pp': '<span class="strength-badge pp">PP</span>',
+  'sh': '<span class="strength-badge sh">SH</span>',
+  'ps': '<span class="strength-badge ps">PS</span>',
+  'ev': ''
+};
+
+/**
+ * Team colors lookup
+ * Defined outside function to prevent recreation on every call
+ */
+const TEAM_COLORS = {
+  // Atlantic
+  'BOS': '#FFB81C',
+  'BUF': '#003087',
+  'DET': '#CE1126',
+  'FLA': '#C8102E',
+  'MTL': '#AF1E2D',
+  'OTT': '#C52032',
+  'TBL': '#002868',
+  'TOR': '#003E7E',
+
+  // Metropolitan
+  'CAR': '#CE1126',
+  'CBJ': '#002654',
+  'NJD': '#CE1126',
+  'NYI': '#00539B',
+  'NYR': '#0038A8',
+  'PHI': '#F74902',
+  'PIT': '#FCB514',
+  'WSH': '#041E42',
+
+  // Central
+  'ARI': '#8C2633',
+  'CHI': '#CF0A2C',
+  'COL': '#6F263D',
+  'DAL': '#006847',
+  'MIN': '#154734',
+  'NSH': '#FFB81C',
+  'STL': '#002F87',
+  'WPG': '#041E42',
+  'UTA': '#69B3E7',
+
+  // Pacific
+  'ANA': '#F47A38',
+  'CGY': '#C8102E',
+  'EDM': '#FF4C00',
+  'LAK': '#111111',
+  'SJS': '#006D75',
+  'SEA': '#001628',
+  'VAN': '#00205B',
+  'VGK': '#B4975A'
+};
+
+/**
  * Get strength badge HTML
  */
 function getStrengthBadge(strength) {
-  const badges = {
-    'pp': '<span class="strength-badge pp">PP</span>',
-    'sh': '<span class="strength-badge sh">SH</span>',
-    'ps': '<span class="strength-badge ps">PS</span>',
-    'ev': ''
-  };
-  
-  return badges[strength] || '';
+  return STRENGTH_BADGES[strength] || '';
 }
 
 /**
  * Get team accent color
  */
 function getTeamColor(teamAbbrev) {
-  const teamColors = {
-    // Atlantic
-    'BOS': '#FFB81C',
-    'BUF': '#003087',
-    'DET': '#CE1126',
-    'FLA': '#C8102E',
-    'MTL': '#AF1E2D',
-    'OTT': '#C52032',
-    'TBL': '#002868',
-    'TOR': '#003E7E',
-    
-    // Metropolitan
-    'CAR': '#CE1126',
-    'CBJ': '#002654',
-    'NJD': '#CE1126',
-    'NYI': '#00539B',
-    'NYR': '#0038A8',
-    'PHI': '#F74902',
-    'PIT': '#FCB514',
-    'WSH': '#041E42',
-    
-    // Central
-    'ARI': '#8C2633',
-    'CHI': '#CF0A2C',
-    'COL': '#6F263D',
-    'DAL': '#006847',
-    'MIN': '#154734',
-    'NSH': '#FFB81C',
-    'STL': '#002F87',
-    'WPG': '#041E42',
-    'UTA': '#69B3E7',
-    
-    // Pacific
-    'ANA': '#F47A38',
-    'CGY': '#C8102E',
-    'EDM': '#FF4C00',
-    'LAK': '#111111',
-    'SJS': '#006D75',
-    'SEA': '#001628',
-    'VAN': '#00205B',
-    'VGK': '#B4975A'
-  };
-  
-  return teamColors[teamAbbrev] || '#FF6B6B';
+  return TEAM_COLORS[teamAbbrev] || '#FF6B6B';
 }
 
 /**
