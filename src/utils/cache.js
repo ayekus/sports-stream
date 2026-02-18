@@ -4,7 +4,6 @@
  */
 
 const CACHE_PREFIX = 'sports_stream_';
-const MAX_CACHE_SIZE = 10 * 1024 * 1024; // 10MB
 
 class CacheManager {
   /**
@@ -44,30 +43,32 @@ class CacheManager {
    * @param {number} ttl - Time to live in milliseconds (optional)
    */
   set(key, value, ttl = null) {
+    const cacheKey = CACHE_PREFIX + key;
+    const item = {
+      value,
+      timestamp: Date.now(),
+      ttl
+    };
+
+    // Attempt to set item immediately without pre-calculating size
+    // This avoids O(N) overhead on every set operation
     try {
-      const cacheKey = CACHE_PREFIX + key;
-      const item = {
-        value,
-        timestamp: Date.now(),
-        ttl
-      };
-      
       const serialized = JSON.stringify(item);
-      
-      // Check cache size before storing
-      if (this.getCacheSize() + serialized.length > MAX_CACHE_SIZE) {
-        this.evictOldest();
-      }
-      
       localStorage.setItem(cacheKey, serialized);
     } catch (error) {
       console.error('Cache set error:', error);
       
-      // If quota exceeded, clear cache and retry
-      if (error.name === 'QuotaExceededError') {
-        this.clear();
+      // If quota exceeded, evict oldest entries and retry
+      // Chrome: QuotaExceededError
+      // Firefox: NS_ERROR_DOM_QUOTA_REACHED
+      // Safari: QuotaExceededError
+      if (error.name === 'QuotaExceededError' ||
+          error.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+        this.evictOldest();
         try {
-          localStorage.setItem(cacheKey, JSON.stringify(item));
+          // Re-serialize and retry
+          const serialized = JSON.stringify(item);
+          localStorage.setItem(cacheKey, serialized);
         } catch (retryError) {
           console.error('Cache retry failed:', retryError);
         }
@@ -102,6 +103,7 @@ class CacheManager {
 
   /**
    * Get total cache size in bytes
+   * Warning: This is an expensive operation as it iterates all keys
    * @returns {number} Total size in bytes
    */
   getCacheSize() {
