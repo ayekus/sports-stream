@@ -155,114 +155,115 @@ export function formatPeriod(period, periodType) {
   return ordinals[period] || `${period}th`;
 }
 
+// NHL team name variations to abbreviations
+// Defined outside function to prevent recreation on every call
+const NHL_TEAM_ABBREVIATIONS = {
+  'Toronto Maple Leafs': 'TOR',
+  'Toronto': 'TOR',
+  'Maple Leafs': 'TOR',
+  'Montreal Canadiens': 'MTL',
+  'Montreal': 'MTL',
+  'Canadiens': 'MTL',
+  'Ottawa Senators': 'OTT',
+  'Ottawa': 'OTT',
+  'Senators': 'OTT',
+  'Boston Bruins': 'BOS',
+  'Boston': 'BOS',
+  'Bruins': 'BOS',
+  'Buffalo Sabres': 'BUF',
+  'Buffalo': 'BUF',
+  'Sabres': 'BUF',
+  'Detroit Red Wings': 'DET',
+  'Detroit': 'DET',
+  'Red Wings': 'DET',
+  'Florida Panthers': 'FLA',
+  'Florida': 'FLA',
+  'Panthers': 'FLA',
+  'Tampa Bay Lightning': 'TBL',
+  'Tampa Bay': 'TBL',
+  'Lightning': 'TBL',
+  'New York Rangers': 'NYR',
+  'Rangers': 'NYR',
+  'New York Islanders': 'NYI',
+  'Islanders': 'NYI',
+  'New Jersey Devils': 'NJD',
+  'New Jersey': 'NJD',
+  'Devils': 'NJD',
+  'Philadelphia Flyers': 'PHI',
+  'Philadelphia': 'PHI',
+  'Flyers': 'PHI',
+  'Pittsburgh Penguins': 'PIT',
+  'Pittsburgh': 'PIT',
+  'Penguins': 'PIT',
+  'Washington Capitals': 'WSH',
+  'Washington': 'WSH',
+  'Capitals': 'WSH',
+  'Carolina Hurricanes': 'CAR',
+  'Carolina': 'CAR',
+  'Hurricanes': 'CAR',
+  'Columbus Blue Jackets': 'CBJ',
+  'Columbus': 'CBJ',
+  'Blue Jackets': 'CBJ',
+  'Chicago Blackhawks': 'CHI',
+  'Chicago': 'CHI',
+  'Blackhawks': 'CHI',
+  'Colorado Avalanche': 'COL',
+  'Colorado': 'COL',
+  'Avalanche': 'COL',
+  'Dallas Stars': 'DAL',
+  'Dallas': 'DAL',
+  'Stars': 'DAL',
+  'Minnesota Wild': 'MIN',
+  'Minnesota': 'MIN',
+  'Wild': 'MIN',
+  'Nashville Predators': 'NSH',
+  'Nashville': 'NSH',
+  'Predators': 'NSH',
+  'St. Louis Blues': 'STL',
+  'St. Louis': 'STL',
+  'Blues': 'STL',
+  'Winnipeg Jets': 'WPG',
+  'Winnipeg': 'WPG',
+  'Jets': 'WPG',
+  'Anaheim Ducks': 'ANA',
+  'Anaheim': 'ANA',
+  'Ducks': 'ANA',
+  'Arizona Coyotes': 'ARI',
+  'Arizona': 'ARI',
+  'Coyotes': 'ARI',
+  'Calgary Flames': 'CGY',
+  'Calgary': 'CGY',
+  'Flames': 'CGY',
+  'Edmonton Oilers': 'EDM',
+  'Edmonton': 'EDM',
+  'Oilers': 'EDM',
+  'Los Angeles Kings': 'LAK',
+  'Los Angeles': 'LAK',
+  'Kings': 'LAK',
+  'San Jose Sharks': 'SJS',
+  'San Jose': 'SJS',
+  'Sharks': 'SJS',
+  'Seattle Kraken': 'SEA',
+  'Seattle': 'SEA',
+  'Kraken': 'SEA',
+  'Vancouver Canucks': 'VAN',
+  'Vancouver': 'VAN',
+  'Canucks': 'VAN',
+  'Vegas Golden Knights': 'VGK',
+  'Vegas': 'VGK',
+  'Golden Knights': 'VGK',
+  'Utah Hockey Club': 'UTA',
+  'Utah Mammoth': 'UTA',
+  'Utah': 'UTA'
+};
+
 /**
  * Map team name to NHL abbreviation
  * @param {string} teamName - Full team name
  * @returns {string|null} Team abbreviation or null
  */
 export function getTeamAbbreviation(teamName) {
-  const nameMap = {
-    // NHL team name variations to abbreviations
-    'Toronto Maple Leafs': 'TOR',
-    'Toronto': 'TOR',
-    'Maple Leafs': 'TOR',
-    'Montreal Canadiens': 'MTL',
-    'Montreal': 'MTL',
-    'Canadiens': 'MTL',
-    'Ottawa Senators': 'OTT',
-    'Ottawa': 'OTT',
-    'Senators': 'OTT',
-    'Boston Bruins': 'BOS',
-    'Boston': 'BOS',
-    'Bruins': 'BOS',
-    'Buffalo Sabres': 'BUF',
-    'Buffalo': 'BUF',
-    'Sabres': 'BUF',
-    'Detroit Red Wings': 'DET',
-    'Detroit': 'DET',
-    'Red Wings': 'DET',
-    'Florida Panthers': 'FLA',
-    'Florida': 'FLA',
-    'Panthers': 'FLA',
-    'Tampa Bay Lightning': 'TBL',
-    'Tampa Bay': 'TBL',
-    'Lightning': 'TBL',
-    'New York Rangers': 'NYR',
-    'Rangers': 'NYR',
-    'New York Islanders': 'NYI',
-    'Islanders': 'NYI',
-    'New Jersey Devils': 'NJD',
-    'New Jersey': 'NJD',
-    'Devils': 'NJD',
-    'Philadelphia Flyers': 'PHI',
-    'Philadelphia': 'PHI',
-    'Flyers': 'PHI',
-    'Pittsburgh Penguins': 'PIT',
-    'Pittsburgh': 'PIT',
-    'Penguins': 'PIT',
-    'Washington Capitals': 'WSH',
-    'Washington': 'WSH',
-    'Capitals': 'WSH',
-    'Carolina Hurricanes': 'CAR',
-    'Carolina': 'CAR',
-    'Hurricanes': 'CAR',
-    'Columbus Blue Jackets': 'CBJ',
-    'Columbus': 'CBJ',
-    'Blue Jackets': 'CBJ',
-    'Chicago Blackhawks': 'CHI',
-    'Chicago': 'CHI',
-    'Blackhawks': 'CHI',
-    'Colorado Avalanche': 'COL',
-    'Colorado': 'COL',
-    'Avalanche': 'COL',
-    'Dallas Stars': 'DAL',
-    'Dallas': 'DAL',
-    'Stars': 'DAL',
-    'Minnesota Wild': 'MIN',
-    'Minnesota': 'MIN',
-    'Wild': 'MIN',
-    'Nashville Predators': 'NSH',
-    'Nashville': 'NSH',
-    'Predators': 'NSH',
-    'St. Louis Blues': 'STL',
-    'St. Louis': 'STL',
-    'Blues': 'STL',
-    'Winnipeg Jets': 'WPG',
-    'Winnipeg': 'WPG',
-    'Jets': 'WPG',
-    'Anaheim Ducks': 'ANA',
-    'Anaheim': 'ANA',
-    'Ducks': 'ANA',
-    'Arizona Coyotes': 'ARI',
-    'Arizona': 'ARI',
-    'Coyotes': 'ARI',
-    'Calgary Flames': 'CGY',
-    'Calgary': 'CGY',
-    'Flames': 'CGY',
-    'Edmonton Oilers': 'EDM',
-    'Edmonton': 'EDM',
-    'Oilers': 'EDM',
-    'Los Angeles Kings': 'LAK',
-    'Los Angeles': 'LAK',
-    'Kings': 'LAK',
-    'San Jose Sharks': 'SJS',
-    'San Jose': 'SJS',
-    'Sharks': 'SJS',
-    'Seattle Kraken': 'SEA',
-    'Seattle': 'SEA',
-    'Kraken': 'SEA',
-    'Vancouver Canucks': 'VAN',
-    'Vancouver': 'VAN',
-    'Canucks': 'VAN',
-    'Vegas Golden Knights': 'VGK',
-    'Vegas': 'VGK',
-    'Golden Knights': 'VGK',
-    'Utah Hockey Club': 'UTA',
-    'Utah Mammoth': 'UTA',
-    'Utah': 'UTA'
-  };
-  
-  return nameMap[teamName] || null;
+  return NHL_TEAM_ABBREVIATIONS[teamName] || null;
 }
 
 /**
@@ -275,6 +276,30 @@ export function isNHLTeam(teamName) {
   return getTeamAbbreviation(teamName) !== null;
 }
 
+// Olympic keywords
+// Defined outside function to prevent recreation on every call
+const OLYMPIC_KEYWORDS = [
+  'olympic',
+  'olympics',
+  'world juniors',
+  'world championship',
+  'iihf',
+  'u18',
+  'u20',
+  'world cup',
+  'spengler cup'
+];
+
+// National team keywords
+// Defined outside function to prevent recreation on every call
+const NATIONAL_TEAM_KEYWORDS = [
+  'canada', 'usa', 'united states', 'sweden', 'finland', 'russia',
+  'czechia', 'czech republic', 'switzerland', 'germany', 'slovakia',
+  'latvia', 'norway', 'denmark', 'austria', 'france', 'kazakhstan',
+  'japan', 'italy', 'china', 'great britain', 'korea', 'poland',
+  'hungary', 'slovenia', 'ukraine', 'belarus'
+];
+
 /**
  * Check if a game is an Olympic or IIHF tournament game
  * @param {string} title - Game title
@@ -284,41 +309,20 @@ export function isNHLTeam(teamName) {
 export function isOlympicGame(title, teams) {
   if (!title) return false;
   
-  const olympicKeywords = [
-    'olympic',
-    'olympics',
-    'world juniors',
-    'world championship',
-    'iihf',
-    'u18',
-    'u20',
-    'world cup',
-    'spengler cup'
-  ];
-  
   const titleLower = title.toLowerCase();
   
   // Check if title contains Olympic/IIHF keywords
-  if (olympicKeywords.some(keyword => titleLower.includes(keyword))) {
+  if (OLYMPIC_KEYWORDS.some(keyword => titleLower.includes(keyword))) {
     return true;
   }
-  
-  // Check for national teams (e.g., "Canada", "USA", "Sweden")
-  const nationalTeamKeywords = [
-    'canada', 'usa', 'united states', 'sweden', 'finland', 'russia',
-    'czechia', 'czech republic', 'switzerland', 'germany', 'slovakia',
-    'latvia', 'norway', 'denmark', 'austria', 'france', 'kazakhstan',
-    'japan', 'italy', 'china', 'great britain', 'korea', 'poland',
-    'hungary', 'slovenia', 'ukraine', 'belarus'
-  ];
   
   if (teams?.home?.name && teams?.away?.name) {
     const homeLower = teams.home.name.toLowerCase();
     const awayLower = teams.away.name.toLowerCase();
     
     // If both teams are national teams, it's likely an Olympic/IIHF game
-    const homeIsNational = nationalTeamKeywords.some(keyword => homeLower.includes(keyword));
-    const awayIsNational = nationalTeamKeywords.some(keyword => awayLower.includes(keyword));
+    const homeIsNational = NATIONAL_TEAM_KEYWORDS.some(keyword => homeLower.includes(keyword));
+    const awayIsNational = NATIONAL_TEAM_KEYWORDS.some(keyword => awayLower.includes(keyword));
     
     if (homeIsNational && awayIsNational) {
       return true;
