@@ -11,6 +11,9 @@ const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 // Ottawa Senators ESPN team ID
 const OTT_ESPN_ID = '14';
 
+// Track pending requests to avoid duplicate fetches
+const pendingRequests = new Map();
+
 /**
  * Fetch from ESPN API through our proxy
  */
@@ -31,16 +34,32 @@ export async function getSensTeamInfo() {
   const cached = cache.get(cacheKey);
   if (cached) return cached;
 
-  try {
-    const response = await fetchESPN(`/teams/${OTT_ESPN_ID}`);
-    const data = await response.json();
-    
-    cache.set(cacheKey, data, CACHE_DURATION);
-    return data;
-  } catch (error) {
-    console.error('Error fetching Sens team info from ESPN:', error);
-    return null;
+  // Check for pending request to avoid race conditions
+  if (pendingRequests.has(cacheKey)) {
+    return pendingRequests.get(cacheKey);
   }
+
+  // Create new request promise
+  const promise = (async () => {
+    try {
+      const response = await fetchESPN(`/teams/${OTT_ESPN_ID}`);
+      const data = await response.json();
+
+      cache.set(cacheKey, data, CACHE_DURATION);
+      return data;
+    } catch (error) {
+      console.error('Error fetching Sens team info from ESPN:', error);
+      return null;
+    } finally {
+      // Clean up pending request
+      pendingRequests.delete(cacheKey);
+    }
+  })();
+
+  // Store promise
+  pendingRequests.set(cacheKey, promise);
+
+  return promise;
 }
 
 /**
@@ -52,19 +71,35 @@ export async function getSensRoster() {
   const cached = cache.get(cacheKey);
   if (cached) return cached;
 
-  try {
-    const response = await fetchESPN(`/teams/${OTT_ESPN_ID}/roster`);
-    const data = await response.json();
-    
-    // Extract athletes from the response
-    const roster = data.athletes || [];
-    
-    cache.set(cacheKey, roster, CACHE_DURATION);
-    return roster;
-  } catch (error) {
-    console.error('Error fetching Sens roster from ESPN:', error);
-    return [];
+  // Check for pending request to avoid race conditions
+  if (pendingRequests.has(cacheKey)) {
+    return pendingRequests.get(cacheKey);
   }
+
+  // Create new request promise
+  const promise = (async () => {
+    try {
+      const response = await fetchESPN(`/teams/${OTT_ESPN_ID}/roster`);
+      const data = await response.json();
+
+      // Extract athletes from the response
+      const roster = data.athletes || [];
+
+      cache.set(cacheKey, roster, CACHE_DURATION);
+      return roster;
+    } catch (error) {
+      console.error('Error fetching Sens roster from ESPN:', error);
+      return [];
+    } finally {
+      // Clean up pending request
+      pendingRequests.delete(cacheKey);
+    }
+  })();
+
+  // Store promise
+  pendingRequests.set(cacheKey, promise);
+
+  return promise;
 }
 
 /**
@@ -76,16 +111,32 @@ export async function getSensTeamStats() {
   const cached = cache.get(cacheKey);
   if (cached) return cached;
 
-  try {
-    const response = await fetchESPN(`/teams/${OTT_ESPN_ID}/statistics`);
-    const data = await response.json();
-    
-    cache.set(cacheKey, data, CACHE_DURATION);
-    return data;
-  } catch (error) {
-    console.error('Error fetching Sens stats from ESPN:', error);
-    return null;
+  // Check for pending request to avoid race conditions
+  if (pendingRequests.has(cacheKey)) {
+    return pendingRequests.get(cacheKey);
   }
+
+  // Create new request promise
+  const promise = (async () => {
+    try {
+      const response = await fetchESPN(`/teams/${OTT_ESPN_ID}/statistics`);
+      const data = await response.json();
+
+      cache.set(cacheKey, data, CACHE_DURATION);
+      return data;
+    } catch (error) {
+      console.error('Error fetching Sens stats from ESPN:', error);
+      return null;
+    } finally {
+      // Clean up pending request
+      pendingRequests.delete(cacheKey);
+    }
+  })();
+
+  // Store promise
+  pendingRequests.set(cacheKey, promise);
+
+  return promise;
 }
 
 /**
@@ -98,40 +149,56 @@ export async function getTeamInjuries(teamId = OTT_ESPN_ID) {
   const cached = cache.get(cacheKey);
   if (cached) return cached;
 
-  try {
-    // ESPN doesn't have a direct injuries endpoint, but we can check roster for injury status
-    const roster = await getSensRoster();
-    
-    // Filter for injured players
-    // ESPN stores injury info in the 'injuries' array, not in status.type
-    const injuries = roster
-      .flatMap(group => group.items || [])
-      .filter(player => {
-        // Check if player has any injuries in the injuries array
-        return player.injuries && player.injuries.length > 0;
-      })
-      .map(player => {
-        // Get the most recent injury (first in array)
-        const injury = player.injuries[0];
-        return {
-          id: player.id,
-          name: player.fullName || player.displayName,
-          position: player.position?.abbreviation || 'N/A',
-          jerseyNumber: player.jersey || '',
-          injury: injury.status || 'Unknown',
-          status: injury.status || 'Unknown',
-          description: injury.description || '',
-          date: injury.date || null,
-          headshot: player.headshot?.href || null
-        };
-      });
-    
-    cache.set(cacheKey, injuries, CACHE_DURATION);
-    return injuries;
-  } catch (error) {
-    console.error('Error fetching team injuries from ESPN:', error);
-    return [];
+  // Check for pending request to avoid race conditions
+  if (pendingRequests.has(cacheKey)) {
+    return pendingRequests.get(cacheKey);
   }
+
+  // Create new request promise
+  const promise = (async () => {
+    try {
+      // ESPN doesn't have a direct injuries endpoint, but we can check roster for injury status
+      const roster = await getSensRoster();
+
+      // Filter for injured players
+      // ESPN stores injury info in the 'injuries' array, not in status.type
+      const injuries = roster
+        .flatMap(group => group.items || [])
+        .filter(player => {
+          // Check if player has any injuries in the injuries array
+          return player.injuries && player.injuries.length > 0;
+        })
+        .map(player => {
+          // Get the most recent injury (first in array)
+          const injury = player.injuries[0];
+          return {
+            id: player.id,
+            name: player.fullName || player.displayName,
+            position: player.position?.abbreviation || 'N/A',
+            jerseyNumber: player.jersey || '',
+            injury: injury.status || 'Unknown',
+            status: injury.status || 'Unknown',
+            description: injury.description || '',
+            date: injury.date || null,
+            headshot: player.headshot?.href || null
+          };
+        });
+
+      cache.set(cacheKey, injuries, CACHE_DURATION);
+      return injuries;
+    } catch (error) {
+      console.error('Error fetching team injuries from ESPN:', error);
+      return [];
+    } finally {
+      // Clean up pending request
+      pendingRequests.delete(cacheKey);
+    }
+  })();
+
+  // Store promise
+  pendingRequests.set(cacheKey, promise);
+
+  return promise;
 }
 
 /**
@@ -143,16 +210,32 @@ export async function getSensLeaders() {
   const cached = cache.get(cacheKey);
   if (cached) return cached;
 
-  try {
-    const response = await fetchESPN(`/teams/${OTT_ESPN_ID}/leaders`);
-    const data = await response.json();
-    
-    cache.set(cacheKey, data, CACHE_DURATION);
-    return data;
-  } catch (error) {
-    console.error('Error fetching Sens leaders from ESPN:', error);
-    return null;
+  // Check for pending request to avoid race conditions
+  if (pendingRequests.has(cacheKey)) {
+    return pendingRequests.get(cacheKey);
   }
+
+  // Create new request promise
+  const promise = (async () => {
+    try {
+      const response = await fetchESPN(`/teams/${OTT_ESPN_ID}/leaders`);
+      const data = await response.json();
+
+      cache.set(cacheKey, data, CACHE_DURATION);
+      return data;
+    } catch (error) {
+      console.error('Error fetching Sens leaders from ESPN:', error);
+      return null;
+    } finally {
+      // Clean up pending request
+      pendingRequests.delete(cacheKey);
+    }
+  })();
+
+  // Store promise
+  pendingRequests.set(cacheKey, promise);
+
+  return promise;
 }
 
 /**
@@ -165,14 +248,30 @@ export async function getScoreboard(date = null) {
   const cached = cache.get(cacheKey, 5 * 60 * 1000); // 5 min cache for scoreboard
   if (cached) return cached;
 
-  try {
-    const response = await fetchESPN(`/scoreboard?dates=${dateStr}`);
-    const data = await response.json();
-    
-    cache.set(cacheKey, data, 5 * 60 * 1000);
-    return data;
-  } catch (error) {
-    console.error('Error fetching scoreboard from ESPN:', error);
-    return null;
+  // Check for pending request to avoid race conditions
+  if (pendingRequests.has(cacheKey)) {
+    return pendingRequests.get(cacheKey);
   }
+
+  // Create new request promise
+  const promise = (async () => {
+    try {
+      const response = await fetchESPN(`/scoreboard?dates=${dateStr}`);
+      const data = await response.json();
+
+      cache.set(cacheKey, data, 5 * 60 * 1000);
+      return data;
+    } catch (error) {
+      console.error('Error fetching scoreboard from ESPN:', error);
+      return null;
+    } finally {
+      // Clean up pending request
+      pendingRequests.delete(cacheKey);
+    }
+  })();
+
+  // Store promise
+  pendingRequests.set(cacheKey, promise);
+
+  return promise;
 }
