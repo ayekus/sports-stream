@@ -17,3 +17,7 @@
 ## 2026-02-14 - [Repeated Object Creation in Loops]
 **Learning:** `HighlightsSection.js` was creating large constant objects (`teamColors` and `badges`) inside helper functions (`getTeamColor`, `getStrengthBadge`) that were called for every highlight card. This caused unnecessary memory allocation and garbage collection pressure, especially when rendering lists.
 **Action:** Move constant data structures outside of function scopes to module-level constants to ensure they are created once and reused. This simple refactor yielded an ~8x performance improvement in micro-benchmarks for the lookup function.
+
+## 2026-02-21 - [Missing Request Coalescing in Standings API]
+**Learning:** `getNHLStandings` in `nhlApi.js` was susceptible to race conditions where multiple concurrent calls would trigger duplicate network requests, bypassing the cache check which only happens after the first request completes.
+**Action:** Implemented the standard `pendingRequests` Map pattern in `nhlApi.js` to coalesce concurrent requests into a single promise, reducing network traffic and load on the external API. Verified with a reproduction script showing a reduction from 2 fetches to 1.
