@@ -21,3 +21,7 @@
 ## 2026-02-21 - [Missing Request Coalescing in Standings API]
 **Learning:** `getNHLStandings` in `nhlApi.js` was susceptible to race conditions where multiple concurrent calls would trigger duplicate network requests, bypassing the cache check which only happens after the first request completes.
 **Action:** Implemented the standard `pendingRequests` Map pattern in `nhlApi.js` to coalesce concurrent requests into a single promise, reducing network traffic and load on the external API. Verified with a reproduction script showing a reduction from 2 fetches to 1.
+
+## 2026-02-23 - [Inter-dependent Service Calls Cause API Cascades]
+**Learning:** In `sensApi.js`, `getSensSeasonRecord` internally calls `getSensStandings`. Without request coalescing, a page load that requests both (like the Season Tracker) triggers a race condition where `getSensStandings` is fetched twice: once directly, and once via the record function.
+**Action:** Always implement request coalescing (using `pendingRequests`) on "base" data fetching functions that are reused by other service methods. This prevents cascading duplicate requests when higher-level functions are called in parallel with their dependencies.
