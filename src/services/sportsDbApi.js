@@ -11,6 +11,9 @@ const CACHE_TTL = {
   TEAMS: 30 * 24 * 60 * 60 * 1000, // 30 days - team data rarely changes
 };
 
+// Track pending requests to avoid duplicate fetches
+const pendingRequests = new Map();
+
 /**
  * Search for NHL teams
  * @returns {Promise<Array>} Array of NHL teams
@@ -24,24 +27,41 @@ export async function getAllNHLTeams() {
     return cached;
   }
   
-  try {
-    const response = await fetch(
-      `${BASE_URL}/${API_KEY}/search_all_teams.php?l=NHL`
-    );
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    const teams = data.teams || [];
-    
-    cache.set(cacheKey, teams, CACHE_TTL.TEAMS);
-    return teams;
-  } catch (error) {
-    console.error('Error fetching NHL teams:', error);
-    return [];
+  // Check for pending request to avoid race conditions
+  if (pendingRequests.has(cacheKey)) {
+    console.log('⚡ Joining pending request for NHL teams');
+    return pendingRequests.get(cacheKey);
   }
+
+  // Create new request promise
+  const promise = (async () => {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/${API_KEY}/search_all_teams.php?l=NHL`
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const teams = data.teams || [];
+
+      cache.set(cacheKey, teams, CACHE_TTL.TEAMS);
+      return teams;
+    } catch (error) {
+      console.error('Error fetching NHL teams:', error);
+      return [];
+    } finally {
+      // Clean up pending request
+      pendingRequests.delete(cacheKey);
+    }
+  })();
+
+  // Store promise
+  pendingRequests.set(cacheKey, promise);
+
+  return promise;
 }
 
 

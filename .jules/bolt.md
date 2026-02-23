@@ -25,3 +25,7 @@
 ## 2026-02-23 - [Inter-dependent Service Calls Cause API Cascades]
 **Learning:** In `sensApi.js`, `getSensSeasonRecord` internally calls `getSensStandings`. Without request coalescing, a page load that requests both (like the Season Tracker) triggers a race condition where `getSensStandings` is fetched twice: once directly, and once via the record function.
 **Action:** Always implement request coalescing (using `pendingRequests`) on "base" data fetching functions that are reused by other service methods. This prevents cascading duplicate requests when higher-level functions are called in parallel with their dependencies.
+
+## 2026-03-05 - [Missing Request Coalescing in SportsDB API]
+**Learning:** `sportsDbApi.js` was missing the `pendingRequests` pattern, leading to duplicate network requests when `getAllNHLTeams` was called concurrently. This is a common pattern failure in the codebase where caching is implemented but in-flight request coalescing is forgotten.
+**Action:** Implemented `pendingRequests` map in `sportsDbApi.js` to share the promise of an ongoing fetch request. This ensures that concurrent calls wait for the first request to complete rather than triggering multiple redundant network calls. Verified with a reproduction script showing 50% reduction in fetches during concurrent access.
