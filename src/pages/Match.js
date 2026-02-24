@@ -72,8 +72,14 @@ export async function renderMatchPage(params) {
   try {
     // Clear cache to ensure fresh data with latest scores
     const { cache } = await import('../utils/cache.js');
-    cache.clear();
-    console.log('🔄 Cache cleared, fetching fresh match data...');
+
+    // PERF: Instead of clearing the entire cache (which wipes expensive static assets like team info),
+    // we only invalidate dynamic match data. This preserves long-lived cache items.
+    cache.remove('streamed_hockey_today_v2_enriched');
+    cache.clear('streamed_stream_');
+    cache.clear('nhl_scores_');
+
+    console.log('🔄 Dynamic match cache cleared, fetching fresh match data...');
     
     // Get match data from today's matches with fresh NHL enrichment
     const matches = await getHockeyMatches('today');
