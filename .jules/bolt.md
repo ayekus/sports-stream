@@ -37,3 +37,7 @@
 ## 2026-06-12 - [Missing Imports and Coalescing in Highlights API]
 **Learning:** `src/services/nhlHighlightsApi.js` was missing critical imports (`cache`, `getScoresByDate`), which would cause runtime errors. Additionally, it lacked request coalescing, meaning concurrent requests for the same game highlight (e.g., from multiple UI components or rapid user actions) would trigger redundant processing and race conditions on the cache write.
 **Action:** Always verify that API service files import their dependencies. Systematically apply the `pendingRequests` map pattern to all data processing functions, even if they call other coalesced APIs, to prevent redundant processing and cache write conflicts.
+
+## 2026-03-06 - [Missing Caching in Salary Cap API]
+**Learning:** `getSenatorsSalaryCap` in `salaryCapApi.js` was fetching fresh data on every call, bypassing the local cache entirely. This caused redundant network requests to the proxy server when the component was remounted or accessed multiple times.
+**Action:** Implemented `pendingRequests` Map for request coalescing and utilized `cache` utility with 24-hour TTL. Added logic to handle `forceRefresh` correctly by bypassing cache but still updating it.

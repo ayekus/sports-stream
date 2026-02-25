@@ -3,79 +3,125 @@
  * Fetches salary cap and player contract data from our scraper endpoint
  */
 
+import { cache } from '../utils/cache.js';
+
 const PROXY_BASE = 'http://localhost:3001';
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
+// Track pending requests to avoid duplicate fetches
+const pendingRequests = new Map();
 
 /**
  * Get Ottawa Senators salary cap and player contract data
  * @returns {Promise<Object>} Salary cap data including summary and players
  */
 export async function getSenatorsSalaryCap(forceRefresh = false) {
-  try {
-    const url = forceRefresh 
-      ? `${PROXY_BASE}/api/salary-cap/senators?refresh=true`
-      : `${PROXY_BASE}/api/salary-cap/senators`;
-    
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch salary cap data: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    
-    // Categorize players by position for easier display
-    const forwards = [];
-    const defense = [];
-    const goalies = [];
-    
-    data.players.forEach(player => {
-      const pos = player.position || '';
-      
-      if (pos.includes('G')) {
-        goalies.push(player);
-      } else if (pos.includes('D') || pos === 'LD' || pos === 'RD') {
-        defense.push(player);
-      } else {
-        forwards.push(player);
-      }
-    });
-    
-    // Calculate total cap hit from players
-    let totalCapHit = 0;
-    data.players.forEach(player => {
-      const currentYear = '2025-26'; // Or calculate dynamically
-      const salary = player.contractYears?.[currentYear];
-      if (salary && salary !== 'UFA' && salary !== 'RFA') {
-        const amount = parseFloat(salary.replace(/[$,]/g, ''));
-        if (!isNaN(amount)) {
-          totalCapHit += amount;
-        }
-      }
-    });
-    
-    // Enhance summary with calculated values
-    const enhancedSummary = {
-      ...data.summary,
-      capHit: data.summary.capHit || totalCapHit.toString(),
-      capSpace: data.summary.capSpace || (96000000 - totalCapHit).toString(), // 2025-26 cap ceiling
-      roster: data.summary.roster || { current: forwards.length + defense.length + goalies.length, max: 23 },
-      contracts: data.summary.contracts || { current: data.totalPlayers, max: 50 }
-    };
-    
-    return {
-      ...data,
-      summary: enhancedSummary,
-      categorizedPlayers: {
-        forwards,
-        defense,
-        goalies
-      }
-    };
-    
-  } catch (error) {
-    console.error('Error fetching salary cap data:', error);
-    throw error;
+  const cacheKey = 'senators_salary_cap';
+
+  if (!forceRefresh) {
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
   }
+
+  // Request key to differentiate between refresh and normal requests
+  // Normal requests can share a promise, forced refreshes should be distinct or handled carefully
+  // If forceRefresh is true, we always want to fetch. But if multiple forceRefreshes happen, they can coalesce.
+  const requestKey = `senators_salary_cap_${forceRefresh}`;
+
+  // Check for pending request to avoid race conditions
+  if (pendingRequests.has(requestKey)) {
+    return pendingRequests.get(requestKey);
+  }
+
+  // Create new request promise
+  const promise = (async () => {
+    try {
+      const url = forceRefresh
+        ? `${PROXY_BASE}/api/salary-cap/senators?refresh=true`
+        : `${PROXY_BASE}/api/salary-cap/senators`;
+
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch salary cap data: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Categorize players by position for easier display
+      const forwards = [];
+      const defense = [];
+      const goalies = [];
+
+      data.players.forEach(player => {
+        const pos = player.position || '';
+
+        if (pos.includes('G')) {
+          goalies.push(player);
+        } else if (pos.includes('D') || pos === 'LD' || pos === 'RD') {
+          defense.push(player);
+        } else {
+          forwards.push(player);
+        }
+      });
+
+      // Calculate total cap hit from players
+      let totalCapHit = 0;
+      data.players.forEach(player => {
+        const currentYear = '2025-26'; // Or calculate dynamically
+        const salary = player.contractYears?.[currentYear];
+        if (salary && salary !== 'UFA' && salary !== 'RFA') {
+          const amount = parseFloat(salary.replace(/[$,]/g, ''));
+          if (!isNaN(amount)) {
+            totalCapHit += amount;
+          }
+        }
+      });
+
+      // Enhance summary with calculated values
+      const enhancedSummary = {
+        ...data.summary,
+        capHit: data.summary.capHit || totalCapHit.toString(),
+        capSpace: data.summary.capSpace || (96000000 - totalCapHit).toString(), // 2025-26 cap ceiling
+        roster: data.summary.roster || { current: forwards.length + defense.length + goalies.length, max: 23 },
+        contracts: data.summary.contracts || { current: data.totalPlayers, max: 50 }
+      };
+
+      const result = {
+        ...data,
+        summary: enhancedSummary,
+        categorizedPlayers: {
+          forwards,
+          defense,
+          goalies
+        }
+      };
+
+      // Cache the result
+      cache.set(cacheKey, result, CACHE_DURATION);
+
+      return result;
+
+    } catch (error) {
+      console.error('Error fetching salary cap data:', error);
+      // If error, try to return cached data even if expired or not forced?
+      // For now, rethrow or return null.
+      // If forceRefresh failed, maybe return old cache if exists?
+      if (forceRefresh) {
+         const oldCache = cache.get(cacheKey);
+         if (oldCache) return oldCache;
+      }
+      throw error;
+    } finally {
+      // Clean up pending request
+      pendingRequests.delete(requestKey);
+    }
+  })();
+
+  // Store promise
+  pendingRequests.set(requestKey, promise);
+
+  return promise;
 }
 
 /**
