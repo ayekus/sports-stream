@@ -4,6 +4,7 @@
  */
 
 import { cache } from '../utils/cache.js';
+import { logger } from '../utils/logger.js';
 
 // Use Vite proxy to avoid CORS issues
 const BASE_URL = '/api/nhl';
@@ -21,13 +22,13 @@ export async function getNHLStandings() {
   const cached = cache.get(cacheKey);
   
   if (cached) {
-    console.log('✅ Using cached NHL standings');
+    logger.log('✅ Using cached NHL standings');
     return cached;
   }
   
   // Check for pending request to avoid race conditions
   if (pendingRequests.has(cacheKey)) {
-    console.log('⚡ Joining pending request for NHL standings');
+    logger.log('⚡ Joining pending request for NHL standings');
     return pendingRequests.get(cacheKey);
   }
 
@@ -47,7 +48,7 @@ export async function getNHLStandings() {
       // Cache for 6 hours
       cache.set(cacheKey, data, CACHE_TTL);
 
-      console.log('✅ Fetched NHL standings', data);
+      logger.log('✅ Fetched NHL standings', data);
 
       return data;
     } catch (error) {

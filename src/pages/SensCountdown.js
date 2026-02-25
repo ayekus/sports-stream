@@ -9,6 +9,7 @@ import { getTeamLogoUrl } from '../services/nhlApi.js';
 import { formatTime } from '../utils/date.js';
 import { router } from '../router.js';
 import { cache } from '../utils/cache.js';
+import { logger } from '../utils/logger.js';
 
 let countdownTimer = null;
 
@@ -170,7 +171,7 @@ async function loadCountdown() {
       // If game started, navigate to it
       if (timeRemaining.isExpired) {
         // You could navigate to the game stream here
-        console.log('Game time! Countdown expired.');
+        logger.log('Game time! Countdown expired.');
       }
     });
     

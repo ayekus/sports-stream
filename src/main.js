@@ -7,9 +7,11 @@ import './styles/index.css';
 import './styles/components.css';
 import './styles/game-cards.css';
 import './styles/highlights.css';
-import './styles/sens-hub.css';
-import './styles/salary-cap.css';
-import './styles/player-contract-modal.css';
+import './styles/sens-common.css';
+import './styles/sens-countdown.css';
+import './styles/sens-salary-cap.css';
+import './styles/sens-season-tracker.css';
+import './styles/sens-team-info.css';
 import { router } from './router.js';
 import { createHeader } from './components/Header.js';
 

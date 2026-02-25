@@ -1,0 +1,713 @@
+/* Senators Hub - Common Layout and Utility Styles */
+
+:root {
+  --color-sens-red: #CE1126;
+  --color-sens-gold: #C8A878;
+  --sens-red: #CE1126;
+  --sens-gold: #C8A878;
+}
+
+.sens-hub-page {
+  min-height: 100vh;
+  padding: var(--spacing-2xl) 0;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0a0505 0%, #0d0d0d 100%);
+}
+
+/* Dramatic Sens ice background - positioned off-center to the right */
+.sens-hub-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -200px;
+  width: 120%;
+  height: 100%;
+  background-image: url('/sens-ice-bg.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: right center;
+  opacity: 0.4;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Gradient overlay for better text readability */
+.sens-hub-page::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to right,
+    rgba(10, 5, 5, 0.9) 0%,
+    rgba(10, 5, 5, 0.7) 40%,
+    rgba(10, 5, 5, 0.3) 70%,
+    transparent 100%
+  );
+  z-index: 0;
+  pointer-events: none;
+}
+
+.sens-hub-container {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
+
+/* Loading State - Sens Red Theme Override */
+.sens-hub-page .loading span,
+.sens-page .loading span {
+  background: linear-gradient(135deg, #CE1126 0%, #a00d1c 100%) !important;
+  box-shadow: 0 0 12px rgba(206, 17, 38, 0.6) !important;
+}
+
+.sens-hub-page .loading span,
+.sens-page .loading span {
+  animation: dotWaveSens 1.4s ease-in-out infinite !important;
+}
+
+.sens-hub-page .loading span:nth-child(1),
+.sens-page .loading span:nth-child(1) {
+  animation-delay: 0s !important;
+}
+
+.sens-hub-page .loading span:nth-child(2),
+.sens-page .loading span:nth-child(2) {
+  animation-delay: 0.2s !important;
+}
+
+.sens-hub-page .loading span:nth-child(3),
+.sens-page .loading span:nth-child(3) {
+  animation-delay: 0.4s !important;
+}
+
+@keyframes dotWaveSens {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    box-shadow: 0 0 12px rgba(206, 17, 38, 0.6);
+  }
+  30% {
+    transform: translateY(-18px);
+    box-shadow: 0 0 20px rgba(200, 168, 120, 0.8);
+  }
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-3xl) 0;
+}
+
+.empty-state-icon {
+  font-size: 5rem;
+  margin-bottom: var(--spacing-lg);
+}
+
+.empty-state-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-sens-red);
+  margin-bottom: var(--spacing-md);
+}
+
+.empty-state p {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
+}
+
+/* Error Message */
+.error-message {
+  background: rgba(206, 17, 38, 0.1);
+  border: 1px solid var(--color-sens-red);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-xl);
+  text-align: center;
+  margin-top: var(--spacing-2xl);
+}
+
+.error-message p {
+  color: var(--color-sens-red);
+  font-size: var(--font-size-lg);
+  margin: 0;
+}
+
+/* ========================================
+   PLAYER MODAL SYSTEM
+   ======================================== */
+.player-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.player-modal.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.player-modal .modal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+}
+
+.player-modal .modal-content {
+  position: relative;
+  width: 90%;
+  max-width: 600px;
+  max-height: 85vh;
+  background: rgba(20, 20, 30, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(200, 168, 120, 0.3);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(200, 168, 120, 0.1);
+}
+
+.player-modal.active .modal-content {
+  transform: scale(1);
+}
+
+.player-modal .modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(200, 16, 46, 0.2);
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.player-modal .modal-close:hover {
+  background: var(--color-sens-red);
+  transform: rotate(90deg);
+}
+
+.player-modal .modal-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 50px;
+  height: 50px;
+  border: none;
+  background: rgba(20, 20, 30, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(200, 168, 120, 0.2);
+  border-radius: 50%;
+  color: var(--color-sens-gold);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 100;
+}
+
+.player-modal .modal-prev {
+  left: 1rem;
+}
+
+.player-modal .modal-next {
+  right: 1rem;
+}
+
+.player-modal .modal-nav:hover {
+  background: rgba(200, 168, 120, 0.2);
+  border-color: var(--color-sens-gold);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.player-modal .modal-nav:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.player-modal .modal-nav svg {
+  width: 24px;
+  height: 24px;
+}
+
+.player-modal .modal-body {
+  padding: 2rem;
+  overflow-y: auto;
+  max-height: 85vh;
+}
+
+.player-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(200, 168, 120, 0.2);
+}
+
+.player-modal-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--color-sens-gold);
+  box-shadow: 0 4px 12px rgba(200, 168, 120, 0.3);
+}
+
+.player-modal-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-sens-red), var(--color-sens-gold));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  border: 3px solid var(--color-sens-gold);
+}
+
+.player-modal-info {
+  flex: 1;
+}
+
+.player-modal-name {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 0.5rem 0;
+}
+
+.player-modal-subtitle {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.player-modal-position,
+.player-modal-number {
+  color: var(--color-sens-gold);
+  font-weight: 600;
+}
+
+.player-modal-injury {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(200, 16, 46, 0.2);
+  border: 1px solid var(--color-sens-red);
+  border-radius: var(--radius-md);
+  margin-top: 0.5rem;
+}
+
+.injury-icon {
+  font-size: 1.25rem;
+}
+
+.injury-text {
+  color: var(--color-sens-red);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.player-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.player-info-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(200, 168, 120, 0.2);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  text-align: center;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.info-value {
+  font-size: 1.25rem;
+  color: var(--color-sens-gold);
+  font-weight: 700;
+}
+
+.player-birthplace {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(200, 168, 120, 0.2);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.birthplace-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.birthplace-value {
+  font-size: 1.1rem;
+  color: white;
+  font-weight: 600;
+}
+
+.player-links {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.espn-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, var(--color-sens-red), rgba(200, 16, 46, 0.8));
+  border: 1px solid var(--color-sens-gold);
+  border-radius: var(--radius-md);
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.espn-link:hover {
+  background: linear-gradient(135deg, rgba(200, 16, 46, 0.9), var(--color-sens-red));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(200, 168, 120, 0.3);
+}
+
+@media (max-width: 768px) {
+  .player-modal .modal-content {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  .player-modal .modal-body {
+    padding: 1.5rem;
+  }
+  
+  .player-modal-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .player-modal-img,
+  .player-modal-avatar {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .player-modal-name {
+    font-size: 1.5rem;
+  }
+  
+  .player-info-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .player-modal .modal-nav {
+    width: 40px;
+    height: 40px;
+  }
+}
+/* Compact Player Contract Cards */
+.player-contract-card.compact {
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.player-contract-card.compact:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 4px 16px rgba(183, 146, 87, 0.3);
+}
+
+.compact-contract-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(183, 146, 87, 0.2);
+  border-radius: 12px;
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-md);
+}
+
+.current-year-salary {
+  flex: 1;
+}
+
+.salary-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 0.25rem;
+}
+
+.salary-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--sens-gold);
+}
+
+.contract-meta-compact {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: right;
+}
+
+/* Player Contract Modal */
+.contract-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+  padding: var(--spacing-lg);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.contract-modal {
+  background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+  border: 2px solid rgba(183, 146, 87, 0.3);
+  border-radius: 20px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-header {
+  padding: var(--spacing-xl);
+  border-bottom: 1px solid rgba(183, 146, 87, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: sticky;
+  top: 0;
+  background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+  z-index: 1;
+}
+
+.modal-player-info {
+  flex: 1;
+}
+
+.modal-player-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--sens-gold);
+  margin-bottom: 0.5rem;
+}
+
+.modal-player-meta {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.modal-close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.modal-close-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #ef4444;
+  transform: rotate(90deg);
+}
+
+.modal-content {
+  padding: var(--spacing-xl);
+}
+
+.modal-section {
+  margin-bottom: var(--spacing-xl);
+}
+
+.modal-section-title {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--spacing-md);
+  font-weight: 600;
+}
+
+.salary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.salary-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(183, 146, 87, 0.2);
+  border-radius: 10px;
+  padding: var(--spacing-md);
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.salary-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(183, 146, 87, 0.4);
+  transform: translateY(-2px);
+}
+
+.salary-year {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 0.5rem;
+}
+
+.salary-amount {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--sens-gold);
+}
+
+.salary-item.current .salary-year {
+  color: var(--sens-gold);
+  font-weight: 700;
+}
+
+.salary-item.current {
+  border-color: var(--sens-gold);
+  background: rgba(183, 146, 87, 0.1);
+}
+
+.contract-details {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(183, 146, 87, 0.2);
+  border-radius: 10px;
+  padding: var(--spacing-lg);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+}
+
+.detail-value {
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+}
+
+.detail-value.highlight {
+  color: var(--sens-gold);
+}
+
+.detail-value.expiring {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+/* Responsive Modal */
+@media (max-width: 768px) {
+  .contract-modal {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 95vh;
+  }
+  
+  .modal-player-name {
+    font-size: 1.25rem;
+  }
+  
+  .salary-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+}

@@ -3,6 +3,8 @@
  * Extracts direct stream URLs from embed pages to bypass redirects and ads
  */
 
+import { logger } from './logger.js';
+
 // CORS proxies to use (try in order if one fails)
 const CORS_PROXIES = [
   { url: 'https://api.allorigins.win/raw?url=', responseType: 'text' },
@@ -16,12 +18,12 @@ const CORS_PROXIES = [
  * @returns {Promise<Object>} { success: boolean, streamUrl: string|null, method: string }
  */
 export async function extractStreamUrl(embedUrl) {
-  console.log('🔍 Attempting to extract stream URL from:', embedUrl);
+  logger.log('🔍 Attempting to extract stream URL from:', embedUrl);
   
   // First, check if the URL itself might be a direct stream
   if (embedUrl.includes('.m3u8') || embedUrl.includes('.mp4') || embedUrl.includes('.webm')) {
-    console.log('✅ URL appears to be a direct stream');
-    return{ success: true, streamUrl: embedUrl, method: 'direct' };
+    logger.log('✅ URL appears to be a direct stream');
+    return { success: true, streamUrl: embedUrl, method: 'direct' };
   }
   
   // Try each CORS proxy
@@ -29,22 +31,22 @@ export async function extractStreamUrl(embedUrl) {
     const proxyConfig = CORS_PROXIES[i];
     
     try {
-      console.log(`📡 Trying extraction method ${i + 1}/${CORS_PROXIES.length}...`);
+      logger.log(`📡 Trying extraction method ${i + 1}/${CORS_PROXIES.length}...`);
       
       const result = await extractWithProxy(embedUrl, proxyConfig);
       
       if (result.success) {
-        console.log('✅ Successfully extracted stream URL:', result.streamUrl);
+        logger.log('✅ Successfully extracted stream URL:', result.streamUrl);
         return result;
       }
       
     } catch (error) {
-      console.warn(`⚠️ Extraction method ${i + 1} failed:`, error.message);
+      logger.warn(`⚠️ Extraction method ${i + 1} failed:`, error.message);
       // Continue to next method
     }
   }
   
-  console.log('❌ All extraction methods failed, will use iframe fallback');
+  logger.log('❌ All extraction methods failed, will use iframe fallback');
   return { success: false, streamUrl: null, method: 'fallback' };
 }
 

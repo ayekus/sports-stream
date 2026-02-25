@@ -4,6 +4,7 @@
  */
 
 import { cache } from '../utils/cache.js';
+import { logger } from '../utils/logger.js';
 
 const BASE_URL = 'https://www.thesportsdb.com/api/v1/json';
 const API_KEY = 3;
@@ -23,13 +24,13 @@ export async function getAllNHLTeams() {
   const cached = cache.get(cacheKey);
   
   if (cached) {
-    console.log('✅ Using cached NHL teams');
+    logger.log('✅ Using cached NHL teams');
     return cached;
   }
   
   // Check for pending request to avoid race conditions
   if (pendingRequests.has(cacheKey)) {
-    console.log('⚡ Joining pending request for NHL teams');
+    logger.log('⚡ Joining pending request for NHL teams');
     return pendingRequests.get(cacheKey);
   }
 

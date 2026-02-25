@@ -1,3 +1,182 @@
+/* Senators Hub - Salary Cap Dashboard Styles */
+
+.cap-usage-bar {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 2px solid var(--color-sens-red);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.cap-usage-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.cap-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.cap-stat-label {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--spacing-sm);
+}
+
+.cap-stat-value {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.cap-stat-value.used {
+  color: var(--color-sens-red);
+}
+
+.cap-stat-value.space {
+  color: #4ade80;
+}
+
+.cap-progress-bar {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-md);
+  height: 40px;
+  overflow: hidden;
+  position: relative;
+}
+
+.cap-progress-fill {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.cap-used {
+  background: linear-gradient(90deg, #ce1126 0%, #e63946 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  transition: width 0.5s ease;
+}
+
+.cap-space {
+  background: linear-gradient(90deg, #10b981 0%, #4ade80 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  transition: width 0.5s ease;
+}
+
+/* Player Contracts Grid */
+.player-contracts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.player-contract-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(200, 168, 120, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.player-contract-card:hover {
+  border-color: var(--color-sens-gold);
+  box-shadow: 0 4px 12px rgba(200, 168, 120, 0.3);
+  transform: translateY(-2px);
+}
+
+.player-contract-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-md);
+}
+
+.player-contract-name {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+
+.player-contract-position {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.contract-status-badge {
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.contract-status-badge.ufa {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+.contract-status-badge.rfa {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fcd34d;
+}
+
+.contract-status-badge.expiring {
+  background: rgba(249, 115, 22, 0.2);
+  color: #fdba74;
+}
+
+.player-contract-salary {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-sens-gold);
+  margin-bottom: var(--spacing-sm);
+}
+
+.player-contract-details {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .cap-usage-stats {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+  
+  .player-contracts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .cap-stat-value {
+    font-size: var(--font-size-2xl);
+  }
+}
 /* Salary Cap Page Styles */
 .salary-cap-page {
   padding: 2rem;

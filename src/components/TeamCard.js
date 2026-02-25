@@ -3,6 +3,8 @@
  * Displays an NHL team card with logo and information
  */
 
+import { logger } from '../utils/logger.js';
+
 export function createTeamCard(team) {
   const card = document.createElement('div');
   card.className = 'team-card card';
@@ -151,8 +153,8 @@ async function loadTeamStats(team) {
     // getNHLStandings returns { standings: [...] }
     const standings = standingsData.standings || standingsData;
     
-    console.log('Looking for team:', team.strTeam, 'Short:', team.strTeamShort);
-    console.log('Available teams:', standings.map(t => ({ name: t.teamName?.default, abbrev: t.teamAbbrev?.default })));
+    logger.log('Looking for team:', team.strTeam, 'Short:', team.strTeamShort);
+    logger.log('Available teams:', standings.map(t => ({ name: t.teamName?.default, abbrev: t.teamAbbrev?.default })));
     
     // Find team by abbreviation or name matching
     const teamStats = standings.find(t => {
@@ -164,14 +166,14 @@ async function loadTeamStats(team) {
       
       // Try matching by abbreviation first (most reliable)
       if (teamShort && abbrev && abbrev.toLowerCase() === teamShort.toLowerCase()) {
-        console.log('Matched by abbrev:', abbrev);
+        logger.log('Matched by abbrev:', abbrev);
         return true;
       }
       
       // Try matching by team name
       if (name.toLowerCase().includes(team.strTeam.toLowerCase()) ||
           team.strTeam.toLowerCase().includes(name.toLowerCase())) {
-        console.log('Matched by name:', name);
+        logger.log('Matched by name:', name);
         return true;
       }
       
@@ -179,7 +181,7 @@ async function loadTeamStats(team) {
       const teamWords = team.strTeam.toLowerCase().split(' ');
       const lastWord = teamWords[teamWords.length - 1];
       if (name.toLowerCase().includes(lastWord)) {
-        console.log('Matched by last word:', lastWord, 'in', name);
+        logger.log('Matched by last word:', lastWord, 'in', name);
         return true;
       }
       
@@ -187,12 +189,12 @@ async function loadTeamStats(team) {
     });
     
     if (!teamStats) {
-      console.error('Team not found in standings:', team.strTeam);
+      logger.error('Team not found in standings:', team.strTeam);
       statsContainer.innerHTML = '<h4>Current Season</h4><p class="text-secondary" style="font-size: 0.9rem;">Stats unavailable</p>';
       return;
     }
     
-    console.log('Found stats for:', teamStats.teamName?.default);
+    logger.log('Found stats for:', teamStats.teamName?.default);
     
     // Display main stats only
     statsContainer.innerHTML = `
@@ -219,7 +221,7 @@ async function loadTeamStats(team) {
       </div>
     `;
   } catch (error) {
-    console.error('Error loading team stats:', error);
+    logger.error('Error loading team stats:', error);
     statsContainer.innerHTML = '<h4>Current Season</h4><p class="text-secondary" style="font-size: 0.9rem;">Unable to load stats</p>';
   }
 }

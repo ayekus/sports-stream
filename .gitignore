@@ -28,3 +28,4 @@ dist-ssr
 
 # Cached salary cap data
 server/cache/
+.agents/

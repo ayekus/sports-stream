@@ -3,6 +3,8 @@
  * Displays goal highlight video in a fullscreen modal
  */
 
+import { logger } from '../utils/logger.js';
+
 let currentModal = null;
 let currentHighlights = [];
 let currentIndex = 0;
@@ -142,7 +144,7 @@ function updateModalContent(highlight) {
  */
 function createVideoPlayer(highlight) {
   // Debug: log what video data we have
-  console.log('🎥 Video data:', {
+  logger.log('🎥 Video data:', {
     goalId: highlight.goalId,
     highlightUrl: highlight.videos?.highlightUrl,
     discreteUrl: highlight.videos?.discreteUrl
@@ -168,7 +170,7 @@ function createVideoPlayer(highlight) {
   const videoIdMatch = sharingUrl.match(/(\d+)$/);
   const videoId = videoIdMatch ? videoIdMatch[1] : null;
   
-  console.log('🎥 Extracted video ID:', videoId, 'from URL:', sharingUrl);
+  logger.log('🎥 Extracted video ID:', videoId, 'from URL:', sharingUrl);
   
   if (!videoId) {
     return `

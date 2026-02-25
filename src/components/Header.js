@@ -79,9 +79,20 @@ function renderHeaderContent(header) {
 }
 
 export function updateActiveNav() {
-  const links = document.querySelectorAll('.nav-link');
   const currentPath = window.location.pathname;
+  const header = document.getElementById('site-header');
+  if (!header) return;
+
+  // 1. Check if we need to switch header mode (Sens Hub vs Normal)
+  const isSensMode = currentPath.startsWith('/sens-hub');
+  const wasInSensMode = header.querySelector('.back-to-streampuck-button') !== null;
   
+  if (wasInSensMode !== isSensMode) {
+    renderHeaderContent(header);
+  }
+
+  // 2. Update active states for navigation links
+  const links = header.querySelectorAll('.nav-link');
   links.forEach(link => {
     link.classList.remove('active');
     if (link.getAttribute('href') === currentPath || 
@@ -90,17 +101,6 @@ export function updateActiveNav() {
     }
   });
   
-  // Update theme based on route
-  const isSensMode = currentPath.startsWith('/sens-hub');
+  // 3. Update global theme based on route
   document.body.classList.toggle('sens-mode', isSensMode);
-  
-  // Re-render header if mode changed
-  const header = document.getElementById('site-header');
-  if (header) {
-    const wasInSensMode = header.querySelector('.back-to-streampuck-button') !== null;
-    if (wasInSensMode !== isSensMode) {
-      renderHeaderContent(header);
-      updateActiveNav(); // Re-run to set active states
-    }
-  }
 }

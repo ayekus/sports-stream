@@ -6,6 +6,7 @@
 
 import { cache } from '../utils/cache.js';
 import * as nhlScoreApi from './nhlScoreApi.js';
+import { logger } from '../utils/logger.js';
 
 const BASE_URL = 'https://streamed.pk/api';
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
@@ -27,7 +28,7 @@ export async function getSports() {
 
   // Check for pending request to avoid race conditions
   if (pendingRequests.has(cacheKey)) {
-    console.log(`⚡ Joining pending request for sports`);
+    logger.log(`⚡ Joining pending request for sports`);
     return pendingRequests.get(cacheKey);
   }
   
@@ -98,7 +99,7 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
 
   // Check for pending request to avoid race conditions
   if (pendingRequests.has(cacheKey)) {
-    console.log(`⚡ Joining pending request for hockey matches (${filter})`);
+    logger.log(`⚡ Joining pending request for hockey matches (${filter})`);
     return pendingRequests.get(cacheKey);
   }
   
@@ -230,7 +231,7 @@ export async function getAllMatches(filter = 'all') {
 
   // Check for pending request to avoid race conditions
   if (pendingRequests.has(cacheKey)) {
-    console.log(`⚡ Joining pending request for all matches (${filter})`);
+    logger.log(`⚡ Joining pending request for all matches (${filter})`);
     return pendingRequests.get(cacheKey);
   }
   
@@ -280,7 +281,7 @@ export async function getStreamUrls(source, id) {
 
   // Check for pending request to avoid race conditions
   if (pendingRequests.has(cacheKey)) {
-    console.log(`⚡ Joining pending request for ${source}/${id}`);
+    logger.log(`⚡ Joining pending request for ${source}/${id}`);
     return pendingRequests.get(cacheKey);
   }
   

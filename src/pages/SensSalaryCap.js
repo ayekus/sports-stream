@@ -64,57 +64,67 @@ async function loadSalaryCapData(forceRefresh = false) {
   }
 }
 
+/**
+ * Uses Event Delegation to handle all clicks within the salary cap page
+ */
 function attachEventListeners() {
-  // Sort buttons (segment-btn with data-sort)
-  const sortButtons = document.querySelectorAll('.segment-btn[data-sort]');
-  sortButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentSort = btn.dataset.sort;
-      sortButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      updatePlayerDisplay();
-    });
-    // Set initial active state
-    if (btn.dataset.sort === currentSort) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
-  });
-  
-  // Filter buttons
-  const filterButtons = document.querySelectorAll('.filter-btn');
-  filterButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentFilter = btn.dataset.filter;
-      filterButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      updatePlayerDisplay();
-    });
-    // Set initial active state
-    if (btn.dataset.filter === currentFilter) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
-  });
+  const container = document.querySelector('.sens-hub-container');
+  if (!container) return;
 
-  // Refresh data button
-  document.getElementById('refresh-data-btn')?.addEventListener('click', () => {
-    loadSalaryCapData(true); // Force refresh
-  });
+  // Remove any existing listener if this is called multiple times
+  if (container._delegatedEventListener) {
+    container.removeEventListener('click', container._delegatedEventListener);
+  }
 
-  // Player card click for modal
-  const playerCards = document.querySelectorAll('.player-contract-card.compact');
-  playerCards.forEach(card => {
-    card.addEventListener('click', () => {
-      const modalDataEl = card.querySelector('.modal-data');
+  container._delegatedEventListener = (e) => {
+    // 1. Handle Sort Buttons
+    const sortBtn = e.target.closest('.segment-btn[data-sort]');
+    if (sortBtn && !sortBtn.classList.contains('filter-btn')) {
+      currentSort = sortBtn.dataset.sort;
+      // Update UI state of buttons
+      document.querySelectorAll('.segment-btn[data-sort]:not(.filter-btn)').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.sort === currentSort);
+      });
+      updatePlayerDisplay();
+      return;
+    }
+
+    // 2. Handle Filter Buttons
+    const filterBtn = e.target.closest('.filter-btn');
+    if (filterBtn) {
+      currentFilter = filterBtn.dataset.filter;
+      // Update UI state of buttons
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === currentFilter);
+      });
+      updatePlayerDisplay();
+      return;
+    }
+
+    // 3. Handle Player Card Clicks
+    const playerCard = e.target.closest('.player-contract-card');
+    if (playerCard) {
+      const modalDataEl = playerCard.querySelector('.modal-data');
       if (modalDataEl) {
-        const data = JSON.parse(modalDataEl.textContent);
-        openPlayerModal(data);
+        try {
+          const data = JSON.parse(modalDataEl.textContent);
+          openPlayerModal(data);
+        } catch (err) {
+          console.error('Error parsing player data:', err);
+        }
       }
-    });
-  });
+      return;
+    }
+
+    // 4. Handle Refresh Button
+    const refreshBtn = e.target.closest('#refresh-data-btn');
+    if (refreshBtn) {
+      loadSalaryCapData(true); // true = force refresh
+      return;
+    }
+  };
+
+  container.addEventListener('click', container._delegatedEventListener);
 }
 
 function updatePlayerDisplay() {
@@ -124,8 +134,6 @@ function updatePlayerDisplay() {
   if (!playersContainer) return;
   
   playersContainer.innerHTML = renderPlayersSection(currentData);
-  // Reattach event listeners after DOM update to ensure active states are correct
-  attachEventListeners();
 }
 
 function calculateRosterCapHit(players) {
@@ -330,13 +338,13 @@ function renderPlayersSection(salaryData) {
           <div class="modern-control-group">
             <span class="control-label">Sort by:</span>
             <div class="segmented-control">
-              <button class="segment-btn" data-sort="salary-desc">
+              <button class="segment-btn ${currentSort === 'salary-desc' ? 'active' : ''}" data-sort="salary-desc">
                 <span class="segment-text">Highest</span>
               </button>
-              <button class="segment-btn" data-sort="salary-asc">
+              <button class="segment-btn ${currentSort === 'salary-asc' ? 'active' : ''}" data-sort="salary-asc">
                 <span class="segment-text">Lowest</span>
               </button>
-              <button class="segment-btn" data-sort="years">
+              <button class="segment-btn ${currentSort === 'years' ? 'active' : ''}" data-sort="years">
                 <span class="segment-text">Years Left</span>
               </button>
             </div>
@@ -346,9 +354,9 @@ function renderPlayersSection(salaryData) {
           <div class="modern-control-group">
             <span class="control-label">Show:</span>
             <div class="segmented-control">
-              <button class="segment-btn filter-btn" data-filter="all">All</button>
-              <button class="segment-btn filter-btn" data-filter="nhl">NHL Only</button>
-              <button class="segment-btn filter-btn" data-filter="expiring">Expiring</button>
+              <button class="segment-btn filter-btn ${currentFilter === 'all' ? 'active' : ''}" data-filter="all">All</button>
+              <button class="segment-btn filter-btn ${currentFilter === 'nhl' ? 'active' : ''}" data-filter="nhl">NHL Only</button>
+              <button class="segment-btn filter-btn ${currentFilter === 'expiring' ? 'active' : ''}" data-filter="expiring">Expiring</button>
             </div>
           </div>
         </div>

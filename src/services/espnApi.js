@@ -4,6 +4,7 @@
  */
 
 import { cache } from '../utils/cache.js';
+import { logger } from '../utils/logger.js';
 
 const ESPN_PROXY_BASE = 'http://localhost:3001/api/espn';
 const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes

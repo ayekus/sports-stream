@@ -6,6 +6,7 @@
 import Plyr from 'plyr';
 import Hls from 'hls.js';
 import 'plyr/dist/plyr.css';
+import { logger } from '../utils/logger.js';
 
 export class VideoPlayer {
   constructor(container, options = {}) {
@@ -54,7 +55,7 @@ export class VideoPlayer {
       }
     }
     
-    console.log(`🎬 Initializing player with type: ${type}`);
+    logger.log(`🎬 Initializing player with type: ${type}`);
     
     if (type === 'iframe') {
       this.createIframePlayer(url);
@@ -95,7 +96,7 @@ export class VideoPlayer {
     this.container.appendChild(iframe);
     this.setupIframeProtection(iframe);
     
-    console.log('🎬 Iframe player loaded');
+    logger.log('🎬 Iframe player loaded');
   }
 
   /**
@@ -153,8 +154,8 @@ export class VideoPlayer {
     
     // HLS event listeners
     this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-      console.log('✅ HLS manifest loaded');
-      video.play().catch(err => console.log('Autoplay prevented:', err));
+      logger.log('✅ HLS manifest loaded');
+      video.play().catch(err => logger.log('Autoplay prevented:', err));
     });
     
     this.hls.on(Hls.Events.ERROR, (event, data) => {
@@ -163,11 +164,11 @@ export class VideoPlayer {
       if (data.fatal) {
         switch (data.type) {
           case Hls.ErrorTypes.NETWORK_ERROR:
-            console.log('Network error, attempting recovery...');
+            logger.log('Network error, attempting recovery...');
             this.hls.startLoad();
             break;
           case Hls.ErrorTypes.MEDIA_ERROR:
-            console.log('Media error, attempting recovery...');
+            logger.log('Media error, attempting recovery...');
             this.hls.recoverMediaError();
             break;
           default:
@@ -195,7 +196,7 @@ export class VideoPlayer {
   setupIframeProtection(iframe) {
     // Listen for iframe load events
     iframe.addEventListener('load', () => {
-      console.log('📺 Iframe loaded');
+      logger.log('📺 Iframe loaded');
       
       try {
         // Try to access iframe window (may fail due to CORS)
@@ -205,11 +206,11 @@ export class VideoPlayer {
         if (iframeWindow) {
           // Note: Due to same-origin policy, we can't fully control the iframe content
           // The sandbox attribute is doing the heavy lifting here
-          console.log('🛡️ Iframe sandbox protection active');
+          logger.log('🛡️ Iframe sandbox protection active');
         }
       } catch (error) {
         // Expected due to CORS - this is actually good for security
-        console.log('🔒 Iframe is properly isolated (CORS)');
+        logger.log('🔒 Iframe is properly isolated (CORS)');
       }
     });
     
@@ -243,11 +244,11 @@ export class VideoPlayer {
     if (!this.player) return;
     
     this.player.on('ready', () => {
-      console.log('Player ready');
+      logger.log('Player ready');
     });
     
     this.player.on('playing', () => {
-      console.log('Playback started');
+      logger.log('Playback started');
     });
     
     this.player.on('error', (event) => {

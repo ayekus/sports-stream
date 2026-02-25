@@ -4,6 +4,8 @@
  */
 
 import { cache } from '../utils/cache.js';
+import { toAPIDate } from '../utils/date.js';
+import { logger } from '../utils/logger.js';
 
 // Use Vite proxy to avoid CORS issues
 const BASE_URL = '/api/nhl';
@@ -17,14 +19,8 @@ const pendingRequests = new Map();
  * @returns {Promise<Object>} Live scores data with game details
  */
 export async function getLiveScores() {
-  // Use local date to avoid UTC rollover issues
-  // When it's 7:30 PM PST on Dec 28, we want Dec 28, not Dec 29 (UTC)
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const today = `${year}-${month}-${day}`;
-
+  // Use toAPIDate to avoid UTC rollover issues
+  const today = toAPIDate();
   return getScoresByDate(today);
 }
 
@@ -44,14 +40,14 @@ export async function getScoresByDate(date) {
 
   // 2. Check Pending Requests (Coalescing)
   if (pendingRequests.has(cacheKey)) {
-    console.log(`⚡ Joining pending request for NHL scores (${date})`);
+    logger.log(`⚡ Joining pending request for NHL scores (${date})`);
     return pendingRequests.get(cacheKey);
   }
 
   // 3. Create New Request
   const promise = (async () => {
     try {
-      console.log(`🔄 Fetching fresh NHL scores for ${date}...`);
+      logger.log(`🔄 Fetching fresh NHL scores for ${date}...`);
 
       const response = await fetch(`${BASE_URL}/score/${date}`);
 
@@ -61,7 +57,7 @@ export async function getScoresByDate(date) {
 
       const data = await response.json();
 
-      console.log(`✅ Fetched ${data.games?.length || 0} NHL games for ${date}`);
+      logger.log(`✅ Fetched ${data.games?.length || 0} NHL games for ${date}`);
 
       // Cache the result
       cache.set(cacheKey, data, CACHE_TTL);

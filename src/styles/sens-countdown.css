@@ -1,0 +1,370 @@
+/* Senators Hub - Countdown and Next Game Styles */
+
+.countdown-header {
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+}
+
+.countdown-title {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  background: linear-gradient(90deg, var(--color-sens-red), var(--color-sens-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.countdown-display {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-3xl);
+  perspective: 1000px;
+}
+
+.countdown-unit {
+  text-align: center;
+  position: relative;
+  animation: float 3s ease-in-out infinite;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.countdown-unit:nth-child(1) { animation-delay: 0s; }
+.countdown-unit:nth-child(3) { animation-delay: 0.2s; }
+.countdown-unit:nth-child(5) { animation-delay: 0.4s; }
+.countdown-unit:nth-child(7) { animation-delay: 0.6s; }
+
+.countdown-unit:hover {
+  transform: translateY(-10px) scale(1.15) rotateY(5deg);
+  z-index: 10;
+  animation: none;
+}
+
+.countdown-unit:hover .countdown-value {
+  transform: scale(1.1);
+  -webkit-text-stroke: 3px #C8A878;
+  filter: 
+    drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6)) 
+    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4))
+    drop-shadow(0 0 40px rgba(200, 168, 120, 1))
+    drop-shadow(0 0 60px rgba(200, 168, 120, 0.8))
+    drop-shadow(0 0 80px rgba(200, 168, 120, 0.6));
+}
+
+.countdown-unit:hover .countdown-label {
+  color: #fff;
+  transform: scale(1.1);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.countdown-value {
+  display: block;
+  font-size: clamp(5rem, 12vw, 9rem);
+  font-weight: var(--font-weight-bold);
+  color: #CE1126 !important;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  font-family: 'Courier New', monospace;
+  position: relative;
+  -webkit-text-fill-color: #CE1126 !important;
+  -webkit-text-stroke: 2.5px #C8A878;
+  paint-order: stroke fill;
+  filter: 
+    drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6)) 
+    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4))
+    drop-shadow(0 0 25px rgba(200, 168, 120, 0.6))
+    drop-shadow(0 0 40px rgba(200, 168, 120, 0.4));
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+.countdown-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--color-sens-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-top: var(--spacing-md);
+  font-weight: var(--font-weight-semibold);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+}
+
+.countdown-separator {
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-sens-gold);
+  opacity: 0.8;
+  line-height: 1;
+  user-select: none;
+  align-self: flex-start;
+  margin-top: -0.5rem;
+  text-shadow: 
+    0 0 10px rgba(200, 168, 120, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.live-game-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-3xl);
+  padding: var(--spacing-xl);
+  background: linear-gradient(135deg, rgba(200, 16, 46, 0.2), rgba(200, 168, 120, 0.1));
+  border: 2px solid var(--color-sens-red);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.live-game-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.live-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  position: relative;
+  z-index: 1;
+}
+
+.live-dot {
+  width: 16px;
+  height: 16px;
+  background: var(--color-sens-red);
+  border-radius: 50%;
+  animation: livePulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 20px var(--color-sens-red);
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+.live-text {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-sens-red);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-shadow: 0 2px 8px rgba(200, 16, 46, 0.5);
+}
+
+.live-score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  position: relative;
+  z-index: 1;
+}
+
+.team-score {
+  color: var(--color-sens-gold);
+  text-shadow: 0 2px 8px rgba(200, 168, 120, 0.5);
+}
+
+.score-separator {
+  color: var(--color-text-muted);
+}
+
+.next-game-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 2px solid var(--color-sens-red);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.game-matchup-horizontal {
+  display: grid;
+  grid-template-columns: 320px 1fr 320px;
+  gap: var(--spacing-xl);
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.team-logo-side {
+  width: 320px;
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.team-logo-side:first-child { margin-left: -30px; }
+.team-logo-side:last-child { margin-right: -30px; }
+
+.team-logo-side:hover { transform: scale(1.1); }
+
+.team-logo-side img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
+}
+
+.matchup-text {
+  text-align: center;
+  padding: var(--spacing-lg) var(--spacing-xl);
+}
+
+.matchup-title {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+}
+
+.game-details-info-horizontal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid rgba(200, 168, 120, 0.2);
+  flex-wrap: wrap;
+}
+
+.detail-separator {
+  color: var(--color-sens-gold);
+  font-size: var(--font-size-lg);
+  opacity: 0.6;
+  user-select: none;
+}
+
+.game-detail-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  justify-content: center;
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-sens-gold);
+  flex-shrink: 0;
+}
+
+.quick-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  text-align: center;
+  transition: all var(--transition-base);
+}
+
+.stat-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--color-sens-gold);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(200, 168, 120, 0.2);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--spacing-md);
+  color: var(--color-sens-gold);
+  stroke-width: 1.5;
+}
+
+.stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--spacing-sm);
+}
+
+.stat-value {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 768px) {
+  .game-matchup-horizontal {
+    grid-template-columns: 140px 1fr 140px;
+    gap: var(--spacing-md);
+  }
+  
+  .team-logo-side {
+    width: 140px;
+    height: 140px;
+  }
+  
+  .matchup-title {
+    font-size: clamp(1.2rem, 5vw, 1.8rem);
+  }
+  
+  .game-details-info-horizontal {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+  
+  .detail-separator {
+    display: none;
+  }
+  
+  .countdown-display {
+    gap: var(--spacing-sm);
+  }
+  
+  .countdown-separator {
+    font-size: 2rem;
+  }
+  
+  .quick-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

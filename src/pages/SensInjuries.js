@@ -5,6 +5,7 @@
 
 import { getTeamInjuries, getInjurySummary } from '../services/sensInjuryApi.js';
 import { router } from '../router.js';
+import { logger } from '../utils/logger.js';
 
 export async function renderSensInjuries() {
   const app = document.getElementById('app-content');
@@ -39,7 +40,7 @@ async function loadInjuryData() {
     renderInjuryUI(injuries, summary);
     
   } catch (error) {
-    console.error('Error loading injury data:', error);
+    logger.error('Error loading injury data:', error);
     container.innerHTML = `
       <div class="error-message">
         <p>⚠️ Failed to load injury report. Please try again later.</p>

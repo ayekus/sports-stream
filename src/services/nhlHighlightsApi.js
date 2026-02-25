@@ -1,10 +1,4 @@
-/**
- * NHL Highlights API Service
- * Fetches goal highlight videos from NHL API
- */
-
-import { cache } from '../utils/cache.js';
-import { getScoresByDate } from './nhlScoreApi.js';
+import { logger } from '../utils/logger.js';
 
 const CACHE_TTL = 30 * 60 * 1000; // 30 minutes for highlights
 
@@ -19,7 +13,7 @@ export async function getGameHighlights(gameId, date) {
   const cached = cache.get(cacheKey);
   
   if (cached) {
-    console.log(`✅ Using cached highlights for game ${gameId}`);
+    logger.log(`✅ Using cached highlights for game ${gameId}`);
     return cached;
   }
   
@@ -32,12 +26,12 @@ export async function getGameHighlights(gameId, date) {
     const game = data.games?.find(g => g.id === gameId);
     
     if (!game) {
-      console.log(`❌ Game ${gameId} not found in NHL API response for date ${date}`);
+      logger.log(`❌ Game ${gameId} not found in NHL API response for date ${date}`);
       return [];
     }
     
     if (!game.goals || game.goals.length === 0) {
-      console.log(`No goals found for game ${gameId}`);
+      logger.log(`No goals found for game ${gameId}`);
       return [];
     }
     
@@ -47,7 +41,7 @@ export async function getGameHighlights(gameId, date) {
     // Cache the highlights
     cache.set(cacheKey, highlights, CACHE_TTL);
     
-    console.log(`✅ Fetched ${highlights.length} highlights for game ${gameId}`);
+    logger.log(`✅ Fetched ${highlights.length} highlights for game ${gameId}`);
     
     return highlights;
   } catch (error) {

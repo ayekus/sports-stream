@@ -1,0 +1,440 @@
+/* Senators Hub - Team Info, Roster and Injury Report Styles */
+
+.injury-report-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.injury-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(200, 168, 120, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--spacing-lg);
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.injury-card:hover {
+  border-color: var(--color-sens-red);
+  box-shadow: 0 4px 12px rgba(206, 17, 38, 0.3);
+  transform: translateY(-2px);
+}
+
+.injury-player-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-sens-red), var(--color-sens-gold));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.injury-player-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-sens-red);
+}
+
+.injury-player-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.injury-player-name {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.injury-player-position {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.injury-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-sm);
+  text-align: right;
+}
+
+.injury-type {
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.injury-status {
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.injury-status.day-to-day { background: rgba(251, 191, 36, 0.2); color: #fcd34d; }
+.injury-status.out { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+.injury-status.ir { background: rgba(127, 29, 29, 0.3); color: #fca5a5; }
+.injury-status.probable { background: rgba(34, 197, 94, 0.2); color: #86efac; }
+
+.injury-return {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.injury-summary {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(200, 168, 120, 0.2);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+}
+
+.injury-summary strong { color: var(--color-sens-gold); }
+
+.team-info-tabs {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+  border-bottom: 2px solid rgba(200, 168, 120, 0.2);
+  overflow-x: auto;
+}
+
+.team-info-tab {
+  background: transparent;
+  border: none;
+  padding: var(--spacing-md) var(--spacing-lg);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  position: relative;
+}
+
+.team-info-tab:hover {
+  color: var(--color-sens-gold);
+  background: rgba(200, 168, 120, 0.05);
+}
+
+.team-info-tab.active {
+  color: var(--color-sens-gold);
+  border-bottom-color: var(--color-sens-gold);
+}
+
+.tab-icon { font-size: var(--font-size-lg); }
+
+.tab-badge {
+  background: var(--color-sens-red);
+  color: white;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+}
+
+.team-info-tab-pane {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+.team-info-tab-pane.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.roster-group { margin-bottom: var(--spacing-2xl); }
+
+.roster-group-title {
+  font-size: var(--font-size-xl);
+  color: var(--color-sens-gold);
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2px solid rgba(200, 168, 120, 0.2);
+}
+
+.roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.roster-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(200, 168, 120, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+}
+
+.roster-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  border-color: var(--color-sens-gold);
+  box-shadow: 0 8px 24px rgba(200, 16, 46, 0.2), 0 0 0 2px var(--color-sens-gold), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.roster-player-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.roster-player-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-sens-gold);
+}
+
+.roster-player-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-sens-red), var(--color-sens-gold));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: white;
+}
+
+.roster-player-name {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+
+.roster-player-position {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.roster-card-hover-text {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  font-size: 0.75rem;
+  color: var(--color-sens-gold);
+  opacity: 0;
+  transform: translateX(10px);
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.roster-card:hover .roster-card-hover-text { opacity: 1; transform: translateX(0); }
+
+.leaders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-xl);
+}
+
+.leader-category {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(200, 168, 120, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+}
+
+.leader-category-title {
+  font-size: var(--font-size-lg);
+  color: var(--color-sens-gold);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid rgba(200, 168, 120, 0.2);
+}
+
+.leader-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  transition: background 0.2s ease;
+}
+
+.leader-item:hover { background: rgba(200, 168, 120, 0.1); }
+
+.leader-rank {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-sens-gold);
+  min-width: 24px;
+  text-align: center;
+}
+
+.leader-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-sens-gold);
+}
+
+.leader-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-sens-red), var(--color-sens-gold));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: white;
+}
+
+.leader-info { flex: 1; }
+.leader-name { font-size: var(--font-size-md); font-weight: 600; color: var(--color-text-primary); }
+.leader-position { font-size: var(--font-size-xs); color: var(--color-text-muted); text-transform: uppercase; }
+.leader-value { font-size: var(--font-size-lg); font-weight: 700; color: var(--color-sens-gold); }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.stat-category {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(200, 168, 120, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+}
+
+.stat-category-title {
+  font-size: var(--font-size-lg);
+  color: var(--color-sens-gold);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid rgba(200, 168, 120, 0.2);
+}
+
+.stat-list { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid rgba(200, 168, 120, 0.1);
+}
+
+.stat-item:last-child { border-bottom: none; }
+.stat-label { font-size: var(--font-size-sm); color: var(--color-text-muted); }
+.stat-value { font-size: var(--font-size-md); font-weight: 600; color: var(--color-text-primary); }
+
+.team-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md) 0;
+}
+
+.team-stat-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(200, 168, 120, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.team-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-sens-red), var(--color-sens-gold));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.team-stat-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--color-sens-gold);
+  box-shadow: 0 8px 24px rgba(200, 168, 120, 0.2);
+}
+
+.team-stat-card:hover::before { opacity: 1; }
+
+.team-stat-icon {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-md);
+  filter: drop-shadow(0 2px 8px rgba(200, 168, 120, 0.3));
+}
+
+.team-stat-title {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--spacing-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+}
+
+.team-stat-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-sens-gold);
+  margin-bottom: var(--spacing-xs);
+  line-height: 1;
+  background: linear-gradient(135deg, var(--color-sens-gold), #ffffff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@media (max-width: 768px) {
+  .team-info-tabs { gap: var(--spacing-sm); }
+  .team-info-tab { padding: var(--spacing-sm) var(--spacing-md); font-size: var(--font-size-sm); }
+  .roster-grid, .leaders-grid, .stats-grid, .team-stats-grid { grid-template-columns: 1fr; }
+  .injury-card { grid-template-columns: auto 1fr; grid-template-rows: auto auto; }
+  .injury-details { grid-column: 1 / 3; align-items: flex-start; text-align: left; margin-top: var(--spacing-md); }
+}

@@ -6,44 +6,48 @@
 import { getStreamUrls, getHockeyMatches, getTeamBadgeUrl } from '../services/streamedApi.js';
 import { createVideoPlayer } from '../components/VideoPlayer.js';
 import { extractStreamUrl } from '../utils/streamExtractor.js';
-import { getGameHighlights } from '../services/nhlHighlightsApi.js';
-import { createHighlightsSection, setupHighlightHandlers, createHighlightsLoadingSkeleton } from '../components/HighlightsSection.js';
-import { openHighlightModal, destroyHighlightModal } from '../components/HighlightModal.js';
+import { destroyHighlightModal } from '../components/HighlightModal.js';
+import { setupRedirectBlocking } from '../utils/security.js';
+import { fetchAndRenderHighlights, resetHighlights } from '../utils/matchHighlights.js';
+import { logger } from '../utils/logger.js';
 
 let currentPlayer = null;
 let currentMatch = null;
 let currentSources = [];
 let feedCounts = {}; // Store feed counts for each source
-let currentHighlights = []; // Store goal highlights
+let securityCleanup = null;
 
 /**
  * Cleanup function to destroy player and reset state
  * Called when navigating away from match page
  */
 export function cleanupMatchPage() {
-  console.log('🧹 Cleaning up match page...');
+  logger.log('🧹 Cleaning up match page...');
   
   if (currentPlayer) {
     try {
       currentPlayer.destroy();
-      console.log('✅ Player destroyed');
+      logger.log('✅ Player destroyed');
     } catch (error) {
       console.error('Error destroying player:', error);
     }
     currentPlayer = null;
   }
   
+  // Cleanup security listeners
+  if (securityCleanup) {
+    securityCleanup();
+    securityCleanup = null;
+  }
+  
   // Cleanup highlight modal
   destroyHighlightModal();
-  
-  // Remove sens-mode if it was applied
-  document.body.classList.remove('sens-mode');
   
   // Clear state
   currentMatch = null;
   currentSources = [];
   feedCounts = {};
-  currentHighlights = [];
+  resetHighlights();
   
   // Clear cached streams
   if (window.currentProviderStreams) {
@@ -79,7 +83,7 @@ export async function renderMatchPage(params) {
     cache.clear('streamed_stream_');
     cache.clear('nhl_scores_');
 
-    console.log('🔄 Dynamic match cache cleared, fetching fresh match data...');
+    logger.log('🔄 Dynamic match cache cleared, fetching fresh match data...');
     
     // Get match data from today's matches with fresh NHL enrichment
     const matches = await getHockeyMatches('today');
@@ -129,11 +133,12 @@ export async function renderMatchPage(params) {
     await loadStream(0);
     
     // Setup global redirect blocking
-    setupRedirectBlocking();
+    securityCleanup = setupRedirectBlocking();
     
     // Fetch and render highlights if game has started
     if (match.status === 'live' || match.status === 'finished') {
-      fetchAndRenderHighlights(match);
+      const highlightsContainer = document.getElementById('highlights-container');
+      fetchAndRenderHighlights(match, highlightsContainer);
     }
     
   } catch (error) {
@@ -156,7 +161,7 @@ export async function renderMatchPage(params) {
  * Updates the UI as each count becomes available
  */
 async function fetchFeedCounts() {
-  console.log('📊 Fetching feed counts for all providers...');
+  logger.log('📊 Fetching feed counts for all providers...');
   
   // Fetch all feed counts in parallel
   const promises = currentSources.map(async (source, index) => {
@@ -174,7 +179,7 @@ async function fetchFeedCounts() {
       }
       window.currentProviderStreams[index] = streams;
       
-      console.log(`✅ ${source.source}: ${count} feed(s)`);
+      logger.log(`✅ ${source.source}: ${count} feed(s)`);
       
       // Update UI to show the count
       updateSourceButtonCount(index, count);
@@ -190,7 +195,7 @@ async function fetchFeedCounts() {
   
   // Wait for all to complete
   await Promise.all(promises);
-  console.log('✅ All feed counts loaded');
+  logger.log('✅ All feed counts loaded');
 }
 
 /**
@@ -210,49 +215,11 @@ function updateSourceButtonCount(sourceIndex, count) {
   // Hide button if there are 0 feeds
   if (count === 0) {
     button.style.display = 'none';
-    console.log(`🚫 Hiding ${currentSources[sourceIndex]?.source} (0 feeds)`);
+    logger.log(`🚫 Hiding ${currentSources[sourceIndex]?.source} (0 feeds)`);
   } else {
     button.style.display = ''; // Show button if it was previously hidden
   }
 }
-
-/**
- * Setup global redirect blocking
- * Prevents the page from being navigated away by ads
- */
-function setupRedirectBlocking() {
-  console.log('🛡️ Setting up redirect blocking...');
-  
-  // 1. Block window.open (pop-ups)
-  window.open = function(...args) {
-    console.log('🛡️ Blocked window.open:', args[0]);
-    return null;
-  };
-  
-  // 2. Block external links (but allow internal navigation)
-  document.addEventListener('click', (e) => {
-    let target = e.target;
-    while (target && target !== document) {
-      if (target.tagName === 'A' && target.href) {
-        // Allow internal navigation links (with data-link attribute)
-        if (target.hasAttribute('data-link')) {
-          return; // Let the router handle it
-        }
-        // Block external links
-        if (!target.href.startsWith(window.location.origin)) {
-          console.log('🛡️ Blocked external link:', target.href);
-          e.preventDefault();
-          e.stopPropagation();
-          return false;
-        }
-      }
-      target = target.parentElement;
-    }
-  }, true);
-  
-  console.log('✅ Redirect blocking enabled');
-}
-
 function renderMatchUI(match) {
   const app = document.getElementById('app-content');
   
@@ -373,7 +340,7 @@ async function loadStream(sourceIndex) {
     
     if (!streams) {
       // If not pre-fetched, fetch now
-      console.log(`📺 Fetching streams for ${source.source}...`);
+      logger.log(`📺 Fetching streams for ${source.source}...`);
       const streamData = await getStreamUrls(source.source, source.id);
       streams = streamData.streams || streamData.allStreams || [];
       
@@ -387,14 +354,14 @@ async function loadStream(sourceIndex) {
       feedCounts[sourceIndex] = streams.length;
       updateSourceButtonCount(sourceIndex, streams.length);
     } else {
-      console.log(`✅ Using cached streams for ${source.source}`);
+      logger.log(`✅ Using cached streams for ${source.source}`);
     }
     
     if (!streams || streams.length === 0) {
       throw new Error('No streams available for this source');
     }
     
-    console.log(`📺 Found ${streams.length} stream(s) for ${source.source}`);
+    logger.log(`📺 Found ${streams.length} stream(s) for ${source.source}`);
     
     // Update stream options UI to show all available streams for this provider
     updateStreamOptions(sourceIndex, streams);
@@ -436,7 +403,7 @@ async function playStream(stream, container, loading) {
     throw new Error('No embed URL available');
   }
   
-  console.log('📺 Playing stream:', stream.language || `Stream ${stream.streamNo}`, embedUrl);
+  logger.log('📺 Playing stream:', stream.language || `Stream ${stream.streamNo}`, embedUrl);
   
   // Try to extract direct stream URL
   if (loading) {
@@ -461,10 +428,10 @@ async function playStream(stream, container, loading) {
   
   // Use extracted URL if successful, otherwise fall back to iframe
   if (extractionResult.success && extractionResult.streamUrl) {
-    console.log('✅ Using extracted stream URL');
+    logger.log('✅ Using extracted stream URL');
     currentPlayer.init(extractionResult.streamUrl, 'auto');
   } else {
-    console.log('⚠️ Extraction failed, using iframe embed');
+    logger.log('⚠️ Extraction failed, using iframe embed');
     currentPlayer.init(embedUrl, 'iframe');
   }
 }
@@ -604,67 +571,6 @@ function getStatusClass(match) {
 function getStatusText(match) {
   const status = getStatusClass(match);
   return status.charAt(0).toUpperCase() + status.slice(1);
-}
-
-/**
- * Fetch and render goal highlights for the match
- */
-async function fetchAndRenderHighlights(match) {
-  const container = document.getElementById('highlights-container');
-  if (!container) return;
-  
-  // Show loading skeleton
-  container.innerHTML = createHighlightsLoadingSkeleton();
-  
-  try {
-    // Get game date in YYYY-MM-DD format (use local date, not UTC)
-    const gameDate = new Date(match.time);
-    const year = gameDate.getFullYear();
-    const month = String(gameDate.getMonth() + 1).padStart(2, '0');
-    const day = String(gameDate.getDate()).padStart(2, '0');
-    const dateStr = `${year}-${month}-${day}`;
-    
-    // Extract NHL game ID if available
-    // The match should already have the NHL game ID from enrichment
-    const gameId = match.nhlGameId;
-    
-    if (!gameId) {
-      console.log('ℹ️ No NHL game ID for this match - may not be an NHL game or enrichment failed');
-      container.innerHTML = ''; // Clear loading skeleton
-      return;
-    }
-    
-    console.log(`🎯 Fetching highlights for NHL game ${gameId}...`);
-    
-    // Fetch highlights
-    const highlights = await getGameHighlights(gameId, dateStr);
-    currentHighlights = highlights;
-    
-    if (highlights.length === 0) {
-      console.log('No highlights available for this game');
-      container.innerHTML = ''; // Clear loading skeleton
-      return;
-    }
-    
-    // Render highlights section
-    container.innerHTML = createHighlightsSection(highlights, handleHighlightClick);
-    
-    // Setup click handlers
-    setupHighlightHandlers(highlights, handleHighlightClick);
-    
-    console.log(`✅ Rendered ${highlights.length} goal highlights`);
-    
-  } catch (error) {
-    console.error('Error fetching highlights:', error);
-    container.innerHTML = ''; // Clear loading skeleton on error
-  }
-}
-
-/**
- * Handle highlight card click
- */
-function handleHighlightClick(highlight, index) {
-  openHighlightModal(highlight, index, currentHighlights);
 }
 
 // Expose stream switching to window for onclick handlers

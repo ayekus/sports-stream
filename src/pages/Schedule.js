@@ -9,6 +9,7 @@ import { debounce } from '../utils/helpers.js';
 import { router } from '../router.js';
 import { isNHLTeam, isOlympicGame } from '../services/nhlScoreApi.js';
 import { getTeamLogoUrl } from '../services/nhlApi.js';
+import { logger } from '../utils/logger.js';
 
 let currentGames = [];
 
@@ -130,7 +131,7 @@ async function loadSchedule() {
       
       // Check if it's an Olympic/IIHF game (World Juniors, etc.)
       if (isOlympicGame(game.title, game.teams)) {
-        console.log(`✅ Including Olympic/IIHF game: ${game.title}`);
+        logger.log(`✅ Including Olympic/IIHF game: ${game.title}`);
         return true;
       }
       
@@ -139,12 +140,12 @@ async function loadSchedule() {
       const awayIsNHL = isNHLTeam(awayTeam);
       
       if (homeIsNHL && awayIsNHL) {
-        console.log(`✅ Including NHL game: ${awayTeam} @ ${homeTeam}`);
+        logger.log(`✅ Including NHL game: ${awayTeam} @ ${homeTeam}`);
         return true;
       }
       
       // Exclude all other games (European leagues, etc.)
-      console.log(`❌ Excluding non-NHL/non-Olympic game: ${game.title}`);
+      logger.log(`❌ Excluding non-NHL/non-Olympic game: ${game.title}`);
       return false;
     });
     

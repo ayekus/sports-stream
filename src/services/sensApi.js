@@ -4,6 +4,7 @@
  */
 
 import { cache } from '../utils/cache.js';
+import { logger } from '../utils/logger.js';
 
 const SENS_TEAM_ABBREV = 'OTT';
 
