@@ -29,3 +29,7 @@
 ## 2026-03-05 - [Missing Request Coalescing in SportsDB API]
 **Learning:** `sportsDbApi.js` was missing the `pendingRequests` pattern, leading to duplicate network requests when `getAllNHLTeams` was called concurrently. This is a common pattern failure in the codebase where caching is implemented but in-flight request coalescing is forgotten.
 **Action:** Implemented `pendingRequests` map in `sportsDbApi.js` to share the promise of an ongoing fetch request. This ensures that concurrent calls wait for the first request to complete rather than triggering multiple redundant network calls. Verified with a reproduction script showing 50% reduction in fetches during concurrent access.
+
+## 2026-05-23 - [Unintended Argument Leakage in Map]
+**Learning:** Using `array.map(func)` directly (e.g., `matches.map(processMatch)`) passes `(element, index, array)` to the function. If the function accepts optional arguments that conflict with `index` (like `nhlGame` object), it can cause severe logic errors and performance degradation by executing code paths meant for other purposes.
+**Action:** Always wrap `map` callbacks in an arrow function (e.g., `matches.map(m => processMatch(m))`) when the callback function accepts optional arguments, unless you explicitly intend to use the index. This prevents unexpected arguments from triggering unintended behavior.

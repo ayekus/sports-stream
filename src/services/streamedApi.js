@@ -244,7 +244,7 @@ export async function getAllMatches(filter = 'all') {
       }
 
       const matches = await response.json();
-      const processedMatches = matches.map(processMatch);
+      const processedMatches = matches.map(m => processMatch(m));
 
       cache.set(cacheKey, processedMatches, CACHE_TTL);
 
@@ -341,20 +341,12 @@ function processMatch(match, nhlGame = null, teamsReversed = false) {
     const gameState = nhlGame.gameState;
     
     // If teams are reversed, we need to swap home/away scores
-    const getScore = (isHome) => {
-      if (teamsReversed) {
-        // Swap: match.home should get NHL away score, match.away should get NHL home score
-        return isHome ? (nhlGame.awayTeam?.score || 0) : (nhlGame.homeTeam?.score || 0);
-      }
-      return isHome ? (nhlGame.homeTeam?.score || 0) : (nhlGame.awayTeam?.score || 0);
-    };
+    // match.home maps to nhlGame.awayTeam if reversed
+    const homeTeamScore = teamsReversed ? (nhlGame.awayTeam?.score || 0) : (nhlGame.homeTeam?.score || 0);
+    const awayTeamScore = teamsReversed ? (nhlGame.homeTeam?.score || 0) : (nhlGame.awayTeam?.score || 0);
     
-    const getSog = (isHome) => {
-      if (teamsReversed) {
-        return isHome ? (nhlGame.awayTeam?.sog || 0) : (nhlGame.homeTeam?.sog || 0);
-      }
-      return isHome ? (nhlGame.homeTeam?.sog || 0) : (nhlGame.awayTeam?.sog || 0);
-    };
+    const homeTeamSog = teamsReversed ? (nhlGame.awayTeam?.sog || 0) : (nhlGame.homeTeam?.sog || 0);
+    const awayTeamSog = teamsReversed ? (nhlGame.homeTeam?.sog || 0) : (nhlGame.awayTeam?.sog || 0);
     
     if (gameState === 'LIVE' || gameState === 'CRIT') {
       status = 'live';
@@ -364,12 +356,12 @@ function processMatch(match, nhlGame = null, teamsReversed = false) {
         timeRemaining: nhlGame.clock?.timeRemaining,
         inIntermission: nhlGame.clock?.inIntermission,
         score: {
-          home: getScore(true),
-          away: getScore(false)
+          home: homeTeamScore,
+          away: awayTeamScore
         },
         sog: {
-          home: getSog(true),
-          away: getSog(false)
+          home: homeTeamSog,
+          away: awayTeamSog
         }
       };
     } else if (gameState === 'FINAL' || gameState === 'OFF') {
@@ -377,12 +369,12 @@ function processMatch(match, nhlGame = null, teamsReversed = false) {
       // Still show final score for finished games
       liveData = {
         score: {
-          home: getScore(true),
-          away: getScore(false)
+          home: homeTeamScore,
+          away: awayTeamScore
         },
         sog: {
-          home: getSog(true),
-          away: getSog(false)
+          home: homeTeamSog,
+          away: awayTeamSog
         }
       };
     } else if (gameState === 'FUT' || gameState === 'PRE') {
