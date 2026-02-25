@@ -33,3 +33,7 @@
 ## 2026-05-23 - [Unintended Argument Leakage in Map]
 **Learning:** Using `array.map(func)` directly (e.g., `matches.map(processMatch)`) passes `(element, index, array)` to the function. If the function accepts optional arguments that conflict with `index` (like `nhlGame` object), it can cause severe logic errors and performance degradation by executing code paths meant for other purposes.
 **Action:** Always wrap `map` callbacks in an arrow function (e.g., `matches.map(m => processMatch(m))`) when the callback function accepts optional arguments, unless you explicitly intend to use the index. This prevents unexpected arguments from triggering unintended behavior.
+
+## 2026-06-12 - [Missing Imports and Coalescing in Highlights API]
+**Learning:** `src/services/nhlHighlightsApi.js` was missing critical imports (`cache`, `getScoresByDate`), which would cause runtime errors. Additionally, it lacked request coalescing, meaning concurrent requests for the same game highlight (e.g., from multiple UI components or rapid user actions) would trigger redundant processing and race conditions on the cache write.
+**Action:** Always verify that API service files import their dependencies. Systematically apply the `pendingRequests` map pattern to all data processing functions, even if they call other coalesced APIs, to prevent redundant processing and cache write conflicts.

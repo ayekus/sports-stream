@@ -1,6 +1,11 @@
 import { logger } from '../utils/logger.js';
+import { cache } from '../utils/cache.js';
+import { getScoresByDate } from './nhlScoreApi.js';
 
 const CACHE_TTL = 30 * 60 * 1000; // 30 minutes for highlights
+
+// Track pending requests to avoid duplicate processing
+const pendingRequests = new Map();
 
 /**
  * Get goal highlights for a specific game
@@ -16,38 +21,55 @@ export async function getGameHighlights(gameId, date) {
     logger.log(`✅ Using cached highlights for game ${gameId}`);
     return cached;
   }
-  
-  try {
-    // Fetch game data from NHL API which includes goals array
-    // Use shared service for request coalescing and caching
-    const data = await getScoresByDate(date);
-    
-    // Find the specific game by ID
-    const game = data.games?.find(g => g.id === gameId);
-    
-    if (!game) {
-      logger.log(`❌ Game ${gameId} not found in NHL API response for date ${date}`);
-      return [];
-    }
-    
-    if (!game.goals || game.goals.length === 0) {
-      logger.log(`No goals found for game ${gameId}`);
-      return [];
-    }
-    
-    // Process and format goals for UI
-    const highlights = game.goals.map(goal => formatGoalHighlight(goal, game));
-    
-    // Cache the highlights
-    cache.set(cacheKey, highlights, CACHE_TTL);
-    
-    logger.log(`✅ Fetched ${highlights.length} highlights for game ${gameId}`);
-    
-    return highlights;
-  } catch (error) {
-    console.error(`Error fetching highlights for game ${gameId}:`, error);
-    return cached || [];
+
+  // Check for pending request to avoid duplicate processing
+  if (pendingRequests.has(cacheKey)) {
+    logger.log(`⚡ Joining pending request for highlights: ${gameId}`);
+    return pendingRequests.get(cacheKey);
   }
+  
+  // Create new request promise
+  const promise = (async () => {
+    try {
+      // Fetch game data from NHL API which includes goals array
+      // Use shared service for request coalescing and caching
+      const data = await getScoresByDate(date);
+
+      // Find the specific game by ID
+      const game = data.games?.find(g => g.id === gameId);
+
+      if (!game) {
+        logger.log(`❌ Game ${gameId} not found in NHL API response for date ${date}`);
+        return [];
+      }
+
+      if (!game.goals || game.goals.length === 0) {
+        logger.log(`No goals found for game ${gameId}`);
+        return [];
+      }
+
+      // Process and format goals for UI
+      const highlights = game.goals.map(goal => formatGoalHighlight(goal, game));
+
+      // Cache the highlights
+      cache.set(cacheKey, highlights, CACHE_TTL);
+
+      logger.log(`✅ Fetched ${highlights.length} highlights for game ${gameId}`);
+
+      return highlights;
+    } catch (error) {
+      console.error(`Error fetching highlights for game ${gameId}:`, error);
+      return cached || [];
+    } finally {
+      // Clean up pending request
+      pendingRequests.delete(cacheKey);
+    }
+  })();
+
+  // Store promise
+  pendingRequests.set(cacheKey, promise);
+
+  return promise;
 }
 
 /**
@@ -175,27 +197,43 @@ export async function getGameRecaps(gameId, date) {
   if (cached) {
     return cached;
   }
-  
-  try {
-    const data = await getScoresByDate(date);
-    const game = data.games?.find(g => g.id === gameId);
-    
-    if (!game) {
-      return null;
-    }
-    
-    const recaps = {
-      threeMinRecap: game.threeMinRecap,
-      threeMinRecapFr: game.threeMinRecapFr,
-      condensedGame: game.condensedGame,
-      condensedGameFr: game.condensedGameFr
-    };
-    
-    cache.set(cacheKey, recaps, CACHE_TTL);
-    
-    return recaps;
-  } catch (error) {
-    console.error(`Error fetching recaps for game ${gameId}:`, error);
-    return cached || null;
+
+  // Check for pending request to avoid duplicate processing
+  if (pendingRequests.has(cacheKey)) {
+    return pendingRequests.get(cacheKey);
   }
+  
+  // Create new request promise
+  const promise = (async () => {
+    try {
+      const data = await getScoresByDate(date);
+      const game = data.games?.find(g => g.id === gameId);
+
+      if (!game) {
+        return null;
+      }
+
+      const recaps = {
+        threeMinRecap: game.threeMinRecap,
+        threeMinRecapFr: game.threeMinRecapFr,
+        condensedGame: game.condensedGame,
+        condensedGameFr: game.condensedGameFr
+      };
+
+      cache.set(cacheKey, recaps, CACHE_TTL);
+
+      return recaps;
+    } catch (error) {
+      console.error(`Error fetching recaps for game ${gameId}:`, error);
+      return cached || null;
+    } finally {
+      // Clean up pending request
+      pendingRequests.delete(cacheKey);
+    }
+  })();
+
+  // Store promise
+  pendingRequests.set(cacheKey, promise);
+
+  return promise;
 }
