@@ -130,6 +130,15 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
       const [matches, scoresData] = await Promise.all([matchesPromise, nhlScoresPromise]);
       const nhlGames = scoresData.games || [];
 
+      // OPTIMIZATION: Create a map for faster O(1) lookup instead of O(N) find in loop
+      // Map key format: "HOME_ABBREV-AWAY_ABBREV"
+      const nhlGameMap = new Map();
+      nhlGames.forEach(g => {
+        if (g.homeTeam?.abbrev && g.awayTeam?.abbrev) {
+          nhlGameMap.set(`${g.homeTeam.abbrev}-${g.awayTeam.abbrev}`, g);
+        }
+      });
+
       // Process matches and enrich with NHL data
       const processedMatches = matches.map(match => {
         let nhlGame = null;
@@ -159,18 +168,16 @@ export async function getHockeyMatches(filter = 'all', enrichWithNHL = true) {
 
           if (homeAbbrev && awayAbbrev) {
             // Try exact match first (Away @ Home)
-            nhlGame = nhlGames.find(g =>
-              g.homeTeam?.abbrev === homeAbbrev &&
-              g.awayTeam?.abbrev === awayAbbrev
-            );
+            // O(1) lookup using the map created above
+            const key = `${homeAbbrev}-${awayAbbrev}`;
+            nhlGame = nhlGameMap.get(key);
 
             // If not found, try reversed (in case APIs have different home/away designations)
             // This happens with outdoor series games and some special events
             if (!nhlGame) {
-              nhlGame = nhlGames.find(g =>
-                g.homeTeam?.abbrev === awayAbbrev &&
-                g.awayTeam?.abbrev === homeAbbrev
-              );
+              const reverseKey = `${awayAbbrev}-${homeAbbrev}`;
+              nhlGame = nhlGameMap.get(reverseKey);
+
               if (nhlGame) {
                 teamsReversed = true; // Mark that we need to swap scores
               }

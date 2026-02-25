@@ -35,9 +35,13 @@
 **Action:** Always wrap `map` callbacks in an arrow function (e.g., `matches.map(m => processMatch(m))`) when the callback function accepts optional arguments, unless you explicitly intend to use the index. This prevents unexpected arguments from triggering unintended behavior.
 
 ## 2026-06-12 - [Missing Imports and Coalescing in Highlights API]
-**Learning:** `src/services/nhlHighlightsApi.js` was missing critical imports (`cache`, `getScoresByDate`), which would cause runtime errors. Additionally, it lacked request coalescing, meaning concurrent requests for the same game highlight (e.g., from multiple UI components or rapid user actions) would trigger redundant processing and race conditions on the cache write.
+**Learning:** `src/services/nhlHighlightsApi.js` was missing critical imports (`cache`, `getScoresByDate`), which would cause runtime errors. Additionally, it lacked request coalescing, meaning concurrent requests for the same game highlight (e.g., from multiple UI components or rapid user actions) would trigger redundant processing and cache write conflicts.
 **Action:** Always verify that API service files import their dependencies. Systematically apply the `pendingRequests` map pattern to all data processing functions, even if they call other coalesced APIs, to prevent redundant processing and cache write conflicts.
 
 ## 2026-03-06 - [Missing Caching in Salary Cap API]
 **Learning:** `getSenatorsSalaryCap` in `salaryCapApi.js` was fetching fresh data on every call, bypassing the local cache entirely. This caused redundant network requests to the proxy server when the component was remounted or accessed multiple times.
 **Action:** Implemented `pendingRequests` Map for request coalescing and utilized `cache` utility with 24-hour TTL. Added logic to handle `forceRefresh` correctly by bypassing cache but still updating it.
+
+## 2026-06-15 - [O(N*M) Complexity in Match Enrichment]
+**Learning:** `getHockeyMatches` in `src/services/streamedApi.js` was using a nested `find` loop (O(N*M)) to match streamed matches with NHL live scores. While M is small, this pattern scales poorly and is algorithmically inefficient.
+**Action:** Replaced the nested search with an O(N) approach by creating a lookup Map keyed by team abbreviations (`${homeAbbrev}-${awayAbbrev}`) before processing matches. This eliminates the inner loop and provides constant-time lookups.
