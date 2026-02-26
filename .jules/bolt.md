@@ -45,3 +45,7 @@
 ## 2026-06-15 - [O(N*M) Complexity in Match Enrichment]
 **Learning:** `getHockeyMatches` in `src/services/streamedApi.js` was using a nested `find` loop (O(N*M)) to match streamed matches with NHL live scores. While M is small, this pattern scales poorly and is algorithmically inefficient.
 **Action:** Replaced the nested search with an O(N) approach by creating a lookup Map keyed by team abbreviations (`${homeAbbrev}-${awayAbbrev}`) before processing matches. This eliminates the inner loop and provides constant-time lookups.
+
+## 2026-06-18 - [Content-Aware Cache TTL]
+**Learning:** `getScoresByDate` in `nhlScoreApi.js` was using a fixed 2-minute TTL for all requests, regardless of whether the game was live, scheduled for next year, or finished 10 years ago. This caused unnecessary re-fetching of static historical data.
+**Action:** Implemented dynamic TTL logic based on game state and date. Completed/Past games are now cached for 24 hours, future schedules for 1 hour, while live games retain the 2-minute refresh rate. This significantly reduces network traffic for non-live content.
