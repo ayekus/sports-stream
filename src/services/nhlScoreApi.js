@@ -59,8 +59,29 @@ export async function getScoresByDate(date) {
 
       logger.log(`✅ Fetched ${data.games?.length || 0} NHL games for ${date}`);
 
+      // Determine Cache TTL based on game states
+      let ttl = CACHE_TTL; // Default 2 mins
+
+      const allFinal = data.games?.length > 0 &&
+                       data.games.every(g => g.gameState === 'FINAL' || g.gameState === 'OFF');
+
+      const today = toAPIDate();
+
+      // If all games are final, we can cache for much longer (24 hours)
+      // If date is in the past and no games (e.g. off season day), also cache longer
+      if (allFinal) {
+        ttl = 24 * 60 * 60 * 1000; // 24 hours
+        logger.log(`🔒 Caching final scores for ${date} (24h)`);
+      } else if (date < today && (!data.games || data.games.length === 0)) {
+        ttl = 24 * 60 * 60 * 1000; // 24 hours for past empty days
+        logger.log(`🔒 Caching empty past schedule for ${date} (24h)`);
+      } else if (date > today) {
+        ttl = 60 * 60 * 1000; // 1 hour for future schedule
+        logger.log(`📅 Caching future schedule for ${date} (1h)`);
+      }
+
       // Cache the result
-      cache.set(cacheKey, data, CACHE_TTL);
+      cache.set(cacheKey, data, ttl);
 
       return data;
     } catch (error) {
