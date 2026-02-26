@@ -3,7 +3,8 @@
  * Only logs in development mode to keep production console clean
  */
 
-const isDev = import.meta.env.DEV;
+// Handle Node.js environment where import.meta.env is not available
+const isDev = (typeof import.meta.env !== 'undefined') ? import.meta.env.DEV : true;
 
 export const logger = {
   log: (...args) => {
