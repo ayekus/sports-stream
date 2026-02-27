@@ -79,11 +79,20 @@ export async function renderMatchPage(params) {
 
     // PERF: Instead of clearing the entire cache (which wipes expensive static assets like team info),
     // we only invalidate dynamic match data. This preserves long-lived cache items.
-    cache.remove('streamed_hockey_today_v2_enriched');
-    cache.clear('streamed_stream_');
-    cache.clear('nhl_scores_');
 
-    logger.log('🔄 Dynamic match cache cleared, fetching fresh match data...');
+    // 1. Clear ONLY the enriched matches cache to force re-fetching latest stream data
+    //    and re-matching with NHL scores.
+    cache.remove('streamed_hockey_today_v2_enriched');
+
+    // 2. Clear individual stream details to ensure fresh links
+    cache.clear('streamed_stream_');
+
+    // 3. DO NOT clear nhl_scores_.
+    //    The getHockeyMatches() call below will automatically fetch fresh scores if the cache
+    //    is expired (2 min TTL). If it's still valid, we should use it to avoid redundant API calls.
+    // cache.clear('nhl_scores_');
+
+    logger.log('🔄 Dynamic match cache cleared (streams), fetching fresh match data...');
     
     // Get match data from today's matches with fresh NHL enrichment
     const matches = await getHockeyMatches('today');
