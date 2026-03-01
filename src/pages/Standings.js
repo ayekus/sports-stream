@@ -7,6 +7,8 @@ import { getNHLStandings, getTeamLogoUrl } from '../services/nhlApi.js';
 import { router } from '../router.js';
 
 let currentStandings = null;
+let currentPlayoffTeams = null;
+let currentWildcardTeams = null;
 let currentView = 'wildcard'; // wildcard, division, conference, league
 
 export async function renderStandingsPage() {
@@ -33,6 +35,10 @@ export async function renderStandingsPage() {
       return;
     }
     
+    // Memoize playoff teams and wildcard teams to avoid recalculating on view changes
+    currentPlayoffTeams = calculatePlayoffTeams(data.standings);
+    currentWildcardTeams = calculateWildcardTeams(data.standings);
+
     renderStandingsUI(data);
     setupStandingsHandlers();
     
@@ -156,14 +162,10 @@ function renderWildCardView(standings) {
 function renderDivisionView(standings) {
   const divisions = groupByDivision(standings);
   
-  // Calculate all playoff teams (including wild cards)
-  const playoffTeams = calculatePlayoffTeams(standings);
-  const wildcardTeams = calculateWildcardTeams(standings);
-  
   let html = '<div class="division-grid">';
   
   for (const [divisionName, teams] of Object.entries(divisions)) {
-    html += createDivisionTable(divisionName, teams, false, playoffTeams, wildcardTeams);
+    html += createDivisionTable(divisionName, teams, false, currentPlayoffTeams, currentWildcardTeams);
   }
   
   html += '</div>';
@@ -174,11 +176,9 @@ function renderConferenceView(standings) {
   const eastern = standings.filter(t => t.conferenceAbbrev === 'E').sort((a, b) => a.conferenceSequence - b.conferenceSequence);
   const western = standings.filter(t => t.conferenceAbbrev === 'W').sort((a, b) => a.conferenceSequence - b.conferenceSequence);
   
-  const wildcardTeams = calculateWildcardTeams(standings);
-  
   let html = '<div class="conference-grid">';
-  html += createConferenceTable('Eastern Conference', eastern, wildcardTeams);
-  html += createConferenceTable('Western Conference', western, wildcardTeams);
+  html += createConferenceTable('Eastern Conference', eastern, currentWildcardTeams);
+  html += createConferenceTable('Western Conference', western, currentWildcardTeams);
   html += '</div>';
   
   return html;
@@ -187,11 +187,7 @@ function renderConferenceView(standings) {
 function renderLeagueView(standings) {
   const sorted = [...standings].sort((a, b) => a.leagueSequence - b.leagueSequence);
   
-  // Calculate playoff teams
-  const playoffTeams = calculatePlayoffTeams(standings);
-  const wildcardTeams = calculateWildcardTeams(standings);
-  
-  return createLeagueTable(sorted, playoffTeams, wildcardTeams);
+  return createLeagueTable(sorted, currentPlayoffTeams, currentWildcardTeams);
 }
 
 function createDivisionTable(title, teams, isWildCardView, playoffTeamsOrFlag = false, wildcardTeamsOrFlag = false) {
