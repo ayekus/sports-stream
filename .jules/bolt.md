@@ -49,3 +49,7 @@
 ## 2026-06-18 - [Content-Aware Cache TTL]
 **Learning:** `getScoresByDate` in `nhlScoreApi.js` was using a fixed 2-minute TTL for all requests, regardless of whether the game was live, scheduled for next year, or finished 10 years ago. This caused unnecessary re-fetching of static historical data.
 **Action:** Implemented dynamic TTL logic based on game state and date. Completed/Past games are now cached for 24 hours, future schedules for 1 hour, while live games retain the 2-minute refresh rate. This significantly reduces network traffic for non-live content.
+
+## 2026-03-08 - [Redundant Calculations in Component Render]
+**Learning:** `src/pages/Standings.js` executed identical playoff and wildcard evaluations twice via `calculatePlayoffTeams` and `calculateWildcardTeams` on every render view (Division, Conference, League). Because these functions both iterated through the entire `standings` list to compute the same top-3 division leaders and wildcard candidates, it led to unnecessary CPU cycles.
+**Action:** Consolidate redundant filtering and array iterations into a single, module-level memoized function (`getPlayoffStatus`). This technique caches the result based on the `standings` object reference, reducing O(N) recalculations to O(1) lookups when switching tabs.

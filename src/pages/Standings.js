@@ -157,8 +157,7 @@ function renderDivisionView(standings) {
   const divisions = groupByDivision(standings);
   
   // Calculate all playoff teams (including wild cards)
-  const playoffTeams = calculatePlayoffTeams(standings);
-  const wildcardTeams = calculateWildcardTeams(standings);
+  const { playoffTeams, wildcardTeams } = getPlayoffStatus(standings);
   
   let html = '<div class="division-grid">';
   
@@ -174,7 +173,7 @@ function renderConferenceView(standings) {
   const eastern = standings.filter(t => t.conferenceAbbrev === 'E').sort((a, b) => a.conferenceSequence - b.conferenceSequence);
   const western = standings.filter(t => t.conferenceAbbrev === 'W').sort((a, b) => a.conferenceSequence - b.conferenceSequence);
   
-  const wildcardTeams = calculateWildcardTeams(standings);
+  const { wildcardTeams } = getPlayoffStatus(standings);
   
   let html = '<div class="conference-grid">';
   html += createConferenceTable('Eastern Conference', eastern, wildcardTeams);
@@ -188,8 +187,7 @@ function renderLeagueView(standings) {
   const sorted = [...standings].sort((a, b) => a.leagueSequence - b.leagueSequence);
   
   // Calculate playoff teams
-  const playoffTeams = calculatePlayoffTeams(standings);
-  const wildcardTeams = calculateWildcardTeams(standings);
+  const { playoffTeams, wildcardTeams } = getPlayoffStatus(standings);
   
   return createLeagueTable(sorted, playoffTeams, wildcardTeams);
 }
@@ -448,57 +446,27 @@ function calculateWildCard(conferenceTeams) {
   return wildCardCandidates.slice(0, 10);
 }
 
-function calculatePlayoffTeams(standings) {
-  /**
-   * Calculate which teams make the playoffs
-   * NHL Playoff Format:
-   * - Top 3 teams from each division (4 divisions x 3 = 12 teams)
-   * - 2 Wild Card teams from each conference (2 conferences x 2 = 4 teams)
-   * - Total: 16 playoff teams (8 per conference)
-   */
-  const playoffTeams = new Set();
-  
-  // Get top 3 from each division
-  const divisions = groupByDivision(standings);
-  for (const teams of Object.values(divisions)) {
-    teams.slice(0, 3).forEach(team => {
-      playoffTeams.add(team.teamAbbrev?.default);
-    });
+// Memoize playoff status to prevent redundant calculations across different views
+let cachedStandingsRef = null;
+let cachedPlayoffStatus = null;
+
+function getPlayoffStatus(standings) {
+  if (cachedStandingsRef === standings && cachedPlayoffStatus) {
+    return cachedPlayoffStatus;
   }
   
-  // Get wild card teams from each conference
-  const eastern = standings.filter(t => t.conferenceAbbrev === 'E');
-  const western = standings.filter(t => t.conferenceAbbrev === 'W');
-  
-  const easternWildCard = calculateWildCard(eastern);
-  const westernWildCard = calculateWildCard(western);
-  
-  // Add top 2 wild card teams from each conference
-  easternWildCard.slice(0, 2).forEach(team => {
-    playoffTeams.add(team.teamAbbrev?.default);
-  });
-  
-  westernWildCard.slice(0, 2).forEach(team => {
-    playoffTeams.add(team.teamAbbrev?.default);
-  });
-  
-  return playoffTeams;
-}
-
-function calculateWildcardTeams(standings) {
-  /**
-   * Calculate which teams are wildcard teams
-   * Returns a Set of team abbreviations for the 2 wildcard teams from each conference
-   */
+  const playoffTeams = new Set();
   const wildcardTeams = new Set();
   
-  // Get top 3 from each division (these are NOT wildcard teams)
+  // Get top 3 from each division
   const divisions = groupByDivision(standings);
   const divisionLeaders = new Set();
   
   for (const teams of Object.values(divisions)) {
     teams.slice(0, 3).forEach(team => {
-      divisionLeaders.add(team.teamAbbrev?.default);
+      const abbrev = team.teamAbbrev?.default;
+      divisionLeaders.add(abbrev);
+      playoffTeams.add(abbrev);
     });
   }
   
@@ -509,22 +477,24 @@ function calculateWildcardTeams(standings) {
   const easternWildCard = calculateWildCard(eastern);
   const westernWildCard = calculateWildCard(western);
   
-  // Add top 2 wild card teams from each conference (only if they're not division leaders)
-  easternWildCard.slice(0, 2).forEach(team => {
-    const teamAbbrev = team.teamAbbrev?.default;
-    if (!divisionLeaders.has(teamAbbrev)) {
-      wildcardTeams.add(teamAbbrev);
-    }
-  });
+  // Process wild card teams
+  const processWildCard = (wcTeams) => {
+    wcTeams.slice(0, 2).forEach(team => {
+      const abbrev = team.teamAbbrev?.default;
+      if (!divisionLeaders.has(abbrev)) {
+        wildcardTeams.add(abbrev);
+        playoffTeams.add(abbrev);
+      }
+    });
+  };
   
-  westernWildCard.slice(0, 2).forEach(team => {
-    const teamAbbrev = team.teamAbbrev?.default;
-    if (!divisionLeaders.has(teamAbbrev)) {
-      wildcardTeams.add(teamAbbrev);
-    }
-  });
+  processWildCard(easternWildCard);
+  processWildCard(westernWildCard);
+
+  cachedPlayoffStatus = { playoffTeams, wildcardTeams };
+  cachedStandingsRef = standings;
   
-  return wildcardTeams;
+  return cachedPlayoffStatus;
 }
 
 function setupStandingsHandlers() {
