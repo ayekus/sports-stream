@@ -53,3 +53,7 @@
 ## 2026-03-08 - [Redundant Calculations in Component Render]
 **Learning:** `src/pages/Standings.js` executed identical playoff and wildcard evaluations twice via `calculatePlayoffTeams` and `calculateWildcardTeams` on every render view (Division, Conference, League). Because these functions both iterated through the entire `standings` list to compute the same top-3 division leaders and wildcard candidates, it led to unnecessary CPU cycles.
 **Action:** Consolidate redundant filtering and array iterations into a single, module-level memoized function (`getPlayoffStatus`). This technique caches the result based on the `standings` object reference, reducing O(N) recalculations to O(1) lookups when switching tabs.
+
+## 2026-03-09 - [Reduce API Requests in Schedule Fetching]
+**Learning:** `getSensSchedule` was fetching upcoming games sequentially week-by-week using a `while` loop (up to 12 API calls). This caused significant network latency, especially during off-seasons or long breaks. Additionally, when switching to month-by-month fetching, doing `date.setMonth(date.getMonth() + n)` without first setting `date.setDate(1)` can cause end-of-month rollover bugs (e.g., adding 1 month to Jan 31st yields March 2nd/3rd).
+**Action:** Replaced week-by-week fetching with month-by-month chunks (max 3 months ahead) to reduce the maximum number of API calls from 12 to 4. Always use `date.setDate(1)` before adding months to a `Date` object to prevent calendar rollover bugs.
