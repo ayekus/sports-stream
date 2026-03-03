@@ -229,33 +229,33 @@ export async function getSensSchedule(count = 5) {
         return gameDate >= now;
       }) || [];
 
-      // If we don't have enough games, fetch additional weeks incrementally
+      // If we don't have enough games, fetch additional months incrementally
       if (upcomingGames.length < count) {
 
-        // Fetch weeks incrementally until we have enough
-        let weeksToFetch = 1;
-        const maxWeeks = 12; // Don't fetch more than 12 weeks ahead
+        // Fetch months incrementally until we have enough
+        let monthsToFetch = 0; // Start at 0 to get the rest of the current month
+        const maxMonths = 3; // Don't fetch more than 3 months ahead
 
-        while (upcomingGames.length < count && weeksToFetch <= maxWeeks) {
+        while (upcomingGames.length < count && monthsToFetch <= maxMonths) {
           try {
-            const weekResponse = await fetchNHL(`/club-schedule/${SENS_TEAM_ABBREV}/week/${getWeekOffset(weeksToFetch)}`);
+            const monthResponse = await fetchNHL(`/club-schedule/${SENS_TEAM_ABBREV}/month/${getMonthOffset(monthsToFetch)}`);
             
-            if (weekResponse.ok) {
-              const weekData = await weekResponse.json();
-              const weekGames = weekData.games?.filter(game => {
+            if (monthResponse.ok) {
+              const monthData = await monthResponse.json();
+              const monthGames = monthData.games?.filter(game => {
                 const gameDate = new Date(game.startTimeUTC);
                 return gameDate >= now && !upcomingGames.find(g => g.id === game.id);
               }) || [];
 
-              if (weekGames.length > 0) {
-                upcomingGames = [...upcomingGames, ...weekGames];
+              if (monthGames.length > 0) {
+                upcomingGames = [...upcomingGames, ...monthGames];
               }
             }
           } catch (error) {
-            console.warn(`Could not fetch week +${weeksToFetch}:`, error);
+            console.warn(`Could not fetch month +${monthsToFetch}:`, error);
           }
 
-          weeksToFetch++;
+          monthsToFetch++;
         }
       }
 
@@ -278,11 +278,12 @@ export async function getSensSchedule(count = 5) {
   return promise;
 }
 
-// Helper to get week offset date string
-function getWeekOffset(weeksAhead) {
+// Helper to get month offset date string
+function getMonthOffset(monthsAhead) {
   const date = new Date();
-  date.setDate(date.getDate() + (weeksAhead * 7));
-  return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD
+  date.setDate(1); // Set to 1st to avoid end-of-month rollover bugs
+  date.setMonth(date.getMonth() + monthsAhead);
+  return date.toISOString().split('T')[0].substring(0, 7); // Returns YYYY-MM
 }
 
 /**
