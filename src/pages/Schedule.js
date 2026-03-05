@@ -319,15 +319,19 @@ function renderGameCards(games) {
   // Optimization: Use DocumentFragment to batch DOM updates
   const fragment = document.createDocumentFragment();
 
+  // Optimization: Instantiate DateTimeFormat once outside the loop instead of calling toLocaleDateString for every item
+  // This reduces memory allocation and CPU cycles during the grouping phase.
+  const dateFormatter = new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
   // Group games by date
   const gamesByDate = {};
   games.forEach(game => {
     const gameDate = new Date(game.time);
-    const dateKey = gameDate.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
+    const dateKey = dateFormatter.format(gameDate);
     
     if (!gamesByDate[dateKey]) {
       gamesByDate[dateKey] = [];
