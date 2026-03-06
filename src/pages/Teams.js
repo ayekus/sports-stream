@@ -100,6 +100,25 @@ function renderTeamsUI(teams) {
     </div>
   `;
   
+  // Set up event delegation on the grid container once
+  const grid = document.getElementById('teams-grid');
+  if (grid) {
+    grid.addEventListener('click', (e) => {
+      const card = e.target.closest('.team-card');
+      if (!card) return;
+
+      const teamId = card.dataset.teamId;
+      const team = allTeams.find(t => t.idTeam === teamId);
+
+      if (team) {
+        if (e.target.closest('.team-button')) {
+          e.stopPropagation();
+        }
+        showTeamDetails(team);
+      }
+    });
+  }
+
   renderTeamCards(teams);
 }
 
@@ -111,19 +130,6 @@ function renderTeamCards(teams) {
   
   teams.forEach(team => {
     const card = createTeamCard(team);
-    
-    // Make entire card clickable
-    card.addEventListener('click', () => showTeamDetails(team));
-    
-    // Button still works independently (stops propagation)
-    const button = card.querySelector('.team-button');
-    if (button) {
-      button.addEventListener('click', (e) => {
-        e.stopPropagation();
-        showTeamDetails(team);
-      });
-    }
-    
     grid.appendChild(card);
   });
 }

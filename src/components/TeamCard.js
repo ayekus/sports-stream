@@ -12,6 +12,7 @@ export function createTeamCard(team) {
   const logo = team.strBadge || team.strLogo || '';
   const stadium = team.strStadium || 'Unknown';
   const formed = team.intFormedYear || 'N/A';
+  card.dataset.teamId = team.idTeam;
   
   card.innerHTML = `
     <div class="team-logo">
