@@ -61,3 +61,7 @@
 ## 2026-06-21 - [Date Formatting in Loops]
 **Learning:** Instantiating `Intl.DateTimeFormat` or calling `.toLocaleDateString()` and `.toLocaleTimeString()` is computationally expensive. When done inside loops (e.g., iterating through a large dataset of games) or frequently called utility functions, it causes significant CPU usage and memory allocation pressure.
 **Action:** Always instantiate `Intl.DateTimeFormat` once outside of loops or at the module level for utility functions, and reuse its `.format()` method. This drastically reduces the overhead of formatting dates and times.
+
+## 2026-03-10 - [Inefficient Date Formatting in Loops]
+**Learning:** Using `Date.prototype.toLocaleDateString()` inside a loop (like in `renderGameCards` in `Schedule.js`) forces the JavaScript engine to re-instantiate locale formatting rules on every iteration. This creates unnecessary CPU overhead and memory allocation, especially for large lists of games.
+**Action:** Always instantiate `Intl.DateTimeFormat` once outside the loop and use its `.format(date)` method inside the loop. This caches the formatting rules and significantly improves rendering performance for large datasets.
