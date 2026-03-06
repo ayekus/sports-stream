@@ -319,8 +319,7 @@ function renderGameCards(games) {
   // Optimization: Use DocumentFragment to batch DOM updates
   const fragment = document.createDocumentFragment();
 
-  // Optimization: Instantiate DateTimeFormat once outside the loop instead of calling toLocaleDateString for every item
-  // This reduces memory allocation and CPU cycles during the grouping phase.
+  // Optimization: Cache Intl.DateTimeFormat instance to avoid recreating in the loop
   const dateFormatter = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'long',
