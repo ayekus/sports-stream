@@ -57,3 +57,7 @@
 ## 2026-03-09 - [Reduce API Requests in Schedule Fetching]
 **Learning:** `getSensSchedule` was fetching upcoming games sequentially week-by-week using a `while` loop (up to 12 API calls). This caused significant network latency, especially during off-seasons or long breaks. Additionally, when switching to month-by-month fetching, doing `date.setMonth(date.getMonth() + n)` without first setting `date.setDate(1)` can cause end-of-month rollover bugs (e.g., adding 1 month to Jan 31st yields March 2nd/3rd).
 **Action:** Replaced week-by-week fetching with month-by-month chunks (max 3 months ahead) to reduce the maximum number of API calls from 12 to 4. Always use `date.setDate(1)` before adding months to a `Date` object to prevent calendar rollover bugs.
+
+## 2026-06-21 - [Date Formatting in Loops]
+**Learning:** Instantiating `Intl.DateTimeFormat` or calling `.toLocaleDateString()` and `.toLocaleTimeString()` is computationally expensive. When done inside loops (e.g., iterating through a large dataset of games) or frequently called utility functions, it causes significant CPU usage and memory allocation pressure.
+**Action:** Always instantiate `Intl.DateTimeFormat` once outside of loops or at the module level for utility functions, and reuse its `.format()` method. This drastically reduces the overhead of formatting dates and times.

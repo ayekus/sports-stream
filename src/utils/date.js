@@ -2,6 +2,20 @@
  * Date and time utilities
  */
 
+// Cache Intl.DateTimeFormat instances for performance
+const dateFormatter = new Intl.DateTimeFormat('en-US', {
+  weekday: 'short',
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric'
+});
+
+const timeFormatter = new Intl.DateTimeFormat('en-US', {
+  hour: 'numeric',
+  minute: '2-digit',
+  hour12: true
+});
+
 /**
  * Format date to readable string
  * @param {string|Date} date - Date to format
@@ -9,13 +23,7 @@
  */
 export function formatDate(date) {
   const d = new Date(date);
-  const options = { 
-    weekday: 'short', 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric' 
-  };
-  return d.toLocaleDateString('en-US', options);
+  return dateFormatter.format(d);
 }
 
 /**
@@ -25,12 +33,7 @@ export function formatDate(date) {
  */
 export function formatTime(date) {
   const d = new Date(date);
-  const options = { 
-    hour: 'numeric', 
-    minute: '2-digit',
-    hour12: true 
-  };
-  return d.toLocaleTimeString('en-US', options);
+  return timeFormatter.format(d);
 }
 
 /**
