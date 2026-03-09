@@ -65,3 +65,7 @@
 ## 2026-03-10 - [Inefficient Date Formatting in Loops]
 **Learning:** Using `Date.prototype.toLocaleDateString()` inside a loop (like in `renderGameCards` in `Schedule.js`) forces the JavaScript engine to re-instantiate locale formatting rules on every iteration. This creates unnecessary CPU overhead and memory allocation, especially for large lists of games.
 **Action:** Always instantiate `Intl.DateTimeFormat` once outside the loop and use its `.format(date)` method inside the loop. This caches the formatting rules and significantly improves rendering performance for large datasets.
+
+## 2026-03-09 - [Redundant String Parsing in Arrays]
+**Learning:** `src/pages/SensSalaryCap.js` was repeatedly executing expensive Regex replacements `replace(/[$,]/g, '')` and `parseFloat` on string properties inside array `.sort()` and `.filter()` methods during render cycles. Since `.sort()` operates in O(N log N) time, the strings were parsed far more times than there were elements in the array, degrading performance on every user interaction (sorting, filtering, or tab switching).
+**Action:** Always pre-compute and normalize complex string data into numeric values during the initial API data fetch (e.g., in `src/services/salaryCapApi.js`). By attaching these cached numbers to the models, frontend operations can run in O(1) comparison time, significantly accelerating UI responsiveness.

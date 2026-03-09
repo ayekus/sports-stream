@@ -65,17 +65,25 @@ export async function getSenatorsSalaryCap(forceRefresh = false) {
         }
       });
 
-      // Calculate total cap hit from players
+      // ⚡ Bolt Performance Optimization: Pre-compute and cache parsed numeric values
+      // during the initial fetch to avoid redundant O(N log N) regex and parseFloat
+      // executions during frequent frontend sorting and filtering operations.
       let totalCapHit = 0;
       data.players.forEach(player => {
         const currentYear = '2025-26'; // Or calculate dynamically
         const salary = player.contractYears?.[currentYear];
+
+        player._parsedSalary = 0;
         if (salary && salary !== 'UFA' && salary !== 'RFA') {
           const amount = parseFloat(salary.replace(/[$,]/g, ''));
           if (!isNaN(amount)) {
             totalCapHit += amount;
+            player._parsedSalary = amount;
           }
         }
+
+        const yearsMatch = player.yearsRemaining?.match(/\d+/);
+        player._parsedYears = yearsMatch ? parseInt(yearsMatch[0]) : null;
       });
 
       // Enhance summary with calculated values

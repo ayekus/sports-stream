@@ -141,10 +141,7 @@ function calculateRosterCapHit(players) {
   let total = 0;
   players.forEach(player => {
     if (player.status === 'NHL') {
-      const salary = parseFloat((player.contractYears?.['2025-26'] || '0').replace(/[$,]/g, ''));
-      if (!isNaN(salary)) {
-        total += salary;
-      }
+      total += player._parsedSalary || 0;
     }
   });
   return total;
@@ -239,9 +236,8 @@ function renderContractTimeline(players) {
     // Only include NHL roster players
     if (player.status !== 'NHL') return;
     
-    const years = player.yearsRemaining?.match(/\d+/);
-    if (years) {
-      const expiryYear = currentYear + parseInt(years[0]);
+    if (player._parsedYears !== null && player._parsedYears !== undefined) {
+      const expiryYear = currentYear + player._parsedYears;
       if (!expiries[expiryYear]) {
         expiries[expiryYear] = {
           players: [],
@@ -252,13 +248,7 @@ function renderContractTimeline(players) {
       // Add player and calculate total cap hit
       expiries[expiryYear].players.push(player);
       
-      const salary = player.contractYears?.['2025-26'];
-      if (salary && salary !== 'UFA' && salary !== 'RFA') {
-        const amount = parseFloat(salary.replace(/[$,]/g, ''));
-        if (!isNaN(amount)) {
-          expiries[expiryYear].totalCap += amount;
-        }
-      }
+      expiries[expiryYear].totalCap += player._parsedSalary || 0;
     }
   });
   
@@ -379,16 +369,13 @@ function renderPlayerSection(title, players) {
   if (currentFilter === 'nhl') {
     filteredPlayers = filteredPlayers.filter(p => p.status === 'NHL');
   } else if (currentFilter === 'expiring') {
-    filteredPlayers = filteredPlayers.filter(p => {
-      const years = p.yearsRemaining?.match(/\d+/);
-      return years && parseInt(years[0]) <= 2;
-    });
+    filteredPlayers = filteredPlayers.filter(p => p._parsedYears !== null && p._parsedYears <= 2);
   }
   
   // Apply sorting
   filteredPlayers.sort((a, b) => {
-    const aSalary = parseFloat((a.contractYears?.['2025-26'] || '0').replace(/[$,]/g, ''));
-    const bSalary = parseFloat((b.contractYears?.['2025-26'] || '0').replace(/[$,]/g, ''));
+    const aSalary = a._parsedSalary || 0;
+    const bSalary = b._parsedSalary || 0;
     
     switch (currentSort) {
       case 'salary-desc':
@@ -396,8 +383,8 @@ function renderPlayerSection(title, players) {
       case 'salary-asc':
         return aSalary - bSalary;
       case 'years':
-        const aYears = parseInt(a.yearsRemaining?.match(/\d+/)?.[0] || 0);
-        const bYears = parseInt(b.yearsRemaining?.match(/\d+/)?.[0] || 0);
+        const aYears = a._parsedYears || 0;
+        const bYears = b._parsedYears || 0;
         return aYears - bYears;
       default:
         return 0;
@@ -433,8 +420,7 @@ function renderPlayerSection(title, players) {
           }
           
           // Check if expiring soon
-          const years = player.yearsRemaining?.match(/\d+/);
-          const isExpiring = years && parseInt(years[0]) <= 1;
+          const isExpiring = player._parsedYears !== null && player._parsedYears <= 1;
           
           return `
             <div class="player-contract-card compact" data-player-id="${player.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}">
