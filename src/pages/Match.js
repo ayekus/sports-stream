@@ -11,6 +11,17 @@ import { setupRedirectBlocking } from '../utils/security.js';
 import { fetchAndRenderHighlights, resetHighlights } from '../utils/matchHighlights.js';
 import { logger } from '../utils/logger.js';
 
+// ⚡ Bolt Performance Optimization: Cache Intl.DateTimeFormat instance to avoid recreating
+// it on every render, significantly reducing memory allocation overhead.
+const matchDateFormatter = new Intl.DateTimeFormat(undefined, {
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: 'numeric',
+  second: 'numeric',
+});
+
 let currentPlayer = null;
 let currentMatch = null;
 let currentSources = [];
@@ -301,7 +312,7 @@ function renderMatchUI(match) {
             <dd>${match.league || 'Unknown'}</dd>
             
             <dt>Match Time</dt>
-            <dd>${new Date(match.time).toLocaleString()}</dd>
+            <dd>${matchDateFormatter.format(new Date(match.time))}</dd>
             
             <dt>Available Streams</dt>
             <dd>${currentSources.length} source${currentSources.length !== 1 ? 's' : ''}</dd>

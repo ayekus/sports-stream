@@ -148,6 +148,11 @@ export function formatSalary(salary) {
   return `$${(amount / 1000000).toFixed(2)}M`;
 }
 
+// ⚡ Bolt Performance Optimization: Cache Intl.NumberFormat instance to avoid recreating
+// it on every formatNumber call, which reduces memory allocation overhead and speeds up
+// formatting significantly, especially on pages displaying many numerical values.
+const numberFormatter = new Intl.NumberFormat(undefined);
+
 /**
  * Format large numbers with commas
  */
@@ -155,5 +160,5 @@ export function formatNumber(num) {
   if (typeof num === 'string') {
     num = parseFloat(num.replace(/,/g, ''));
   }
-  return num.toLocaleString();
+  return numberFormatter.format(num);
 }

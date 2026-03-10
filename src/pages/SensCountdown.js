@@ -185,6 +185,15 @@ async function loadCountdown() {
   }
 }
 
+// ⚡ Bolt Performance Optimization: Cache Intl.DateTimeFormat instance to avoid recreating
+// it on every render, significantly reducing memory allocation overhead.
+const countdownDateFormatter = new Intl.DateTimeFormat(undefined, {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
+
 function renderCountdownUI(nextGame, seasonRecord, upcomingGames) {
   const container = document.querySelector('.sens-hub-container');
   
@@ -196,12 +205,7 @@ function renderCountdownUI(nextGame, seasonRecord, upcomingGames) {
   const now = new Date();
   const isLive = gameDate < now && (nextGame.gameState === 'LIVE' || nextGame.gameState === 'CRIT');
   
-  const dateStr = gameDate.toLocaleDateString('en-US', { 
-    weekday: 'long',
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
+  const dateStr = countdownDateFormatter.format(gameDate);
   const timeStr = formatTime(gameDate);
   
   // Format next 5 games with correct home/away indicators

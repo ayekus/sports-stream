@@ -1,5 +1,16 @@
 import { getSenatorsSalaryCap, formatSalary, formatNumber } from '../services/salaryCapApi.js';
 
+// ⚡ Bolt Performance Optimization: Cache Intl.DateTimeFormat instance to avoid recreating
+// it on every render, significantly reducing memory allocation overhead.
+const updateDateFormatter = new Intl.DateTimeFormat(undefined, {
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: 'numeric',
+  second: 'numeric',
+});
+
 export default class SalaryCap {
   constructor() {
     this.data = null;
@@ -128,7 +139,7 @@ export default class SalaryCap {
         
         <div class="data-info">
           <p>Data scraped from CapWages.com</p>
-          <p>Last updated: ${new Date(this.data.scrapedAt).toLocaleString()}</p>
+          <p>Last updated: ${updateDateFormatter.format(new Date(this.data.scrapedAt))}</p>
         </div>
       </div>
     `;

@@ -5,6 +5,10 @@
 
 import { logger } from '../utils/logger.js';
 
+// ⚡ Bolt Performance Optimization: Cache Intl.NumberFormat instance to avoid recreating
+// it repeatedly when rendering team capacities, reducing memory allocation overhead.
+const capacityFormatter = new Intl.NumberFormat(undefined);
+
 export function createTeamCard(team) {
   const card = document.createElement('div');
   card.className = 'team-card card';
@@ -89,7 +93,7 @@ export function createTeamModal(team) {
             </div>
             <div class="detail-item">
               <span class="detail-label">Capacity</span>
-              <span class="detail-value">${team.intStadiumCapacity ? parseInt(team.intStadiumCapacity).toLocaleString() : 'N/A'}</span>
+              <span class="detail-value">${team.intStadiumCapacity ? capacityFormatter.format(parseInt(team.intStadiumCapacity)) : 'N/A'}</span>
             </div>
           </div>
           
