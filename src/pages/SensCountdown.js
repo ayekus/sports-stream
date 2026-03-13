@@ -13,6 +13,13 @@ import { logger } from '../utils/logger.js';
 
 let countdownTimer = null;
 
+const dateFormatter = new Intl.DateTimeFormat('en-US', {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
+
 /**
  * Get readable playoff position text
  */
@@ -196,12 +203,7 @@ function renderCountdownUI(nextGame, seasonRecord, upcomingGames) {
   const now = new Date();
   const isLive = gameDate < now && (nextGame.gameState === 'LIVE' || nextGame.gameState === 'CRIT');
   
-  const dateStr = gameDate.toLocaleDateString('en-US', { 
-    weekday: 'long',
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
+  const dateStr = dateFormatter.format(gameDate);
   const timeStr = formatTime(gameDate);
   
   // Format next 5 games with correct home/away indicators

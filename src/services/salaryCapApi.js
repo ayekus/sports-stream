@@ -151,9 +151,11 @@ export function formatSalary(salary) {
 /**
  * Format large numbers with commas
  */
+const numberFormatter = new Intl.NumberFormat(undefined);
+
 export function formatNumber(num) {
   if (typeof num === 'string') {
     num = parseFloat(num.replace(/,/g, ''));
   }
-  return num.toLocaleString();
+  return numberFormatter.format(num);
 }
