@@ -17,6 +17,16 @@ let currentSources = [];
 let feedCounts = {}; // Store feed counts for each source
 let securityCleanup = null;
 
+// Cache Intl.DateTimeFormat instance for performance optimization
+const matchDateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: 'numeric',
+  second: 'numeric'
+});
+
 /**
  * Cleanup function to destroy player and reset state
  * Called when navigating away from match page
@@ -301,7 +311,7 @@ function renderMatchUI(match) {
             <dd>${match.league || 'Unknown'}</dd>
             
             <dt>Match Time</dt>
-            <dd>${new Date(match.time).toLocaleString()}</dd>
+            <dd>${matchDateTimeFormatter.format(new Date(match.time))}</dd>
             
             <dt>Available Streams</dt>
             <dd>${currentSources.length} source${currentSources.length !== 1 ? 's' : ''}</dd>

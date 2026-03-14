@@ -11,6 +11,16 @@ let currentData = null;
 let currentSort = 'salary-desc';
 let currentFilter = 'nhl'; // Default to NHL Only
 
+// Cache Intl.DateTimeFormat instance for performance optimization
+const capDateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: 'numeric',
+  second: 'numeric'
+});
+
 export async function renderSensSalaryCap() {
   const app = document.getElementById('app-content');
   
@@ -215,7 +225,7 @@ function renderSalaryCapUI(salaryData) {
         <!-- Last Updated Footer -->
         <div style="margin-top: var(--spacing-2xl); padding: var(--spacing-lg); text-align: center; border-top: 1px solid rgba(183, 146, 87, 0.2);">
           <div style="font-size: 0.875rem; color: rgba(255,255,255,0.5); margin-bottom: var(--spacing-md);">
-            Data from CapWages.com • Last updated: ${new Date(salaryData.scrapedAt).toLocaleString()}
+            Data from CapWages.com • Last updated: ${capDateTimeFormatter.format(new Date(salaryData.scrapedAt))}
           </div>
           <button id="refresh-data-btn" class="refresh-btn">
             <span>↻</span>

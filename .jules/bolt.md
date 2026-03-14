@@ -69,3 +69,7 @@
 ## 2026-03-09 - [Redundant String Parsing in Arrays]
 **Learning:** `src/pages/SensSalaryCap.js` was repeatedly executing expensive Regex replacements `replace(/[$,]/g, '')` and `parseFloat` on string properties inside array `.sort()` and `.filter()` methods during render cycles. Since `.sort()` operates in O(N log N) time, the strings were parsed far more times than there were elements in the array, degrading performance on every user interaction (sorting, filtering, or tab switching).
 **Action:** Always pre-compute and normalize complex string data into numeric values during the initial API data fetch (e.g., in `src/services/salaryCapApi.js`). By attaching these cached numbers to the models, frontend operations can run in O(1) comparison time, significantly accelerating UI responsiveness.
+
+## 2026-03-14 - [Avoid Repeated Date and Number Formatter Instantiation]
+**Learning:** Instantiating `Intl.DateTimeFormat` or `Intl.NumberFormat`, or calling `.toLocaleString()` and `.toLocaleDateString()`, is computationally expensive and causes measurable performance drops and memory pressure when executed repeatedly in render loops or frequent component renders.
+**Action:** Always extract and cache `Intl.NumberFormat` and `Intl.DateTimeFormat` instances at the module level. Use their `.format()` method to preserve local configuration (by passing `undefined` as locale) while preventing overhead inside loops and render cycles.
