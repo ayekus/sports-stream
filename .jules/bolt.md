@@ -69,3 +69,7 @@
 ## 2026-03-09 - [Redundant String Parsing in Arrays]
 **Learning:** `src/pages/SensSalaryCap.js` was repeatedly executing expensive Regex replacements `replace(/[$,]/g, '')` and `parseFloat` on string properties inside array `.sort()` and `.filter()` methods during render cycles. Since `.sort()` operates in O(N log N) time, the strings were parsed far more times than there were elements in the array, degrading performance on every user interaction (sorting, filtering, or tab switching).
 **Action:** Always pre-compute and normalize complex string data into numeric values during the initial API data fetch (e.g., in `src/services/salaryCapApi.js`). By attaching these cached numbers to the models, frontend operations can run in O(1) comparison time, significantly accelerating UI responsiveness.
+
+## 2024-05-24 - SensTeamInfo Roster Memory Overhead
+**Learning:** Attaching event listeners inside loops (O(N)) for large DOM lists like player rosters (`roster.forEach(player => element.addEventListener(...))`) creates a significant memory footprint and initialization bottleneck in the vanilla JS SPA architecture.
+**Action:** Use Event Delegation. Attach a single event listener to the parent container (e.g., `rosterContainer.addEventListener`) and use `e.target.closest('.roster-card')` to identify the clicked element, significantly reducing memory and improving render times.

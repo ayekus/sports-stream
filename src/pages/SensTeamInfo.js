@@ -93,13 +93,19 @@ function renderTeamInfoUI(roster, injuries, leaders, stats) {
 
 /**
  * Setup click handlers for roster cards
+ * ⚡ Bolt Performance Optimization: Replaced O(N) event listeners with a single
+ * event listener on the parent container using event delegation. This reduces
+ * memory usage and speeds up initialization time for the roster view.
  */
 function setupRosterClickHandlers(roster) {
   const allPlayers = roster.flatMap(group => group.items || []);
-  const rosterCards = document.querySelectorAll('.roster-card');
+  const rosterContainer = document.querySelector('[data-tab-content="roster"]');
   
-  rosterCards.forEach(card => {
-    card.addEventListener('click', (e) => {
+  if (rosterContainer) {
+    rosterContainer.addEventListener('click', (e) => {
+      const card = e.target.closest('.roster-card');
+      if (!card) return;
+
       e.preventDefault();
       const playerIndex = parseInt(card.dataset.playerIndex);
       const player = allPlayers[playerIndex];
@@ -108,7 +114,7 @@ function setupRosterClickHandlers(roster) {
         openPlayerModal(player, playerIndex, allPlayers);
       }
     });
-  });
+  }
 }
 
 /**
