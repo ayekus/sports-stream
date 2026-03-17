@@ -69,3 +69,7 @@
 ## 2026-03-09 - [Redundant String Parsing in Arrays]
 **Learning:** `src/pages/SensSalaryCap.js` was repeatedly executing expensive Regex replacements `replace(/[$,]/g, '')` and `parseFloat` on string properties inside array `.sort()` and `.filter()` methods during render cycles. Since `.sort()` operates in O(N log N) time, the strings were parsed far more times than there were elements in the array, degrading performance on every user interaction (sorting, filtering, or tab switching).
 **Action:** Always pre-compute and normalize complex string data into numeric values during the initial API data fetch (e.g., in `src/services/salaryCapApi.js`). By attaching these cached numbers to the models, frontend operations can run in O(1) comparison time, significantly accelerating UI responsiveness.
+
+## 2024-03-XX - Pre-computing search strings for UI filtering
+**Learning:** Performing string manipulation (like `.toLowerCase()`) and object traversal inside the array `.filter()` callbacks used by debounced input handlers creates measurable UI lag when the dataset is large. It's also bad practice to allocate three new arrays using `.filter()` just to get lengths/counts of different item types.
+**Action:** Pre-compute concatenated `_searchString` properties once during the initial data fetch. During render cycles, use a single pass `for` loop to generate counts instead of chained `.filter()` calls, and combine active filter checks into a single pass.

@@ -149,6 +149,15 @@ async function loadSchedule() {
       return false;
     });
     
+    // ⚡ Bolt: Pre-compute search strings to prevent redundant .toLowerCase()
+    // and object traversal during frequent frontend filtering
+    filteredGames.forEach(game => {
+      const homeTeam = game.teams?.home?.name?.toLowerCase() || '';
+      const awayTeam = game.teams?.away?.name?.toLowerCase() || '';
+      const title = game.title?.toLowerCase() || '';
+      game._searchString = `${homeTeam} ${awayTeam} ${title}`;
+    });
+
     currentGames = filteredGames;
     
     if (filteredGames.length === 0) {
@@ -228,9 +237,16 @@ function renderEmptySchedule() {
 function renderScheduleUI(games) {
   const app = document.getElementById('app-content');
   
-  const liveGames = games.filter(g => g.status === 'live');
-  const upcomingGames = games.filter(g => g.status === 'upcoming');
-  const finishedGames = games.filter(g => g.status === 'finished');
+  // ⚡ Bolt: Single pass count avoids allocating 3 intermediate arrays
+  let liveCount = 0;
+  let upcomingCount = 0;
+  let finishedCount = 0;
+
+  for (const g of games) {
+    if (g.status === 'live') liveCount++;
+    else if (g.status === 'upcoming') upcomingCount++;
+    else if (g.status === 'finished') finishedCount++;
+  }
   
   app.innerHTML = `
     <div class="page">
@@ -238,9 +254,9 @@ function renderScheduleUI(games) {
         <div class="schedule-controls mb-lg">
           <select id="filter-select" class="sort-select" aria-label="Filter games by status">
             <option value="all">All Games (${games.length})</option>
-            <option value="live">Live Only (${liveGames.length})</option>
-            <option value="upcoming">Upcoming Only (${upcomingGames.length})</option>
-            <option value="finished">Finished (${finishedGames.length})</option>
+            <option value="live">Live Only (${liveCount})</option>
+            <option value="upcoming">Upcoming Only (${upcomingCount})</option>
+            <option value="finished">Finished (${finishedCount})</option>
           </select>
           <input 
             type="text" 
@@ -548,35 +564,25 @@ function applyFilters() {
   const filterSelect = document.getElementById('filter-select');
   const searchInput = document.getElementById('schedule-search');
   
-  let filtered = [...currentGames];
+  const filterValue = filterSelect ? filterSelect.value : 'all';
+  const query = searchInput ? searchInput.value.toLowerCase() : '';
   
-  // Apply status filter
-  if (filterSelect) {
-    const filterValue = filterSelect.value;
-    if (filterValue === 'live') {
-      filtered = filtered.filter(g => g.status === 'live');
-    } else if (filterValue === 'upcoming') {
-      filtered = filtered.filter(g => g.status === 'upcoming');
-    } else if (filterValue === 'finished') {
-      filtered = filtered.filter(g => g.status === 'finished');
+  // ⚡ Bolt: Combine status and search filters into a single pass.
+  // We use the pre-computed _searchString to eliminate inline object traversal
+  // and repeated .toLowerCase() calls during keystrokes.
+  const filtered = currentGames.filter(game => {
+    // 1. Status Check
+    if (filterValue !== 'all' && game.status !== filterValue) {
+      return false;
     }
-  }
-  
-  // Apply search filter
-  if (searchInput) {
-    const query = searchInput.value.toLowerCase();
-    if (query) {
-      filtered = filtered.filter(game => {
-        const homeTeam = game.teams?.home?.name?.toLowerCase() || '';
-        const awayTeam = game.teams?.away?.name?.toLowerCase() || '';
-        const title = game.title?.toLowerCase() || '';
-        
-        return homeTeam.includes(query) || 
-               awayTeam.includes(query) || 
-               title.includes(query);
-      });
+
+    // 2. Search Query Check
+    if (query && !game._searchString.includes(query)) {
+      return false;
     }
-  }
+
+    return true;
+  });
   
   renderGameCards(filtered);
 }
