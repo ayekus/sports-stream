@@ -11,6 +11,16 @@ import { setupRedirectBlocking } from '../utils/security.js';
 import { fetchAndRenderHighlights, resetHighlights } from '../utils/matchHighlights.js';
 import { logger } from '../utils/logger.js';
 
+// Initialize DateTimeFormat instance outside of function to prevent recreation
+const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: 'numeric',
+  second: 'numeric'
+});
+
 let currentPlayer = null;
 let currentMatch = null;
 let currentSources = [];
@@ -301,7 +311,7 @@ function renderMatchUI(match) {
             <dd>${match.league || 'Unknown'}</dd>
             
             <dt>Match Time</dt>
-            <dd>${new Date(match.time).toLocaleString()}</dd>
+            <dd>${dateTimeFormatter.format(new Date(match.time))}</dd>
             
             <dt>Available Streams</dt>
             <dd>${currentSources.length} source${currentSources.length !== 1 ? 's' : ''}</dd>

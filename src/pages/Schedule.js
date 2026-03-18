@@ -548,35 +548,31 @@ function applyFilters() {
   const filterSelect = document.getElementById('filter-select');
   const searchInput = document.getElementById('schedule-search');
   
-  let filtered = [...currentGames];
+  const filterValue = filterSelect ? filterSelect.value : 'all';
+  const query = searchInput ? searchInput.value.toLowerCase() : '';
   
-  // Apply status filter
-  if (filterSelect) {
-    const filterValue = filterSelect.value;
-    if (filterValue === 'live') {
-      filtered = filtered.filter(g => g.status === 'live');
-    } else if (filterValue === 'upcoming') {
-      filtered = filtered.filter(g => g.status === 'upcoming');
-    } else if (filterValue === 'finished') {
-      filtered = filtered.filter(g => g.status === 'finished');
+  // Combine status and search filters into a single pass to avoid creating intermediate arrays
+  const filtered = currentGames.filter(game => {
+    // 1. Check status
+    if (filterValue !== 'all' && game.status !== filterValue) {
+      return false;
     }
-  }
-  
-  // Apply search filter
-  if (searchInput) {
-    const query = searchInput.value.toLowerCase();
+
+    // 2. Check search query
     if (query) {
-      filtered = filtered.filter(game => {
-        const homeTeam = game.teams?.home?.name?.toLowerCase() || '';
-        const awayTeam = game.teams?.away?.name?.toLowerCase() || '';
-        const title = game.title?.toLowerCase() || '';
-        
-        return homeTeam.includes(query) || 
-               awayTeam.includes(query) || 
-               title.includes(query);
-      });
+      const homeTeam = game.teams?.home?.name?.toLowerCase() || '';
+      const awayTeam = game.teams?.away?.name?.toLowerCase() || '';
+      const title = game.title?.toLowerCase() || '';
+
+      if (!homeTeam.includes(query) &&
+          !awayTeam.includes(query) &&
+          !title.includes(query)) {
+        return false;
+      }
     }
-  }
+
+    return true;
+  });
   
   renderGameCards(filtered);
 }
