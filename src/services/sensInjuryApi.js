@@ -108,13 +108,17 @@ export async function getInjurySummary() {
     };
   }
   
-  const summary = {
-    total: injuries.length,
-    dayToDay: injuries.filter(i => i.status === 'Day-to-Day').length,
-    out: injuries.filter(i => i.status === 'Out').length,
-    ir: injuries.filter(i => i.status === 'IR').length,
-    probable: injuries.filter(i => i.status === 'Probable').length
-  };
+  // ⚡ Bolt Performance Optimization: Consolidate multiple .filter() array iterations
+  // into a single O(N) pass using .reduce(). This prevents creating four intermediate
+  // arrays and reduces CPU overhead from traversing the same dataset four times.
+  const summary = injuries.reduce((acc, injury) => {
+    acc.total++;
+    if (injury.status === 'Day-to-Day') acc.dayToDay++;
+    else if (injury.status === 'Out') acc.out++;
+    else if (injury.status === 'IR') acc.ir++;
+    else if (injury.status === 'Probable') acc.probable++;
+    return acc;
+  }, { total: 0, dayToDay: 0, out: 0, ir: 0, probable: 0 });
   
   return summary;
 }
