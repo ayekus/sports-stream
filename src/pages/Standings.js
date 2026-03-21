@@ -115,8 +115,13 @@ function renderViewContent(data) {
 
 function renderWildCardView(standings) {
   // Group by conference and division
-  const eastern = standings.filter(t => t.conferenceAbbrev === 'E');
-  const western = standings.filter(t => t.conferenceAbbrev === 'W');
+  // Bolt Optimization: Single-pass O(N) loop to split teams by conference instead of double O(N) .filter() pass
+  const eastern = [];
+  const western = [];
+  for (const team of standings) {
+    if (team.conferenceAbbrev === 'E') eastern.push(team);
+    else if (team.conferenceAbbrev === 'W') western.push(team);
+  }
   
   const easternDivisions = groupByDivision(eastern);
   const westernDivisions = groupByDivision(western);
@@ -170,8 +175,16 @@ function renderDivisionView(standings) {
 }
 
 function renderConferenceView(standings) {
-  const eastern = standings.filter(t => t.conferenceAbbrev === 'E').sort((a, b) => a.conferenceSequence - b.conferenceSequence);
-  const western = standings.filter(t => t.conferenceAbbrev === 'W').sort((a, b) => a.conferenceSequence - b.conferenceSequence);
+  // Bolt Optimization: Single-pass O(N) loop to split teams by conference instead of double O(N) .filter() pass
+  const eastern = [];
+  const western = [];
+  for (const team of standings) {
+    if (team.conferenceAbbrev === 'E') eastern.push(team);
+    else if (team.conferenceAbbrev === 'W') western.push(team);
+  }
+
+  eastern.sort((a, b) => a.conferenceSequence - b.conferenceSequence);
+  western.sort((a, b) => a.conferenceSequence - b.conferenceSequence);
   
   const { wildcardTeams } = getPlayoffStatus(standings);
   
@@ -471,8 +484,13 @@ function getPlayoffStatus(standings) {
   }
   
   // Get wild card teams from each conference
-  const eastern = standings.filter(t => t.conferenceAbbrev === 'E');
-  const western = standings.filter(t => t.conferenceAbbrev === 'W');
+  // Bolt Optimization: Single-pass O(N) loop to split teams by conference instead of double O(N) .filter() pass
+  const eastern = [];
+  const western = [];
+  for (const team of standings) {
+    if (team.conferenceAbbrev === 'E') eastern.push(team);
+    else if (team.conferenceAbbrev === 'W') western.push(team);
+  }
   
   const easternWildCard = calculateWildCard(eastern);
   const westernWildCard = calculateWildCard(western);
