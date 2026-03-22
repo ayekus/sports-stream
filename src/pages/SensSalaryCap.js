@@ -6,6 +6,7 @@
 
 import { getSenatorsSalaryCap, formatSalary, formatNumber } from '../services/salaryCapApi.js';
 import { router } from '../router.js';
+import { formatDateTimeLocal } from '../utils/date.js';
 
 let currentData = null;
 let currentSort = 'salary-desc';
@@ -215,7 +216,7 @@ function renderSalaryCapUI(salaryData) {
         <!-- Last Updated Footer -->
         <div style="margin-top: var(--spacing-2xl); padding: var(--spacing-lg); text-align: center; border-top: 1px solid rgba(183, 146, 87, 0.2);">
           <div style="font-size: 0.875rem; color: rgba(255,255,255,0.5); margin-bottom: var(--spacing-md);">
-            Data from CapWages.com • Last updated: ${new Date(salaryData.scrapedAt).toLocaleString()}
+            Data from CapWages.com • Last updated: ${formatDateTimeLocal(salaryData.scrapedAt)}
           </div>
           <button id="refresh-data-btn" class="refresh-btn">
             <span>↻</span>

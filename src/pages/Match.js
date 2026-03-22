@@ -10,6 +10,7 @@ import { destroyHighlightModal } from '../components/HighlightModal.js';
 import { setupRedirectBlocking } from '../utils/security.js';
 import { fetchAndRenderHighlights, resetHighlights } from '../utils/matchHighlights.js';
 import { logger } from '../utils/logger.js';
+import { formatDateTimeLocal } from '../utils/date.js';
 
 let currentPlayer = null;
 let currentMatch = null;
@@ -301,7 +302,7 @@ function renderMatchUI(match) {
             <dd>${match.league || 'Unknown'}</dd>
             
             <dt>Match Time</dt>
-            <dd>${new Date(match.time).toLocaleString()}</dd>
+            <dd>${formatDateTimeLocal(match.time)}</dd>
             
             <dt>Available Streams</dt>
             <dd>${currentSources.length} source${currentSources.length !== 1 ? 's' : ''}</dd>

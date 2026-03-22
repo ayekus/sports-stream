@@ -1,4 +1,5 @@
 import { getSenatorsSalaryCap, formatSalary, formatNumber } from '../services/salaryCapApi.js';
+import { formatDateTimeLocal } from '../utils/date.js';
 
 export default class SalaryCap {
   constructor() {
@@ -128,7 +129,7 @@ export default class SalaryCap {
         
         <div class="data-info">
           <p>Data scraped from CapWages.com</p>
-          <p>Last updated: ${new Date(this.data.scrapedAt).toLocaleString()}</p>
+          <p>Last updated: ${formatDateTimeLocal(this.data.scrapedAt)}</p>
         </div>
       </div>
     `;

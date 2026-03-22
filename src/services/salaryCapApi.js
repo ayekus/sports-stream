@@ -148,6 +148,9 @@ export function formatSalary(salary) {
   return `$${(amount / 1000000).toFixed(2)}M`;
 }
 
+// Cached formatter for large numbers
+const numberFormatter = new Intl.NumberFormat(undefined);
+
 /**
  * Format large numbers with commas
  */
@@ -155,5 +158,5 @@ export function formatNumber(num) {
   if (typeof num === 'string') {
     num = parseFloat(num.replace(/,/g, ''));
   }
-  return num.toLocaleString();
+  return numberFormatter.format(num);
 }
