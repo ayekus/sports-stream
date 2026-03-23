@@ -69,3 +69,7 @@
 ## 2026-03-09 - [Redundant String Parsing in Arrays]
 **Learning:** `src/pages/SensSalaryCap.js` was repeatedly executing expensive Regex replacements `replace(/[$,]/g, '')` and `parseFloat` on string properties inside array `.sort()` and `.filter()` methods during render cycles. Since `.sort()` operates in O(N log N) time, the strings were parsed far more times than there were elements in the array, degrading performance on every user interaction (sorting, filtering, or tab switching).
 **Action:** Always pre-compute and normalize complex string data into numeric values during the initial API data fetch (e.g., in `src/services/salaryCapApi.js`). By attaching these cached numbers to the models, frontend operations can run in O(1) comparison time, significantly accelerating UI responsiveness.
+
+## 2026-03-11 - [O(N) vs O(4N) array traversals]
+**Learning:** `getInjurySummary` in `sensInjuryApi.js` was using `.filter().length` four times sequentially to calculate summary counts for four statuses. This caused O(4N) iteration through the same array and generated four throwaway intermediate arrays that required garbage collection.
+**Action:** Use a single-pass `for...of` loop or `.reduce()` to count multiple conditions in an array simultaneously. This provides an O(N) solution and completely avoids allocating intermediate memory arrays during the render cycle.
