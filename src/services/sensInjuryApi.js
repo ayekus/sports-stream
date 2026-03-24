@@ -108,14 +108,23 @@ export async function getInjurySummary() {
     };
   }
   
+  // OPTIMIZATION: Use a single pass to count statuses instead of 4 separate .filter() calls
+  // that create intermediate arrays.
   const summary = {
     total: injuries.length,
-    dayToDay: injuries.filter(i => i.status === 'Day-to-Day').length,
-    out: injuries.filter(i => i.status === 'Out').length,
-    ir: injuries.filter(i => i.status === 'IR').length,
-    probable: injuries.filter(i => i.status === 'Probable').length
+    dayToDay: 0,
+    out: 0,
+    ir: 0,
+    probable: 0
   };
   
+  for (const injury of injuries) {
+    if (injury.status === 'Day-to-Day') summary.dayToDay++;
+    else if (injury.status === 'Out') summary.out++;
+    else if (injury.status === 'IR') summary.ir++;
+    else if (injury.status === 'Probable') summary.probable++;
+  }
+
   return summary;
 }
 
