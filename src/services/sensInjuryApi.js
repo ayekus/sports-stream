@@ -108,12 +108,32 @@ export async function getInjurySummary() {
     };
   }
   
+  // ⚡ Bolt Performance Optimization:
+  // Replaced multiple O(N) array.filter() calls with a single O(N) pass
+  // to count injury statuses, reducing redundant iterations and intermediate array allocations.
+  let dayToDay = 0;
+  let out = 0;
+  let ir = 0;
+  let probable = 0;
+
+  for (const i of injuries) {
+    if (i.status === 'Day-to-Day') {
+      dayToDay++;
+    } else if (i.status === 'Out') {
+      out++;
+    } else if (i.status === 'IR') {
+      ir++;
+    } else if (i.status === 'Probable') {
+      probable++;
+    }
+  }
+
   const summary = {
     total: injuries.length,
-    dayToDay: injuries.filter(i => i.status === 'Day-to-Day').length,
-    out: injuries.filter(i => i.status === 'Out').length,
-    ir: injuries.filter(i => i.status === 'IR').length,
-    probable: injuries.filter(i => i.status === 'Probable').length
+    dayToDay,
+    out,
+    ir,
+    probable
   };
   
   return summary;
