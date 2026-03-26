@@ -228,9 +228,15 @@ function renderEmptySchedule() {
 function renderScheduleUI(games) {
   const app = document.getElementById('app-content');
   
-  const liveGames = games.filter(g => g.status === 'live');
-  const upcomingGames = games.filter(g => g.status === 'upcoming');
-  const finishedGames = games.filter(g => g.status === 'finished');
+  // ⚡ Bolt: Optimize redundant array traversals
+  // Replaced three O(N) .filter() calls with a single O(N) loop to calculate counts
+  // Reduces memory allocation from three intermediate arrays and lowers CPU cycles
+  let liveCount = 0, upcomingCount = 0, finishedCount = 0;
+  for (const g of games) {
+    if (g.status === 'live') liveCount++;
+    else if (g.status === 'upcoming') upcomingCount++;
+    else if (g.status === 'finished') finishedCount++;
+  }
   
   app.innerHTML = `
     <div class="page">
@@ -238,9 +244,9 @@ function renderScheduleUI(games) {
         <div class="schedule-controls mb-lg">
           <select id="filter-select" class="sort-select" aria-label="Filter games by status">
             <option value="all">All Games (${games.length})</option>
-            <option value="live">Live Only (${liveGames.length})</option>
-            <option value="upcoming">Upcoming Only (${upcomingGames.length})</option>
-            <option value="finished">Finished (${finishedGames.length})</option>
+            <option value="live">Live Only (${liveCount})</option>
+            <option value="upcoming">Upcoming Only (${upcomingCount})</option>
+            <option value="finished">Finished (${finishedCount})</option>
           </select>
           <input 
             type="text" 
@@ -548,35 +554,30 @@ function applyFilters() {
   const filterSelect = document.getElementById('filter-select');
   const searchInput = document.getElementById('schedule-search');
   
-  let filtered = [...currentGames];
+  const filterValue = filterSelect ? filterSelect.value : 'all';
+  const query = searchInput ? searchInput.value.toLowerCase() : '';
   
-  // Apply status filter
-  if (filterSelect) {
-    const filterValue = filterSelect.value;
-    if (filterValue === 'live') {
-      filtered = filtered.filter(g => g.status === 'live');
-    } else if (filterValue === 'upcoming') {
-      filtered = filtered.filter(g => g.status === 'upcoming');
-    } else if (filterValue === 'finished') {
-      filtered = filtered.filter(g => g.status === 'finished');
+  // ⚡ Bolt: Consolidate multiple .filter() calls into a single loop
+  // Avoids creating intermediate arrays and parsing strings multiple times
+  const filtered = currentGames.filter(game => {
+    // 1. Check status filter
+    if (filterValue !== 'all' && game.status !== filterValue) {
+      return false;
     }
-  }
-  
-  // Apply search filter
-  if (searchInput) {
-    const query = searchInput.value.toLowerCase();
+
+    // 2. Check search filter
     if (query) {
-      filtered = filtered.filter(game => {
-        const homeTeam = game.teams?.home?.name?.toLowerCase() || '';
-        const awayTeam = game.teams?.away?.name?.toLowerCase() || '';
-        const title = game.title?.toLowerCase() || '';
-        
-        return homeTeam.includes(query) || 
-               awayTeam.includes(query) || 
-               title.includes(query);
-      });
+      const homeTeam = game.teams?.home?.name?.toLowerCase() || '';
+      const awayTeam = game.teams?.away?.name?.toLowerCase() || '';
+      const title = game.title?.toLowerCase() || '';
+
+      if (!homeTeam.includes(query) && !awayTeam.includes(query) && !title.includes(query)) {
+        return false;
+      }
     }
-  }
+
+    return true;
+  });
   
   renderGameCards(filtered);
 }
