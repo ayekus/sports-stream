@@ -228,9 +228,17 @@ function renderEmptySchedule() {
 function renderScheduleUI(games) {
   const app = document.getElementById('app-content');
   
-  const liveGames = games.filter(g => g.status === 'live');
-  const upcomingGames = games.filter(g => g.status === 'upcoming');
-  const finishedGames = games.filter(g => g.status === 'finished');
+  // ⚡ Bolt: Single-pass iteration to replace multiple O(N) array .filter() calls.
+  // This reduces redundant traversals over the games array.
+  let liveCount = 0;
+  let upcomingCount = 0;
+  let finishedCount = 0;
+  for (let i = 0; i < games.length; i++) {
+    const status = games[i].status;
+    if (status === 'live') liveCount++;
+    else if (status === 'upcoming') upcomingCount++;
+    else if (status === 'finished') finishedCount++;
+  }
   
   app.innerHTML = `
     <div class="page">
@@ -238,9 +246,9 @@ function renderScheduleUI(games) {
         <div class="schedule-controls mb-lg">
           <select id="filter-select" class="sort-select" aria-label="Filter games by status">
             <option value="all">All Games (${games.length})</option>
-            <option value="live">Live Only (${liveGames.length})</option>
-            <option value="upcoming">Upcoming Only (${upcomingGames.length})</option>
-            <option value="finished">Finished (${finishedGames.length})</option>
+            <option value="live">Live Only (${liveCount})</option>
+            <option value="upcoming">Upcoming Only (${upcomingCount})</option>
+            <option value="finished">Finished (${finishedCount})</option>
           </select>
           <input 
             type="text" 

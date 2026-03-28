@@ -69,3 +69,7 @@
 ## 2026-03-09 - [Redundant String Parsing in Arrays]
 **Learning:** `src/pages/SensSalaryCap.js` was repeatedly executing expensive Regex replacements `replace(/[$,]/g, '')` and `parseFloat` on string properties inside array `.sort()` and `.filter()` methods during render cycles. Since `.sort()` operates in O(N log N) time, the strings were parsed far more times than there were elements in the array, degrading performance on every user interaction (sorting, filtering, or tab switching).
 **Action:** Always pre-compute and normalize complex string data into numeric values during the initial API data fetch (e.g., in `src/services/salaryCapApi.js`). By attaching these cached numbers to the models, frontend operations can run in O(1) comparison time, significantly accelerating UI responsiveness.
+
+## 2026-06-25 - [Replacing Chained Filters with Single-Pass Loops]
+**Learning:** Using chained `.filter(condition).length` methods consecutively to count statuses or bucket properties inside data processing functions (like `renderScheduleUI` and `getInjurySummary`) creates redundant O(N) array traversals and causes unnecessary intermediate array allocations, adding to garbage collection overhead.
+**Action:** Replace multiple sequential `.filter()` operations that calculate counts with a single `for` loop traversal (or `reduce()`) that tallies counts in one pass. This guarantees an O(N) complexity overall instead of O(K * N), where K is the number of filters.
