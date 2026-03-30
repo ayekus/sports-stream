@@ -48,6 +48,13 @@ export async function getAllNHLTeams() {
       const data = await response.json();
       const teams = data.teams || [];
 
+      // ⚡ Bolt Performance Optimization: Pre-compute and cache parsed numeric year
+      // during the initial fetch to avoid redundant O(N log N) parseInt executions
+      // during frontend sorting operations.
+      teams.forEach(team => {
+        team._parsedFormedYear = parseInt(team.intFormedYear) || 0;
+      });
+
       cache.set(cacheKey, teams, CACHE_TTL.TEAMS);
       return teams;
     } catch (error) {

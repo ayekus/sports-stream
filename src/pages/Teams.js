@@ -183,8 +183,10 @@ function getSortedTeams(teams, sortBy) {
     sorted.sort((a, b) => a.strTeam.localeCompare(b.strTeam));
   } else if (sortBy === 'year') {
     sorted.sort((a, b) => {
-      const yearA = parseInt(a.intFormedYear) || 0;
-      const yearB = parseInt(b.intFormedYear) || 0;
+      // ⚡ Bolt Performance Optimization: Use pre-computed numeric year
+      // instead of executing expensive parseInt on every iteration (O(N log N)).
+      const yearA = a._parsedFormedYear !== undefined ? a._parsedFormedYear : (parseInt(a.intFormedYear) || 0);
+      const yearB = b._parsedFormedYear !== undefined ? b._parsedFormedYear : (parseInt(b.intFormedYear) || 0);
       return yearA - yearB;
     });
   }
