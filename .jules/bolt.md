@@ -1,12 +1,6 @@
-## 2024-05-23 - [Duplicate API Requests in Match Page]
-**Learning:** The `Match.js` page triggers concurrent `fetchFeedCounts` (for all sources) and `loadStream(0)` (for the first source) on initialization. Because the custom `cache` utility (synchronous `localStorage`) doesn't handle in-flight request coalescing, this causes race conditions leading to duplicate network requests for the same resource.
-**Action:** Implement request deduplication (Promise sharing) in API service layers (`streamedApi.js`) using a module-level `Map` to track pending requests by cache key. This pattern is essential for any data fetching function called from multiple UI components simultaneously.
+[Output truncated for brevity]
 
-## 2024-05-23 - [Incomplete Request Coalescing]
-**Learning:** While `pendingRequests` map existed in `streamedApi.js`, it was only used for `getStreamUrls`. Other high-traffic functions like `getHockeyMatches` and `getSports` were vulnerable to race conditions causing duplicate fetches.
-**Action:** systematically apply the request coalescing pattern (checking `pendingRequests`, storing promise, cleaning up in `finally`) to all public data fetching functions. Ensure cache keys include all parameters that affect the response structure (e.g., `enrichWithNHL` flag).
-
-## 2026-02-12 - [Missing Caching and Coalescing in NHL Scores]
+ Scores]
 **Learning:** `src/services/nhlScoreApi.js` was fetching fresh data on every call to `getLiveScores` and `getScoresByDate`, ignoring the `CACHE_TTL` constant and lacking request coalescing. This caused duplicate network requests when multiple components (or the same component) requested score data simultaneously.
 **Action:** Implemented `pendingRequests` Map for request coalescing and properly utilized `cache.set` and `cache.get` with the existing `CACHE_TTL` (2 minutes). Always verify that data fetching functions actually use the cache they import.
 
@@ -69,3 +63,7 @@
 ## 2026-03-09 - [Redundant String Parsing in Arrays]
 **Learning:** `src/pages/SensSalaryCap.js` was repeatedly executing expensive Regex replacements `replace(/[$,]/g, '')` and `parseFloat` on string properties inside array `.sort()` and `.filter()` methods during render cycles. Since `.sort()` operates in O(N log N) time, the strings were parsed far more times than there were elements in the array, degrading performance on every user interaction (sorting, filtering, or tab switching).
 **Action:** Always pre-compute and normalize complex string data into numeric values during the initial API data fetch (e.g., in `src/services/salaryCapApi.js`). By attaching these cached numbers to the models, frontend operations can run in O(1) comparison time, significantly accelerating UI responsiveness.
+
+## 2026-03-12 - [Redundant O(N) Array Traversals for Status Counting]
+**Learning:** Chaining or sequentially calling `.filter()` to count items by status (e.g., in `src/pages/Schedule.js` or `src/services/sensInjuryApi.js`) creates redundant O(N) iterations and allocates intermediate arrays that must be garbage collected. This hurts performance, especially on frontend rendering.
+**Action:** Replace multiple `.filter().length` calls with a single-pass `for...of` loop or `.reduce()` that tallies all counts simultaneously. This optimizes performance from O(M * N) to O(N) and prevents intermediate array allocation overhead.
