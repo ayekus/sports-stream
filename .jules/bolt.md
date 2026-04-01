@@ -69,3 +69,7 @@
 ## 2026-03-09 - [Redundant String Parsing in Arrays]
 **Learning:** `src/pages/SensSalaryCap.js` was repeatedly executing expensive Regex replacements `replace(/[$,]/g, '')` and `parseFloat` on string properties inside array `.sort()` and `.filter()` methods during render cycles. Since `.sort()` operates in O(N log N) time, the strings were parsed far more times than there were elements in the array, degrading performance on every user interaction (sorting, filtering, or tab switching).
 **Action:** Always pre-compute and normalize complex string data into numeric values during the initial API data fetch (e.g., in `src/services/salaryCapApi.js`). By attaching these cached numbers to the models, frontend operations can run in O(1) comparison time, significantly accelerating UI responsiveness.
+
+## 2026-06-25 - [Redundant Array Iterations for Counting]
+**Learning:** `src/pages/Schedule.js` was chaining `.filter()` methods sequentially to get lengths of categories (e.g. `games.filter(g => g.status === 'live').length`), creating multiple intermediate arrays that were immediately discarded. This caused redundant O(N) traversals and unnecessary garbage collection overhead during frequent render cycles.
+**Action:** Replace sequential `.filter()` operations with a single `for...of` loop or `.reduce()` when only generating counts or bucketed lengths. This consolidates the logic into a single O(N) traversal and eliminates intermediate array memory allocations.

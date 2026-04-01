@@ -91,36 +91,34 @@ async function loadSchedule() {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
     const today6AM = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 6, 0, 0);
     
-    const relevantGames = allGames.filter(game => {
+    // ⚡ Bolt Performance Optimization: Combined two sequential .filter() passes into one
+    // to avoid creating an intermediate array and redundant O(N) traversals
+    const filteredGames = allGames.filter(game => {
+      // --- First check: Time relevance ---
       const gameTime = new Date(game.time);
-      
-      // Always show upcoming and live games
-      if (game.status === 'upcoming' || game.status === 'live') {
-        return true;
-      }
+      let isTimeRelevant = true;
       
       // For finished games, only hide them after 6 AM if they started yesterday or earlier
       if (game.status === 'finished') {
         // If it's before 6 AM today, keep all finished games from yesterday
         if (now < today6AM) {
           // Show finished games from yesterday
-          if (gameTime >= todayStart.getTime() - 24 * 60 * 60 * 1000) {
-            return true;
+          if (gameTime < todayStart.getTime() - 24 * 60 * 60 * 1000) {
+            isTimeRelevant = false;
           }
         } else {
           // After 6 AM, only show finished games from today
-          if (gameTime >= todayStart) {
-            return true;
+          if (gameTime < todayStart) {
+            isTimeRelevant = false;
           }
         }
-        return false; // Hide old finished games
       }
       
-      return true; // Show everything else
-    });
-    
-    // Filter out TBA games and non-NHL/non-Olympic games
-    const filteredGames = relevantGames.filter(game => {
+      if (!isTimeRelevant) {
+        return false;
+      }
+
+      // --- Second check: Game type (NHL/Olympic) ---
       const homeTeam = game.teams?.home?.name || 'TBA';
       const awayTeam = game.teams?.away?.name || 'TBA';
       
@@ -228,9 +226,18 @@ function renderEmptySchedule() {
 function renderScheduleUI(games) {
   const app = document.getElementById('app-content');
   
-  const liveGames = games.filter(g => g.status === 'live');
-  const upcomingGames = games.filter(g => g.status === 'upcoming');
-  const finishedGames = games.filter(g => g.status === 'finished');
+  // ⚡ Bolt Performance Optimization: Replace multiple sequential .filter() passes
+  // with a single loop to calculate counts. This avoids creating three intermediate
+  // arrays and saves significant garbage collection overhead during renders.
+  let liveCount = 0;
+  let upcomingCount = 0;
+  let finishedCount = 0;
+
+  for (const game of games) {
+    if (game.status === 'live') liveCount++;
+    else if (game.status === 'upcoming') upcomingCount++;
+    else if (game.status === 'finished') finishedCount++;
+  }
   
   app.innerHTML = `
     <div class="page">
@@ -238,9 +245,9 @@ function renderScheduleUI(games) {
         <div class="schedule-controls mb-lg">
           <select id="filter-select" class="sort-select" aria-label="Filter games by status">
             <option value="all">All Games (${games.length})</option>
-            <option value="live">Live Only (${liveGames.length})</option>
-            <option value="upcoming">Upcoming Only (${upcomingGames.length})</option>
-            <option value="finished">Finished (${finishedGames.length})</option>
+            <option value="live">Live Only (${liveCount})</option>
+            <option value="upcoming">Upcoming Only (${upcomingCount})</option>
+            <option value="finished">Finished (${finishedCount})</option>
           </select>
           <input 
             type="text" 
