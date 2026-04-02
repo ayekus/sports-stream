@@ -91,36 +91,34 @@ async function loadSchedule() {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
     const today6AM = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 6, 0, 0);
     
-    const relevantGames = allGames.filter(game => {
+    const filteredGames = allGames.filter(game => {
       const gameTime = new Date(game.time);
+      let isRelevant = true;
       
+      // 1. Time & Status Filtering
       // Always show upcoming and live games
       if (game.status === 'upcoming' || game.status === 'live') {
-        return true;
-      }
-      
-      // For finished games, only hide them after 6 AM if they started yesterday or earlier
-      if (game.status === 'finished') {
+        isRelevant = true;
+      } else if (game.status === 'finished') {
+        // For finished games, only hide them after 6 AM if they started yesterday or earlier
         // If it's before 6 AM today, keep all finished games from yesterday
         if (now < today6AM) {
           // Show finished games from yesterday
-          if (gameTime >= todayStart.getTime() - 24 * 60 * 60 * 1000) {
-            return true;
+          if (gameTime < todayStart.getTime() - 24 * 60 * 60 * 1000) {
+            isRelevant = false;
           }
         } else {
           // After 6 AM, only show finished games from today
-          if (gameTime >= todayStart) {
-            return true;
+          if (gameTime < todayStart) {
+            isRelevant = false;
           }
         }
-        return false; // Hide old finished games
       }
       
-      return true; // Show everything else
-    });
-    
-    // Filter out TBA games and non-NHL/non-Olympic games
-    const filteredGames = relevantGames.filter(game => {
+      if (!isRelevant) return false;
+
+      // 2. League & Team Filtering
+      // Filter out TBA games and non-NHL/non-Olympic games
       const homeTeam = game.teams?.home?.name || 'TBA';
       const awayTeam = game.teams?.away?.name || 'TBA';
       
@@ -131,7 +129,7 @@ async function loadSchedule() {
       
       // Check if it's an Olympic/IIHF game (World Juniors, etc.)
       if (isOlympicGame(game.title, game.teams)) {
-        logger.log(`✅ Including Olympic/IIHF game: ${game.title}`);
+        // logger.log(`✅ Including Olympic/IIHF game: ${game.title}`);
         return true;
       }
       
@@ -140,12 +138,12 @@ async function loadSchedule() {
       const awayIsNHL = isNHLTeam(awayTeam);
       
       if (homeIsNHL && awayIsNHL) {
-        logger.log(`✅ Including NHL game: ${awayTeam} @ ${homeTeam}`);
+        // logger.log(`✅ Including NHL game: ${awayTeam} @ ${homeTeam}`);
         return true;
       }
       
       // Exclude all other games (European leagues, etc.)
-      logger.log(`❌ Excluding non-NHL/non-Olympic game: ${game.title}`);
+      // logger.log(`❌ Excluding non-NHL/non-Olympic game: ${game.title}`);
       return false;
     });
     
@@ -228,9 +226,15 @@ function renderEmptySchedule() {
 function renderScheduleUI(games) {
   const app = document.getElementById('app-content');
   
-  const liveGames = games.filter(g => g.status === 'live');
-  const upcomingGames = games.filter(g => g.status === 'upcoming');
-  const finishedGames = games.filter(g => g.status === 'finished');
+  let liveCount = 0;
+  let upcomingCount = 0;
+  let finishedCount = 0;
+
+  for (const game of games) {
+    if (game.status === 'live') liveCount++;
+    else if (game.status === 'upcoming') upcomingCount++;
+    else if (game.status === 'finished') finishedCount++;
+  }
   
   app.innerHTML = `
     <div class="page">
@@ -238,9 +242,9 @@ function renderScheduleUI(games) {
         <div class="schedule-controls mb-lg">
           <select id="filter-select" class="sort-select" aria-label="Filter games by status">
             <option value="all">All Games (${games.length})</option>
-            <option value="live">Live Only (${liveGames.length})</option>
-            <option value="upcoming">Upcoming Only (${upcomingGames.length})</option>
-            <option value="finished">Finished (${finishedGames.length})</option>
+            <option value="live">Live Only (${liveCount})</option>
+            <option value="upcoming">Upcoming Only (${upcomingCount})</option>
+            <option value="finished">Finished (${finishedCount})</option>
           </select>
           <input 
             type="text" 
@@ -548,35 +552,31 @@ function applyFilters() {
   const filterSelect = document.getElementById('filter-select');
   const searchInput = document.getElementById('schedule-search');
   
-  let filtered = [...currentGames];
+  const filterValue = filterSelect ? filterSelect.value : 'all';
+  const query = searchInput ? searchInput.value.toLowerCase() : '';
   
-  // Apply status filter
-  if (filterSelect) {
-    const filterValue = filterSelect.value;
-    if (filterValue === 'live') {
-      filtered = filtered.filter(g => g.status === 'live');
-    } else if (filterValue === 'upcoming') {
-      filtered = filtered.filter(g => g.status === 'upcoming');
-    } else if (filterValue === 'finished') {
-      filtered = filtered.filter(g => g.status === 'finished');
+  // Combine status and search filters into a single pass
+  const filtered = currentGames.filter(game => {
+    // 1. Status Check
+    if (filterValue !== 'all' && game.status !== filterValue) {
+      return false;
     }
-  }
-  
-  // Apply search filter
-  if (searchInput) {
-    const query = searchInput.value.toLowerCase();
+
+    // 2. Search Check
     if (query) {
-      filtered = filtered.filter(game => {
-        const homeTeam = game.teams?.home?.name?.toLowerCase() || '';
-        const awayTeam = game.teams?.away?.name?.toLowerCase() || '';
-        const title = game.title?.toLowerCase() || '';
-        
-        return homeTeam.includes(query) || 
-               awayTeam.includes(query) || 
-               title.includes(query);
-      });
+      const homeTeam = game.teams?.home?.name?.toLowerCase() || '';
+      const awayTeam = game.teams?.away?.name?.toLowerCase() || '';
+      const title = game.title?.toLowerCase() || '';
+
+      if (!homeTeam.includes(query) &&
+          !awayTeam.includes(query) &&
+          !title.includes(query)) {
+        return false;
+      }
     }
-  }
+
+    return true;
+  });
   
   renderGameCards(filtered);
 }
