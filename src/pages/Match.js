@@ -5,7 +5,6 @@
 
 import { getStreamUrls, getHockeyMatches, getTeamBadgeUrl } from '../services/streamedApi.js';
 import { createVideoPlayer } from '../components/VideoPlayer.js';
-import { extractStreamUrl } from '../utils/streamExtractor.js';
 import { destroyHighlightModal } from '../components/HighlightModal.js';
 import { setupRedirectBlocking } from '../utils/security.js';
 import { fetchAndRenderHighlights, resetHighlights } from '../utils/matchHighlights.js';
@@ -96,9 +95,16 @@ export async function renderMatchPage(params) {
     logger.log('🔄 Dynamic match cache cleared (streams), fetching fresh match data...');
     
     // Get match data from today's matches with fresh NHL enrichment
-    const matches = await getHockeyMatches('today');
-    const match = matches.find(m => m.id === matchId);
-    
+    let matches = await getHockeyMatches('today');
+    let match = matches.find(m => m.id === matchId);
+
+    // Finished games may not appear in 'today' — fall back to 'all'
+    if (!match) {
+      logger.log('⚠️ Match not found in today\'s games, trying full schedule...');
+      const allMatches = await getHockeyMatches('all');
+      match = allMatches.find(m => m.id === matchId);
+    }
+
     if (!match) {
       app.innerHTML = `
         <div class="page">
@@ -136,19 +142,25 @@ export async function renderMatchPage(params) {
     // Render match page
     renderMatchUI(match);
 
-    // Pre-fetch feed counts for all sources in parallel
-    fetchFeedCounts();
-
-    // Load first stream
-    await loadStream(0);
-    
-    // Setup global redirect blocking
-    securityCleanup = setupRedirectBlocking();
-    
-    // Fetch and render highlights if game has started
-    if (match.status === 'live' || match.status === 'finished') {
+    if (match.status === 'finished') {
+      // Game is over — skip stream loading entirely, just show highlights
       const highlightsContainer = document.getElementById('highlights-container');
       fetchAndRenderHighlights(match, highlightsContainer);
+    } else {
+      // Pre-fetch feed counts for all sources in parallel
+      fetchFeedCounts();
+
+      // Load first stream
+      await loadStream(0);
+
+      // Setup global redirect blocking
+      securityCleanup = setupRedirectBlocking();
+
+      // Fetch and render highlights if game has started
+      if (match.status === 'live') {
+        const highlightsContainer = document.getElementById('highlights-container');
+        fetchAndRenderHighlights(match, highlightsContainer);
+      }
     }
     
   } catch (error) {
@@ -247,6 +259,8 @@ function renderMatchUI(match) {
     document.body.classList.remove('sens-mode');
   }
   
+  const isFinished = match.status === 'finished';
+
   app.innerHTML = `
     <div class="page match-page ${isSensGame ? 'sens-game' : ''}">
       <div class="container">
@@ -257,43 +271,45 @@ function renderMatchUI(match) {
         <h1 class="page-title">${match.title}</h1>
         <p class="text-secondary mb-lg">${match.league || 'Hockey'}</p>
         
-        <div class="alert alert-info mb-lg" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 1rem;">
-          <div style="display: flex; align-items: start; gap: 0.75rem;">
-            <div style="font-size: 1.25rem;">ℹ️</div>
-            <div>
-              <strong style="display: block; margin-bottom: 0.25rem;">Stream Loading Notice</strong>
-              <p style="margin: 0; opacity: 0.9; font-size: 0.9rem;">Due to free streaming sources, you may need to click 2-3 times to bypass redirects and load the stream. This is a limitation of the embed provider.</p>
+        ${isFinished ? `
+          <div class="alert alert-finished mb-lg" style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.35); border-radius: 12px; padding: 1.1rem 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.85rem;">
+              <div style="font-size: 1.5rem;">🏁</div>
+              <div>
+                <strong style="display: block; margin-bottom: 0.2rem; font-size: 1rem;">Game Over</strong>
+                <p style="margin: 0; opacity: 0.85; font-size: 0.875rem;">This game has ended. Stream playback is unavailable — check out the 🎯 Goal Highlights below!</p>
+              </div>
             </div>
-            </div>
-        </div>
-        
-        <div class="player-wrapper">
-          <div id="video-player-container" class="video-container"></div>
-          <div id="stream-loading" class="stream-loading">
-            <div class="loading"></div>
-            <p>Loading stream...</p>
           </div>
-        </div>
-        
-        <div class="stream-sources mt-lg">
-          <h3>Stream Information</h3>
-          ${currentSources.length > 1 ? `
-            <div class="sources-list" id="sources-list">
-              ${currentSources.map((source, idx) => `
-                <button 
-                  class="source-button ${idx === 0 ? 'active' : ''}" 
-                  data-source-idx="${idx}"
-                  onclick="window.switchStream(${idx})"
-                >
-                  <span class="source-provider">${source.source}</span>
-                  <span class="feed-count-badge">...</span>
-                </button>
-              `).join('')}
+        ` : `
+          <div class="player-wrapper">
+            <div id="video-player-container" class="video-container"></div>
+            <div id="stream-loading" class="stream-loading">
+              <div class="loading"></div>
+              <p>Loading stream...</p>
             </div>
-          ` : `
-            <p class="text-secondary">Source: ${currentSources[0]?.source || 'Unknown'} (${currentSources[0]?.id || 'N/A'})</p>
-          `}
-        </div>
+          </div>
+          
+          <div class="stream-sources mt-lg">
+            <h3>Stream Information</h3>
+            ${currentSources.length > 1 ? `
+              <div class="sources-list" id="sources-list">
+                ${currentSources.map((source, idx) => `
+                  <button 
+                    class="source-button ${idx === 0 ? 'active' : ''}" 
+                    data-source-idx="${idx}"
+                    onclick="window.switchStream(${idx})"
+                  >
+                    <span class="source-provider">${source.source}</span>
+                    <span class="feed-count-badge">...</span>
+                  </button>
+                `).join('')}
+              </div>
+            ` : `
+              <p class="text-secondary">Source: ${currentSources[0]?.source || 'Unknown'} (${currentSources[0]?.id || 'N/A'})</p>
+            `}
+          </div>
+        `}
         
         <div class="match-details mt-xl card">
           <h3>Match Details</h3>
@@ -304,8 +320,10 @@ function renderMatchUI(match) {
             <dt>Match Time</dt>
             <dd>${formatDateTimeLocal(match.time)}</dd>
             
-            <dt>Available Streams</dt>
-            <dd>${currentSources.length} source${currentSources.length !== 1 ? 's' : ''}</dd>
+            ${!isFinished ? `
+              <dt>Available Streams</dt>
+              <dd>${currentSources.length} source${currentSources.length !== 1 ? 's' : ''}</dd>
+            ` : ''}
             
             <dt>Status</dt>
             <dd><span class="badge ${getStatusClass(match)}">${getStatusText(match)}</span></dd>
@@ -340,7 +358,7 @@ async function loadStream(sourceIndex) {
       loading.style.display = 'flex';
       loading.innerHTML = `
         <div class="loading"></div>
-        <p>Extracting stream URLs...</p>
+        <p>Loading stream...</p>
       `;
     }
     if (container) container.style.display = 'none';
@@ -413,19 +431,10 @@ async function playStream(stream, container, loading) {
     throw new Error('No embed URL available');
   }
   
-  logger.log('📺 Playing stream:', stream.language || `Stream ${stream.streamNo}`, embedUrl);
+  logger.log('📺 Playing stream via iframe:', stream.language || `Stream ${stream.streamNo}`, embedUrl);
   
-  // Try to extract direct stream URL
-  if (loading) {
-    loading.innerHTML = `
-      <div class="loading"></div>
-      <p>Extracting direct stream URL...</p>
-    `;
-  }
-  
-  const extractionResult = await extractStreamUrl(embedUrl);
-  
-  // Hide loading
+  // Hide loading and show player immediately — go straight to iframe
+  // (CORS-based extraction attempts added ~30s of delay with near-zero success rate)
   if (loading) loading.style.display = 'none';
   if (container) container.style.display = 'block';
   
@@ -435,15 +444,7 @@ async function playStream(stream, container, loading) {
   }
   
   currentPlayer = createVideoPlayer(container);
-  
-  // Use extracted URL if successful, otherwise fall back to iframe
-  if (extractionResult.success && extractionResult.streamUrl) {
-    logger.log('✅ Using extracted stream URL');
-    currentPlayer.init(extractionResult.streamUrl, 'auto');
-  } else {
-    logger.log('⚠️ Extraction failed, using iframe embed');
-    currentPlayer.init(embedUrl, 'iframe');
-  }
+  currentPlayer.init(embedUrl, 'iframe');
 }
 
 function updateStreamOptions(sourceIndex, streams) {
