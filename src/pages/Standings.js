@@ -114,9 +114,13 @@ function renderViewContent(data) {
 }
 
 function renderWildCardView(standings) {
-  // Group by conference and division
-  const eastern = standings.filter(t => t.conferenceAbbrev === 'E');
-  const western = standings.filter(t => t.conferenceAbbrev === 'W');
+  // Single pass split by conference instead of two separate .filter() traversals
+  const eastern = [];
+  const western = [];
+  for (const t of standings) {
+    if (t.conferenceAbbrev === 'E') eastern.push(t);
+    else if (t.conferenceAbbrev === 'W') western.push(t);
+  }
   
   const easternDivisions = groupByDivision(eastern);
   const westernDivisions = groupByDivision(western);
@@ -170,8 +174,15 @@ function renderDivisionView(standings) {
 }
 
 function renderConferenceView(standings) {
-  const eastern = standings.filter(t => t.conferenceAbbrev === 'E').sort((a, b) => a.conferenceSequence - b.conferenceSequence);
-  const western = standings.filter(t => t.conferenceAbbrev === 'W').sort((a, b) => a.conferenceSequence - b.conferenceSequence);
+  // Single pass split by conference instead of two separate .filter() traversals
+  const eastern = [];
+  const western = [];
+  for (const t of standings) {
+    if (t.conferenceAbbrev === 'E') eastern.push(t);
+    else if (t.conferenceAbbrev === 'W') western.push(t);
+  }
+  eastern.sort((a, b) => a.conferenceSequence - b.conferenceSequence);
+  western.sort((a, b) => a.conferenceSequence - b.conferenceSequence);
   
   const { wildcardTeams } = getPlayoffStatus(standings);
   
@@ -470,9 +481,13 @@ function getPlayoffStatus(standings) {
     });
   }
   
-  // Get wild card teams from each conference
-  const eastern = standings.filter(t => t.conferenceAbbrev === 'E');
-  const western = standings.filter(t => t.conferenceAbbrev === 'W');
+  // Single pass split by conference instead of two separate .filter() traversals
+  const eastern = [];
+  const western = [];
+  for (const t of standings) {
+    if (t.conferenceAbbrev === 'E') eastern.push(t);
+    else if (t.conferenceAbbrev === 'W') western.push(t);
+  }
   
   const easternWildCard = calculateWildCard(eastern);
   const westernWildCard = calculateWildCard(western);

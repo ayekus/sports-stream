@@ -6,7 +6,7 @@
 import { getSensNextGame, getSensSeasonRecord, getSensSchedule } from '../services/sensApi.js';
 import { createCountdownTimer, formatCountdown, getCountdownMessage } from '../utils/countdown.js';
 import { getTeamLogoUrl } from '../services/nhlApi.js';
-import { formatTime } from '../utils/date.js';
+import { formatTime, formatDateLocal } from '../utils/date.js';
 import { router } from '../router.js';
 import { cache } from '../utils/cache.js';
 import { logger } from '../utils/logger.js';
@@ -196,12 +196,7 @@ function renderCountdownUI(nextGame, seasonRecord, upcomingGames) {
   const now = new Date();
   const isLive = gameDate < now && (nextGame.gameState === 'LIVE' || nextGame.gameState === 'CRIT');
   
-  const dateStr = gameDate.toLocaleDateString('en-US', { 
-    weekday: 'long',
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
+  const dateStr = formatDateLocal(gameDate);
   const timeStr = formatTime(gameDate);
   
   // Format next 5 games with correct home/away indicators

@@ -16,6 +16,22 @@ const timeFormatter = new Intl.DateTimeFormat('en-US', {
   hour12: true
 });
 
+const localDateFormatter = new Intl.DateTimeFormat('en-US', {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
+
+const localDateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: 'numeric',
+  second: 'numeric'
+});
+
 /**
  * Format date to readable string
  * @param {string|Date} date - Date to format
@@ -43,6 +59,24 @@ export function formatTime(date) {
  */
 export function formatDateTime(date) {
   return `${formatDate(date)} at ${formatTime(date)}`;
+}
+
+/**
+ * Format date to local date string (equivalent to toLocaleDateString with long format)
+ * @param {string|Date} date - Date to format
+ * @returns {string} Formatted local date string
+ */
+export function formatDateLocal(date) {
+  return localDateFormatter.format(new Date(date));
+}
+
+/**
+ * Format date to local date/time string (equivalent to toLocaleString)
+ * @param {string|Date} date - Date to format
+ * @returns {string} Formatted local date-time string
+ */
+export function formatDateTimeLocal(date) {
+  return localDateTimeFormatter.format(new Date(date));
 }
 
 /**
