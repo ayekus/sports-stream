@@ -163,7 +163,7 @@ function renderSeasonTrackerUI(standingsData, seasonRecord) {
                     <img src="${getTeamLogoUrl(team.teamAbbrev?.default)}" 
                          alt="${teamName}" 
                          style="width: 24px; height: 24px;" 
-                         onerror="this.style.display='none'" />
+                         onerror="this.style.display='none'" loading="lazy" />
                     <strong>${teamName}</strong>
                   </div>
                 </td>

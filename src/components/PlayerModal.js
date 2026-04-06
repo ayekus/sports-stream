@@ -141,7 +141,7 @@ function createPlayerHeader(player) {
   return `
     <div class="player-modal-header">
       ${player.headshot?.href ? 
-        `<img src="${player.headshot.href}" alt="${player.displayName}" class="player-modal-img" />` :
+        `<img src="${player.headshot.href}" alt="${player.displayName}" class="player-modal-img" loading="lazy" />` :
         `<div class="player-modal-avatar">${player.jersey || '?'}</div>`
       }
       <div class="player-modal-info">

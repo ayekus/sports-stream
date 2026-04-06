@@ -269,7 +269,7 @@ function renderCountdownUI(nextGame, seasonRecord, upcomingGames) {
     <div class="next-game-card">
       <div class="game-matchup-horizontal">
         <div class="team-logo-side">
-          <img src="${getTeamLogoUrl('OTT')}" alt="Ottawa Senators" />
+          <img src="${getTeamLogoUrl('OTT')}" alt="Ottawa Senators" loading="lazy" />
         </div>
         
         <div class="matchup-text">
@@ -277,7 +277,7 @@ function renderCountdownUI(nextGame, seasonRecord, upcomingGames) {
         </div>
         
         <div class="team-logo-side">
-          <img src="${getTeamLogoUrl(opponent.abbrev)}" alt="${opponentFullName}" />
+          <img src="${getTeamLogoUrl(opponent.abbrev)}" alt="${opponentFullName}" loading="lazy" />
         </div>
       </div>
       

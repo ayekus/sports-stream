@@ -147,7 +147,7 @@ function renderRosterTab(roster) {
                 <button class="roster-card" data-player-id="${player.id}" data-player-index="${playerIndex}">
                   <div class="roster-player-header">
                     ${player.headshot?.href ? 
-                      `<img src="${player.headshot.href}" alt="${player.displayName}" class="roster-player-img" />` :
+                      `<img src="${player.headshot.href}" alt="${player.displayName}" class="roster-player-img" loading="lazy" />` :
                       `<div class="roster-player-avatar">${player.jersey || '?'}</div>`
                     }
                     <div class="roster-player-info">
@@ -191,7 +191,7 @@ function renderInjuriesTab(injuries) {
         ${injuries.map(injury => `
           <div class="injury-card">
             ${injury.headshot ? 
-              `<img src="${injury.headshot}" alt="${injury.name}" class="injury-player-img" />` :
+              `<img src="${injury.headshot}" alt="${injury.name}" class="injury-player-img" loading="lazy" />` :
               `<div class="injury-player-avatar">${injury.jerseyNumber || '🏒'}</div>`
             }
             
